@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import JobChecklist from "@/components/JobChecklist";
 import LoginForm from "@/components/LoginForm";
 
@@ -32,10 +33,18 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 dark:bg-black p-4 md:p-8">
       <main className="max-w-6xl mx-auto">
         <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
+          <div className="flex items-baseline gap-8">
             <h1 className="text-6xl font-black text-gray-900 dark:text-white tracking-tighter">
               Opus
             </h1>
+            {isAuthenticated && (
+              <Link 
+                href="/stats" 
+                className="text-lg font-bold text-gray-400 hover:text-blue-600 transition-colors"
+              >
+                Stats
+              </Link>
+            )}
           </div>
           {isAuthenticated && (
             <button
