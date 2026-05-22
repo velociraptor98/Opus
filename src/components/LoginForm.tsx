@@ -26,7 +26,6 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
       <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-zinc-800 w-full max-w-md">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">Welcome Back</h2>
-          <p className="text-gray-500 dark:text-zinc-400">Please sign in to your tracker</p>
         </div>
 
         {error && (

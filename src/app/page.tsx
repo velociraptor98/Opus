@@ -33,12 +33,9 @@ export default function Home() {
       <main className="max-w-6xl mx-auto">
         <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="text-5xl font-black text-gray-900 dark:text-white tracking-tighter">
-              Job <span className="text-blue-600">Search</span> Tracker
+            <h1 className="text-6xl font-black text-gray-900 dark:text-white tracking-tighter">
+              Opus
             </h1>
-            <p className="mt-2 text-lg text-gray-500 dark:text-zinc-400 font-medium italic">
-              Organize your career journey with precision.
-            </p>
           </div>
           {isAuthenticated && (
             <button

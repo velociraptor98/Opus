@@ -327,8 +327,7 @@ const JobChecklist = () => {
 
   return (
     <div className="w-full flex flex-col gap-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">Your Applications</h2>
+      <div className="flex justify-end items-center">
         <button
           onClick={() => setIsModalOpen(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 active:scale-95 flex items-center gap-2"
