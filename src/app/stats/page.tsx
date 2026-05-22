@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 
 type Status = 'Pending' | 'Applied' | 'Interviewing' | 'Offered' | 'Rejected';
 
@@ -20,20 +21,11 @@ const COLORS = {
 };
 
 export default function StatsPage() {
+  const { isAuthenticated } = useAuth();
   const [data, setData] = useState<{ name: string; value: number }[]>([]);
-  const [isMounted, setIsMounted] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
-    
-    // Auth check
-    const auth = localStorage.getItem("isLoggedIn");
-    if (auth !== "true") {
-      setIsAuthenticated(false);
-      return;
-    }
-    setIsAuthenticated(true);
+    if (!isAuthenticated) return;
 
     const saved = localStorage.getItem('jobApplications');
     let apps: JobApplication[] = [];
@@ -66,13 +58,11 @@ export default function StatsPage() {
       }));
       setData(chartData);
     }
-  }, []);
-
-  if (!isMounted) return null;
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center p-8">
+      <div className="min-h-[60vh] flex items-center justify-center p-8">
         <div className="text-center">
           <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-4">Access Denied</h1>
           <p className="text-gray-500 mb-8">Please sign in to view your statistics.</p>
@@ -85,20 +75,8 @@ export default function StatsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background dark:bg-background p-4 md:p-8 text-foreground transition-colors">
+    <div className="min-h-[calc(100vh-6rem)] p-4 md:p-8 transition-colors">
       <main className="max-w-4xl mx-auto">
-        <header className="mb-12 flex items-center justify-between">
-          <Link href="/" className="text-6xl font-black text-primary dark:text-primary tracking-tighter hover:opacity-80 transition-opacity">
-            Opus
-          </Link>
-          <Link 
-            href="/" 
-            className="px-6 py-2 bg-primary dark:bg-secondary text-white dark:text-zinc-900 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-primary/20"
-          >
-            Back to List
-          </Link>
-        </header>
-
         <section className="bg-white dark:bg-[#343f44] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-foreground/5 dark:border-foreground/5 p-8">
           <h2 className="text-2xl font-bold text-primary dark:text-primary mb-8">Application Status Distribution</h2>
           
