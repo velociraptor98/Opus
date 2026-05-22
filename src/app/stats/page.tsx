@@ -12,11 +12,11 @@ interface JobApplication {
 }
 
 const COLORS = {
-  Applied: '#3b82f6',      // blue-500
-  Interviewing: '#eab308', // yellow-500
-  Offered: '#22c55e',      // green-500
-  Rejected: '#ef4444',     // red-500
-  Pending: '#71717a',      // zinc-500
+  Applied: '#3a94c5',      // Blue
+  Interviewing: '#dfa000', // Yellow
+  Offered: '#8da101',      // Green
+  Rejected: '#f85552',     // Red
+  Pending: '#df69ba',      // Purple
 };
 
 export default function StatsPage() {
@@ -85,22 +85,22 @@ export default function StatsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black p-4 md:p-8">
+    <div className="min-h-screen bg-background dark:bg-background p-4 md:p-8 text-foreground transition-colors">
       <main className="max-w-4xl mx-auto">
         <header className="mb-12 flex items-center justify-between">
-          <Link href="/" className="text-6xl font-black text-gray-900 dark:text-white tracking-tighter hover:opacity-80 transition-opacity">
+          <Link href="/" className="text-6xl font-black text-primary dark:text-primary tracking-tighter hover:opacity-80 transition-opacity">
             Opus
           </Link>
           <Link 
             href="/" 
-            className="px-6 py-2 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-xl font-bold transition-all active:scale-95"
+            className="px-6 py-2 bg-primary dark:bg-secondary text-white dark:text-zinc-900 rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-primary/20"
           >
             Back to List
           </Link>
         </header>
 
-        <section className="bg-white dark:bg-zinc-900 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-zinc-800 p-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">Application Status Distribution</h2>
+        <section className="bg-white dark:bg-[#343f44] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-foreground/5 dark:border-foreground/5 p-8">
+          <h2 className="text-2xl font-bold text-primary dark:text-primary mb-8">Application Status Distribution</h2>
           
           {data.length > 0 ? (
             <div className="h-[400px] w-full">

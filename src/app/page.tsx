@@ -30,17 +30,17 @@ export default function Home() {
   if (!isMounted) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black p-4 md:p-8">
+    <div className="min-h-screen bg-background dark:bg-background p-4 md:p-8 text-foreground transition-colors">
       <main className="max-w-6xl mx-auto">
         <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="flex items-baseline gap-8">
-            <h1 className="text-6xl font-black text-gray-900 dark:text-white tracking-tighter">
+            <h1 className="text-6xl font-black text-primary dark:text-primary tracking-tighter">
               Opus
             </h1>
             {isAuthenticated && (
               <Link 
                 href="/stats" 
-                className="text-lg font-bold text-gray-400 hover:text-blue-600 transition-colors"
+                className="text-lg font-bold text-secondary hover:text-accent transition-colors"
               >
                 Stats
               </Link>
@@ -49,7 +49,7 @@ export default function Home() {
           {isAuthenticated && (
             <button
               onClick={handleLogout}
-              className="px-4 py-2 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-red-100 dark:border-red-900/30 w-fit"
+              className="px-4 py-2 text-sm font-bold text-error hover:bg-error/10 dark:hover:bg-error/20 rounded-lg transition-colors border border-error/30 w-fit"
             >
               Sign Out
             </button>
