@@ -2,21 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { JobRow } from "./JobRow";
-
-type Status = "Pending" | "Applied" | "Interviewing" | "Offered" | "Rejected";
-
-export interface JobApplication {
-  id: number;
-  company: string;
-  position: string;
-  status: Status;
-  dateApplied: string;
-  checklist: {
-    resumeSent: boolean;
-    coverLetterSent: boolean;
-    followUpSent: boolean;
-  };
-}
+import { JobApplication, Status } from "@/constants/generic";
 
 interface NewJobModalProps {
   isOpen: boolean;
@@ -165,29 +151,6 @@ const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
       </div>
     </div>
   );
-};
-
-export const STATUS_CONFIG: Record<
-  Status,
-  { dot: string; bg: string; text: string }
-> = {
-  Applied: {
-    dot: "bg-secondary",
-    bg: "bg-secondary/10",
-    text: "text-secondary",
-  },
-  Interviewing: {
-    dot: "bg-warning",
-    bg: "bg-warning/10",
-    text: "text-warning",
-  },
-  Offered: { dot: "bg-primary", bg: "bg-primary/10", text: "text-primary" },
-  Rejected: { dot: "bg-error", bg: "bg-error/10", text: "text-error" },
-  Pending: {
-    dot: "bg-foreground/30",
-    bg: "bg-foreground/5",
-    text: "text-foreground/50",
-  },
 };
 
 const JobChecklist = () => {

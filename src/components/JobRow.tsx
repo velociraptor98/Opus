@@ -1,5 +1,5 @@
+import { JobApplication, STATUS_CONFIG } from "@/constants/generic";
 import { useState } from "react";
-import { JobApplication, STATUS_CONFIG } from "./JobChecklist";
 
 export interface JobRowProps {
   application: JobApplication;
