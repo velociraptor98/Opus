@@ -1,4 +1,4 @@
-import { JobApplication, STATUS_CONFIG } from "@/constants/generic";
+import { JobApplication, Status, STATUS_CONFIG } from "@/constants/generic";
 import { useState } from "react";
 
 export interface JobRowProps {

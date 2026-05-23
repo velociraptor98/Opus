@@ -1,41 +1,53 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useMemo,
+  ReactNode,
+} from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: () => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const auth = localStorage.getItem("isLoggedIn");
-    if (auth === "true") {
-      setIsAuthenticated(true);
-    }
-    setIsMounted(true);
-  }, []);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+      setIsMounted(true);
+    });
 
-  const login = () => {
-    setIsAuthenticated(true);
-    localStorage.setItem("isLoggedIn", "true");
-  };
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem("isLoggedIn");
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+    router.refresh();
   };
 
   if (!isMounted) return null;
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, logout }}>
       {children}
     </AuthContext.Provider>
   );
