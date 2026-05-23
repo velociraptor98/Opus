@@ -23,6 +23,7 @@ const COLORS = {
 export default function StatsPage() {
   const { isAuthenticated } = useAuth();
   const [data, setData] = useState<{ name: string; value: number }[]>([]);
+  const [totals, setTotals] = useState({ total: 0, offered: 0, interviewing: 0, rejected: 0 });
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -57,6 +58,12 @@ export default function StatsPage() {
         value,
       }));
       setData(chartData);
+      setTotals({
+        total: apps.length,
+        offered: counts['Offered'] || 0,
+        interviewing: counts['Interviewing'] || 0,
+        rejected: counts['Rejected'] || 0,
+      });
     }
   }, [isAuthenticated]);
 
@@ -64,9 +71,9 @@ export default function StatsPage() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center p-8">
         <div className="text-center">
-          <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-4">Access Denied</h1>
-          <p className="text-gray-500 mb-8">Please sign in to view your statistics.</p>
-          <Link href="/" className="px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-xl font-bold transition-all active:scale-95">
+          <h1 className="text-4xl font-black text-primary mb-4">Access Denied</h1>
+          <p className="text-foreground/50 mb-8">Please sign in to view your statistics.</p>
+          <Link href="/" className="px-8 py-3 bg-primary text-white rounded-xl font-bold transition-all hover:bg-primary/90 active:scale-95">
             Go to Login
           </Link>
         </div>
@@ -74,11 +81,58 @@ export default function StatsPage() {
     );
   }
 
+  const statCards = [
+    {
+      label: 'Total Applications',
+      value: totals.total,
+      sub: 'tracked',
+      color: 'text-secondary',
+      bg: 'bg-secondary/10',
+    },
+    {
+      label: 'Offers Received',
+      value: totals.offered,
+      sub: totals.total > 0 ? `${Math.round((totals.offered / totals.total) * 100)}% rate` : '—',
+      color: 'text-primary',
+      bg: 'bg-primary/10',
+    },
+    {
+      label: 'In Pipeline',
+      value: totals.interviewing,
+      sub: 'interviewing',
+      color: 'text-warning',
+      bg: 'bg-warning/10',
+    },
+    {
+      label: 'Rejected',
+      value: totals.rejected,
+      sub: totals.total > 0 ? `${Math.round((totals.rejected / totals.total) * 100)}% rate` : '—',
+      color: 'text-error',
+      bg: 'bg-error/10',
+    },
+  ];
+
   return (
     <div className="min-h-[calc(100vh-6rem)] p-4 md:p-8 transition-colors">
-      <main className="max-w-4xl mx-auto">
+      <main className="max-w-4xl mx-auto space-y-6">
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {statCards.map((card) => (
+            <div
+              key={card.label}
+              className="bg-white dark:bg-[#343f44] rounded-2xl border border-foreground/5 p-5 shadow-sm"
+            >
+              <div className={`inline-flex items-center justify-center w-9 h-9 rounded-xl ${card.bg} mb-3`}>
+                <span className={`text-lg font-black ${card.color}`}>{card.value}</span>
+              </div>
+              <p className="text-sm font-semibold text-foreground/80">{card.label}</p>
+              <p className="text-xs text-foreground/40 mt-0.5">{card.sub}</p>
+            </div>
+          ))}
+        </div>
+
         <section className="bg-white dark:bg-[#343f44] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-foreground/5 dark:border-foreground/5 p-8">
-          <h2 className="text-2xl font-bold text-primary dark:text-primary mb-8">Application Status Distribution</h2>
+          <h2 className="text-xl font-bold text-primary dark:text-primary mb-6">Status Distribution</h2>
           
           {data.length > 0 ? (
             <div className="h-[400px] w-full">
