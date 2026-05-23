@@ -5,13 +5,13 @@ import LoginForm from "@/components/LoginForm";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   return (
     <div className="min-h-[calc(100vh-6rem)] p-4 md:p-8 transition-colors">
       <main className="max-w-6xl mx-auto">
         {!isAuthenticated ? (
-          <LoginForm onLogin={login} />
+          <LoginForm />
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <JobChecklist />

@@ -1,25 +1,33 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
-interface LoginFormProps {
-  onLogin: () => void;
-}
+const LoginForm = () => {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
-const LoginForm = ({ onLogin }: LoginFormProps) => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // This is just for demo and testing purposes till we get a db connection going
-    if (username === "testUser" && password === "1234") {
-      onLogin();
-      setError(false);
-    } else {
-      setError(true);
+    setPending(true);
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    const supabase = createClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: String(formData.get("email") ?? ""),
+      password: String(formData.get("password") ?? ""),
+    });
+
+    if (signInError) {
+      setError(signInError.message);
+      setPending(false);
+      return;
     }
+
+    router.refresh();
   };
 
   return (
@@ -64,23 +72,20 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span className="text-error font-medium">
-              Invalid username or password
-            </span>
+            <span className="text-error font-medium">{error}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-bold text-foreground/80 dark:text-foreground/70 mb-2 ml-1">
-              Username
+              Email
             </label>
             <input
-              type="text"
+              type="email"
+              name="email"
               className="w-full px-4 py-3 rounded-xl border border-primary/20 dark:border-primary/10 dark:bg-[#3d484d] dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-foreground/30"
-              placeholder="Enter username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter email"
               required
             />
           </div>
@@ -90,26 +95,20 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
             </label>
             <input
               type="password"
+              name="password"
               className="w-full px-4 py-3 rounded-xl border border-primary/20 dark:border-primary/10 dark:bg-[#3d484d] dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-foreground/30"
               placeholder="Enter password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full py-3.5 bg-primary text-white rounded-xl font-bold text-base shadow-md shadow-primary/25 hover:bg-primary/90 transition-all active:scale-[0.98] mt-4"
+            disabled={pending}
+            className="w-full py-3.5 bg-primary text-white rounded-xl font-bold text-base shadow-md shadow-primary/25 hover:bg-primary/90 transition-all active:scale-[0.98] mt-4 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Sign In
+            {pending ? "Signing in…" : "Sign In"}
           </button>
         </form>
-
-        <div className="mt-8 pt-6 border-t border-foreground/10 dark:border-foreground/5 text-center">
-          <p className="text-xs text-foreground/50 uppercase tracking-widest font-bold">
-            Demo: testUser / 1234
-          </p>
-        </div>
       </div>
     </div>
   );
