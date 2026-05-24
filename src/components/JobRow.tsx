@@ -12,6 +12,7 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
   const [editData, setEditData] = useState(application);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState(application.notes);
+  const [linkDraft, setLinkDraft] = useState(application.link);
 
   const handleToggleChecklist = (field: keyof JobApplication["checklist"]) => {
     onUpdate(application.id, {
@@ -29,11 +30,12 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
 
   const openNotes = () => {
     setNoteDraft(application.notes);
+    setLinkDraft(application.link);
     setIsNotesOpen(true);
   };
 
   const handleSaveNotes = () => {
-    onUpdate(application.id, { notes: noteDraft });
+    onUpdate(application.id, { notes: noteDraft, link: linkDraft });
     setIsNotesOpen(false);
   };
 
@@ -130,106 +132,68 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
         {application.dateApplied}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground/70 dark:text-foreground/60">
-        <div className="flex items-center justify-between">
-          <div className="flex gap-4">
-            <label className="flex items-center space-x-2 cursor-pointer group">
-              <input
-                type="checkbox"
-                checked={application.checklist.resumeSent}
-                onChange={() => handleToggleChecklist("resumeSent")}
-                className="rounded border-foreground/20 text-primary focus:ring-primary cursor-pointer"
-              />
-              <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
-                Resume
-              </span>
-            </label>
-            <label className="flex items-center space-x-2 cursor-pointer group">
-              <input
-                type="checkbox"
-                checked={application.checklist.coverLetterSent}
-                onChange={() => handleToggleChecklist("coverLetterSent")}
-                className="rounded border-foreground/20 text-primary focus:ring-primary cursor-pointer"
-              />
-              <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
-                Cover Letter
-              </span>
-            </label>
-            <label className="flex items-center space-x-2 cursor-pointer group">
-              <input
-                type="checkbox"
-                checked={application.checklist.followUpSent}
-                onChange={() => handleToggleChecklist("followUpSent")}
-                className="rounded border-foreground/20 text-primary focus:ring-primary cursor-pointer"
-              />
-              <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
-                Follow-up
-              </span>
-            </label>
-          </div>
-          <div className="flex gap-3 ml-8">
-            <button
-              onClick={openNotes}
-              className={`p-1.5 rounded-lg transition-colors ${
-                application.notes
-                  ? "text-primary bg-primary/10 hover:bg-primary/20"
-                  : "text-secondary hover:bg-secondary/10"
-              }`}
-              title={application.notes ? "View notes" : "Add notes"}
+        <div className="flex gap-3">
+          <button
+            onClick={openNotes}
+            className={`p-1.5 rounded-lg transition-colors ${
+              application.notes
+                ? "text-primary bg-primary/10 hover:bg-primary/20"
+                : "text-secondary hover:bg-secondary/10"
+            }`}
+            title="Notes & checklist"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={() => setIsEditing(true)}
-              className="p-1.5 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
-              title="Edit"
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </button>
+          <button
+            onClick={() => setIsEditing(true)}
+            className="p-1.5 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
+            title="Edit"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                ></path>
-              </svg>
-            </button>
-            <button
-              onClick={() => onDelete(application.id)}
-              className="p-1.5 text-error hover:bg-error/10 rounded-lg transition-colors"
-              title="Delete"
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+              ></path>
+            </svg>
+          </button>
+          <button
+            onClick={() => onDelete(application.id)}
+            className="p-1.5 text-error hover:bg-error/10 rounded-lg transition-colors"
+            title="Delete"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              {" "}
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                ></path>
-              </svg>
-            </button>
-          </div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              ></path>
+            </svg>
+          </button>
         </div>
         {isNotesOpen && (
           <div
@@ -242,7 +206,7 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
             >
               <div className="px-6 py-4 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center">
                 <h3 className="text-xl font-bold text-primary dark:text-primary">
-                  Notes — {application.company}
+                  {application.company}
                 </h3>
                 <button
                   onClick={() => setIsNotesOpen(false)}
@@ -264,14 +228,66 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
                 </button>
               </div>
               <div className="p-6 space-y-4">
-                <textarea
-                  value={noteDraft}
-                  onChange={(e) => setNoteDraft(e.target.value)}
-                  placeholder="Add notes about this application…"
-                  rows={6}
-                  className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white focus:ring-2 focus:ring-secondary outline-none transition-all resize-y"
-                  autoFocus
-                />
+                <div>
+                  <label className="block text-xs font-bold text-foreground/50 uppercase tracking-widest mb-1">
+                    Link
+                  </label>
+                  <input
+                    type="url"
+                    value={linkDraft}
+                    onChange={(e) => setLinkDraft(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white focus:ring-2 focus:ring-secondary outline-none transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-foreground/50 uppercase tracking-widest mb-1">
+                    Notes
+                  </label>
+                  <textarea
+                    value={noteDraft}
+                    onChange={(e) => setNoteDraft(e.target.value)}
+                    placeholder="Add notes about this application…"
+                    rows={5}
+                    className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white focus:ring-2 focus:ring-secondary outline-none transition-all resize-y"
+                    autoFocus
+                  />
+                </div>
+                <div className="flex gap-6">
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={application.checklist.resumeSent}
+                      onChange={() => handleToggleChecklist("resumeSent")}
+                      className="rounded border-foreground/20 text-primary focus:ring-primary cursor-pointer"
+                    />
+                    <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
+                      Resume
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={application.checklist.coverLetterSent}
+                      onChange={() => handleToggleChecklist("coverLetterSent")}
+                      className="rounded border-foreground/20 text-primary focus:ring-primary cursor-pointer"
+                    />
+                    <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
+                      Cover Letter
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={application.checklist.followUpSent}
+                      onChange={() => handleToggleChecklist("followUpSent")}
+                      className="rounded border-foreground/20 text-primary focus:ring-primary cursor-pointer"
+                    />
+                    <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
+                      Follow-up
+                    </span>
+                  </label>
+                </div>
                 <div className="pt-4 border-t border-secondary/10 dark:border-zinc-800 flex gap-3">
                   <button
                     type="button"

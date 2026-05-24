@@ -18,6 +18,7 @@ const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
     status: "Pending" as Status,
     dateApplied: new Date().toISOString().split("T")[0],
     notes: "",
+    link: "",
     checklist: {
       resumeSent: false,
       coverLetterSent: false,
@@ -48,6 +49,7 @@ const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
       status: "Pending",
       dateApplied: new Date().toISOString().split("T")[0],
       notes: "",
+      link: "",
       checklist: {
         resumeSent: false,
         coverLetterSent: false,
@@ -213,6 +215,7 @@ const JobChecklist = () => {
         status: row.status,
         dateApplied: row.date_applied,
         notes: row.notes,
+        link: row.link ?? "",
         checklist: {
           resumeSent: false,
           coverLetterSent: false,
@@ -230,10 +233,30 @@ const JobChecklist = () => {
     })();
   }, []);
 
-  const updateApplication = (id: string, updates: Partial<JobApplication>) => {
-    setApplications((apps) =>
-      apps.map((app) => (app.id === id ? { ...app, ...updates } : app)),
-    );
+  const updateApplication = async (
+    id: string,
+    updates: Partial<JobApplication>,
+  ) => {
+    const supabase = createClient();
+    const dbUpdates: Record<string, unknown> = {};
+    if (updates.company !== undefined) dbUpdates.company = updates.company;
+    if (updates.position !== undefined) dbUpdates.position = updates.position;
+    if (updates.status !== undefined) dbUpdates.status = updates.status;
+    if (updates.dateApplied !== undefined)
+      dbUpdates.date_applied = updates.dateApplied;
+    if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+    if (updates.link !== undefined) dbUpdates.link = updates.link;
+
+    const { error } = await supabase
+      .from("applications")
+      .update(dbUpdates)
+      .eq("id", id);
+
+    if (!error) {
+      setApplications((apps) =>
+        apps.map((app) => (app.id === id ? { ...app, ...updates } : app)),
+      );
+    }
   };
 
   const deleteApplication = (id: string) => {
@@ -252,6 +275,7 @@ const JobChecklist = () => {
         status: newJobData.status,
         date_applied: newJobData.dateApplied,
         notes: newJobData.notes,
+        link: newJobData.link,
       })
       .select()
       .single();
@@ -267,6 +291,7 @@ const JobChecklist = () => {
       status: data.status,
       dateApplied: data.date_applied,
       notes: data.notes,
+      link: data.link ?? "",
       checklist: newJobData.checklist,
     };
     setApplications((apps) => [newJob, ...apps]);
@@ -319,7 +344,7 @@ const JobChecklist = () => {
                     Date Applied
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-foreground/50 dark:text-foreground/50 uppercase tracking-widest">
-                    Actions & Checklist
+                    Actions
                   </th>
                 </tr>
               </thead>
