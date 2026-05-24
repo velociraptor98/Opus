@@ -6,12 +6,13 @@ export type Status =
   | "Rejected";
 
 export interface JobApplication {
-  id: number;
+  id: string;
   company: string;
   position: string;
   status: Status;
   dateApplied: string;
-  checklist: {
+  notes: string;
+  checklist?: {
     resumeSent: boolean;
     coverLetterSent: boolean;
     followUpSent: boolean;

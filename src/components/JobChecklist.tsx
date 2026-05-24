@@ -3,11 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { JobRow } from "./JobRow";
 import { JobApplication, Status } from "@/constants/generic";
+import { createClient } from "@/lib/supabase/client";
 
 interface NewJobModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (job: Omit<JobApplication, "id">) => void;
+  onAdd: (job: Omit<JobApplication, "id">) => Promise<{ error: string | null }>;
 }
 
 const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
@@ -16,29 +17,44 @@ const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
     position: "",
     status: "Pending" as Status,
     dateApplied: new Date().toISOString().split("T")[0],
+    notes: "",
     checklist: {
       resumeSent: false,
       coverLetterSent: false,
       followUpSent: false,
     },
   });
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onAdd(formData);
+    setSubmitting(true);
+    setError(null);
+
+    const { error: addError } = await onAdd(formData);
+
+    if (addError) {
+      setError(addError);
+      setSubmitting(false);
+      return;
+    }
+
     setFormData({
       company: "",
       position: "",
       status: "Pending",
       dateApplied: new Date().toISOString().split("T")[0],
+      notes: "",
       checklist: {
         resumeSent: false,
         coverLetterSent: false,
         followUpSent: false,
       },
     });
+    setSubmitting(false);
     onClose();
   };
 
@@ -69,6 +85,24 @@ const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="p-4 bg-error/10 border border-error/20 rounded-xl flex items-center gap-3 animate-shake">
+              <svg
+                className="w-5 h-5 text-error flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span className="text-error font-medium text-sm">{error}</span>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-primary/80 dark:text-secondary mb-1">
               Company
@@ -142,9 +176,10 @@ const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-primary dark:bg-secondary text-white dark:text-zinc-900 rounded-lg hover:opacity-90 transition-colors font-semibold shadow-md shadow-primary/20"
+              disabled={submitting}
+              className="flex-1 px-4 py-2 bg-primary dark:bg-secondary text-white dark:text-zinc-900 rounded-lg hover:opacity-90 transition-colors font-semibold shadow-md shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Add Job
+              {submitting ? "Adding…" : "Add Job"}
             </button>
           </div>
         </form>
@@ -159,112 +194,40 @@ const JobChecklist = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saveFlash, setSaveFlash] = useState<"idle" | "saved">("idle");
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem("jobApplications");
-    if (saved) {
-      setApplications(JSON.parse(saved));
-    } else {
-      setApplications([
-        {
-          id: 1,
-          company: "Tech Corp",
-          position: "Frontend Engineer",
-          status: "Applied",
-          dateApplied: "2023-10-01",
-          checklist: {
-            resumeSent: true,
-            coverLetterSent: true,
-            followUpSent: false,
-          },
-        },
-        {
-          id: 2,
-          company: "Nexus Systems",
-          position: "Software Architect",
-          status: "Interviewing",
-          dateApplied: "2023-10-05",
-          checklist: {
-            resumeSent: true,
-            coverLetterSent: true,
-            followUpSent: true,
-          },
-        },
-        {
-          id: 3,
-          company: "Cloud Scale",
-          position: "Fullstack Developer",
-          status: "Pending",
-          dateApplied: "2023-10-10",
-          checklist: {
-            resumeSent: true,
-            coverLetterSent: false,
-            followUpSent: false,
-          },
-        },
-        {
-          id: 4,
-          company: "Vertex AI",
-          position: "ML Engineer",
-          status: "Offered",
-          dateApplied: "2023-09-20",
-          checklist: {
-            resumeSent: true,
-            coverLetterSent: true,
-            followUpSent: true,
-          },
-        },
-        {
-          id: 5,
-          company: "Blue Wave",
-          position: "Product Designer",
-          status: "Rejected",
-          dateApplied: "2023-09-15",
-          checklist: {
-            resumeSent: true,
-            coverLetterSent: true,
-            followUpSent: false,
-          },
-        },
-        {
-          id: 6,
-          company: "Green Field",
-          position: "Backend Developer",
-          status: "Pending",
-          dateApplied: "2023-10-12",
-          checklist: {
-            resumeSent: false,
-            coverLetterSent: false,
-            followUpSent: false,
-          },
-        },
-        {
-          id: 7,
-          company: "Nova Labs",
-          position: "QA Engineer",
-          status: "Pending",
-          dateApplied: "2023-10-15",
-          checklist: {
-            resumeSent: true,
-            coverLetterSent: false,
-            followUpSent: false,
-          },
-        },
-        {
-          id: 8,
-          company: "Silver Tech",
-          position: "DevOps Engineer",
-          status: "Pending",
-          dateApplied: "2023-10-18",
-          checklist: {
-            resumeSent: false,
-            coverLetterSent: false,
-            followUpSent: false,
-          },
-        },
-      ]);
+  const fetchJobs = async (): Promise<JobApplication[]> => {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("applications")
+      .select()
+      .order("created_at", { ascending: false });
+
+    if (error || !data) {
+      return [];
     }
-    setIsMounted(true);
+
+    return data.map(
+      (row): JobApplication => ({
+        id: row.id,
+        company: row.company,
+        position: row.position,
+        status: row.status,
+        dateApplied: row.date_applied,
+        notes: row.notes,
+        checklist: {
+          resumeSent: false,
+          coverLetterSent: false,
+          followUpSent: false,
+        },
+      }),
+    );
+  };
+
+  useEffect(() => {
+    (async () => {
+      const jobs = await fetchJobs();
+      setApplications(jobs);
+      setIsMounted(true);
+    })();
   }, []);
 
   const saveToLocalStorage = () => {
@@ -273,22 +236,47 @@ const JobChecklist = () => {
     setTimeout(() => setSaveFlash("idle"), 2000);
   };
 
-  const updateApplication = (id: number, updates: Partial<JobApplication>) => {
+  const updateApplication = (id: string, updates: Partial<JobApplication>) => {
     setApplications((apps) =>
       apps.map((app) => (app.id === id ? { ...app, ...updates } : app)),
     );
   };
 
-  const deleteApplication = (id: number) => {
+  const deleteApplication = (id: string) => {
     setApplications((apps) => apps.filter((app) => app.id !== id));
   };
 
-  const addNewJob = (newJobData: Omit<JobApplication, "id">) => {
+  const addNewJob = async (
+    newJobData: Omit<JobApplication, "id">,
+  ): Promise<{ error: string | null }> => {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("applications")
+      .insert({
+        company: newJobData.company,
+        position: newJobData.position,
+        status: newJobData.status,
+        date_applied: newJobData.dateApplied,
+        notes: newJobData.notes,
+      })
+      .select()
+      .single();
+
+    if (error || !data) {
+      return { error: error?.message ?? "Failed to create application" };
+    }
+
     const newJob: JobApplication = {
-      ...newJobData,
-      id: Date.now(),
+      id: data.id,
+      company: data.company,
+      position: data.position,
+      status: data.status,
+      dateApplied: data.date_applied,
+      notes: data.notes,
+      checklist: newJobData.checklist,
     };
-    setApplications([newJob, ...applications]);
+    setApplications((apps) => [newJob, ...apps]);
+    return { error: null };
   };
 
   if (!isMounted) return null;
@@ -372,7 +360,7 @@ const JobChecklist = () => {
                           ></path>
                         </svg>
                         <p className="font-medium italic">
-                          No applications found. Add your first one!
+                          No applications created
                         </p>
                       </div>
                     </td>
