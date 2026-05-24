@@ -192,7 +192,7 @@ const JobChecklist = () => {
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [saveFlash, setSaveFlash] = useState<"idle" | "saved">("idle");
+  const [saveFlash] = useState<"idle" | "saved">("idle");
 
   const fetchJobs = async (): Promise<JobApplication[]> => {
     const supabase = createClient();
@@ -229,12 +229,6 @@ const JobChecklist = () => {
       setIsMounted(true);
     })();
   }, []);
-
-  const saveToLocalStorage = () => {
-    localStorage.setItem("jobApplications", JSON.stringify(applications));
-    setSaveFlash("saved");
-    setTimeout(() => setSaveFlash("idle"), 2000);
-  };
 
   const updateApplication = (id: string, updates: Partial<JobApplication>) => {
     setApplications((apps) =>
@@ -374,7 +368,6 @@ const JobChecklist = () => {
 
       <div className="mt-6 flex justify-center">
         <button
-          onClick={saveToLocalStorage}
           className={`group relative px-8 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center gap-2 ${
             saveFlash === "saved"
               ? "bg-primary/15 text-primary border border-primary/30 shadow-none"
