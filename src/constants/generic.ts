@@ -12,7 +12,7 @@ export interface JobApplication {
   status: Status;
   dateApplied: string;
   notes: string;
-  checklist?: {
+  checklist: {
     resumeSent: boolean;
     coverLetterSent: boolean;
     followUpSent: boolean;
