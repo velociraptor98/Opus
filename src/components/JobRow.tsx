@@ -3,13 +3,15 @@ import { useState } from "react";
 
 export interface JobRowProps {
   application: JobApplication;
-  onUpdate: (id: number, updates: Partial<JobApplication>) => void;
-  onDelete: (id: number) => void;
+  onUpdate: (id: string, updates: Partial<JobApplication>) => void;
+  onDelete: (id: string) => void;
 }
 
 export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(application);
+  const [isNotesOpen, setIsNotesOpen] = useState(false);
+  const [noteDraft, setNoteDraft] = useState(application.notes);
 
   const handleToggleChecklist = (field: keyof JobApplication["checklist"]) => {
     onUpdate(application.id, {
@@ -23,6 +25,16 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
   const handleSaveEdit = () => {
     onUpdate(application.id, editData);
     setIsEditing(false);
+  };
+
+  const openNotes = () => {
+    setNoteDraft(application.notes);
+    setIsNotesOpen(true);
+  };
+
+  const handleSaveNotes = () => {
+    onUpdate(application.id, { notes: noteDraft });
+    setIsNotesOpen(false);
   };
 
   if (isEditing) {
@@ -156,6 +168,29 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
           </div>
           <div className="flex gap-3 ml-8">
             <button
+              onClick={openNotes}
+              className={`p-1.5 rounded-lg transition-colors ${
+                application.notes
+                  ? "text-primary bg-primary/10 hover:bg-primary/20"
+                  : "text-secondary hover:bg-secondary/10"
+              }`}
+              title={application.notes ? "View notes" : "Add notes"}
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </button>
+            <button
               onClick={() => setIsEditing(true)}
               className="p-1.5 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
               title="Edit"
@@ -196,6 +231,67 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
             </button>
           </div>
         </div>
+        {isNotesOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            onClick={() => setIsNotesOpen(false)}
+          >
+            <div
+              className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-6 py-4 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center">
+                <h3 className="text-xl font-bold text-primary dark:text-primary">
+                  Notes — {application.company}
+                </h3>
+                <button
+                  onClick={() => setIsNotesOpen(false)}
+                  className="text-secondary hover:text-primary transition-colors"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <textarea
+                  value={noteDraft}
+                  onChange={(e) => setNoteDraft(e.target.value)}
+                  placeholder="Add notes about this application…"
+                  rows={6}
+                  className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white focus:ring-2 focus:ring-secondary outline-none transition-all resize-y"
+                  autoFocus
+                />
+                <div className="pt-4 border-t border-secondary/10 dark:border-zinc-800 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsNotesOpen(false)}
+                    className="flex-1 px-4 py-2 border border-secondary/30 text-secondary rounded-lg hover:bg-secondary/5 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveNotes}
+                    className="flex-1 px-4 py-2 bg-primary dark:bg-secondary text-white dark:text-zinc-900 rounded-lg hover:opacity-90 transition-colors font-semibold shadow-md shadow-primary/20"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </td>
     </tr>
   );
