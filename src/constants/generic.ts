@@ -5,21 +5,6 @@ export type Status =
   | "Offered"
   | "Rejected";
 
-export interface JobApplication {
-  id: string;
-  company: string;
-  position: string;
-  status: Status;
-  dateApplied: string;
-  notes: string;
-  link: string;
-  checklist: {
-    resumeSent: boolean;
-    coverLetterSent: boolean;
-    followUpSent: boolean;
-  };
-}
-
 export const STATUS_CONFIG: Record<
   Status,
   { dot: string; bg: string; text: string }

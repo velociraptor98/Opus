@@ -1,4 +1,5 @@
-import { JobApplication, Status } from "@/constants/generic";
+import { Status } from "@/constants/generic";
+import { JobApplication } from "@/constants/types";
 import { useState } from "react";
 
 interface NewJobModalProps {

@@ -1,7 +1,6 @@
-import { JobApplication } from "@/constants/generic";
-import { JobRowProps } from "./JobRow";
+import { BaseJobProps, JobApplication } from "@/constants/types";
 
-interface NotesModalProps extends JobRowProps {
+interface NotesModalProps extends BaseJobProps {
   noteDraft: string;
   setNoteDraft: (v: string) => void;
   linkDraft: string;

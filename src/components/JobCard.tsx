@@ -1,15 +1,12 @@
-import { JobApplication, Status, STATUS_CONFIG } from "@/constants/generic";
+"use client";
+
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import { Status, STATUS_CONFIG } from "@/constants/generic";
 import { NotesModal } from "./NotesModal";
+import { BaseJobProps } from "@/constants/types";
 
-export interface JobRowProps {
-  application: JobApplication;
-  onUpdate: (id: string, updates: Partial<JobApplication>) => void;
-  onDelete: (id: string) => void;
-}
-
-export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
+export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(application);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
@@ -27,32 +24,32 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
     setIsNotesOpen(true);
   };
 
+  const cfg = STATUS_CONFIG[application.status];
+
   if (isEditing) {
     return (
-      <tr className="bg-blue-50/30 dark:bg-blue-900/10 transition-colors">
-        <td className="px-6 py-4">
-          <input
-            type="text"
-            className="w-full px-2 py-1 border rounded dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
-            value={editData.company}
-            onChange={(e) =>
-              setEditData({ ...editData, company: e.target.value })
-            }
-          />
-        </td>
-        <td className="px-6 py-4">
-          <input
-            type="text"
-            className="w-full px-2 py-1 border rounded dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
-            value={editData.position}
-            onChange={(e) =>
-              setEditData({ ...editData, position: e.target.value })
-            }
-          />
-        </td>
-        <td className="px-6 py-4">
+      <div className="animate-row bg-blue-50/30 dark:bg-blue-900/10 rounded-2xl border border-foreground/5 p-4 space-y-3">
+        <input
+          type="text"
+          className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white text-sm outline-none focus:ring-2 focus:ring-secondary"
+          value={editData.company}
+          onChange={(e) =>
+            setEditData({ ...editData, company: e.target.value })
+          }
+          placeholder="Company"
+        />
+        <input
+          type="text"
+          className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white text-sm outline-none focus:ring-2 focus:ring-secondary"
+          value={editData.position}
+          onChange={(e) =>
+            setEditData({ ...editData, position: e.target.value })
+          }
+          placeholder="Position"
+        />
+        <div className="grid grid-cols-2 gap-3">
           <select
-            className="w-full px-2 py-1 border rounded dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
+            className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white text-sm outline-none focus:ring-2 focus:ring-secondary"
             value={editData.status}
             onChange={(e) =>
               setEditData({ ...editData, status: e.target.value as Status })
@@ -64,70 +61,61 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
             <option value="Offered">Offered</option>
             <option value="Rejected">Rejected</option>
           </select>
-        </td>
-        <td className="px-6 py-4">
           <input
             type="date"
-            className="w-full px-2 py-1 border rounded dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
+            className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white text-sm outline-none focus:ring-2 focus:ring-secondary"
             value={editData.dateApplied}
             onChange={(e) =>
               setEditData({ ...editData, dateApplied: e.target.value })
             }
           />
-        </td>
-        <td className="px-6 py-4">
-          <div className="flex gap-2">
-            <button
-              onClick={handleSaveEdit}
-              className="text-green-600 hover:text-green-700 font-medium text-sm px-2 py-1"
-            >
-              Save
-            </button>
-            <button
-              onClick={() => setIsEditing(false)}
-              className="text-gray-500 hover:text-gray-600 font-medium text-sm px-2 py-1"
-            >
-              Cancel
-            </button>
-          </div>
-        </td>
-      </tr>
+        </div>
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={handleSaveEdit}
+            className="flex-1 py-2 bg-primary dark:bg-secondary text-white dark:text-zinc-900 rounded-lg text-sm font-semibold hover:opacity-90 transition-colors"
+          >
+            Save
+          </button>
+          <button
+            onClick={() => setIsEditing(false)}
+            className="flex-1 py-2 border border-secondary/30 text-secondary rounded-lg text-sm hover:bg-secondary/5 transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <tr className="animate-row hover:bg-foreground/5 dark:hover:bg-foreground/5 transition-colors border-b border-foreground/5 dark:border-foreground/5 last:border-0">
-      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground dark:text-foreground">
-        {application.company}
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground/70 dark:text-foreground/60">
-        {application.position}
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap">
-        {(() => {
-          const cfg = STATUS_CONFIG[application.status];
-          return (
-            <span
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.text}`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-              {application.status}
-            </span>
-          );
-        })()}
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground/70 dark:text-foreground/60">
-        {application.dateApplied}
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground/70 dark:text-foreground/60">
-        <div className="flex gap-3">
+    <>
+      <div className="animate-row bg-white dark:bg-[#343f44] rounded-2xl border border-foreground/5 shadow-sm p-4 transition-transform duration-200 hover:scale-[1.02] hover:shadow-md">
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <h3 className="font-bold text-foreground text-base leading-tight">
+            {application.company}
+          </h3>
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 ${cfg.bg} ${cfg.text}`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+            {application.status}
+          </span>
+        </div>
+        <p className="text-sm text-foreground/60 mb-1">
+          {application.position}
+        </p>
+        <p className="text-xs text-foreground/40 mb-3">
+          {application.dateApplied}
+        </p>
+        <div className="flex items-center gap-2 border-t border-foreground/5 pt-3">
           {application.link && (
             <a
               href={application.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
-              title="Launch Application"
+              className="p-2 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
+              title="Open link"
             >
               <svg
                 className="w-4 h-4"
@@ -146,7 +134,7 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
           )}
           <button
             onClick={openNotes}
-            className={`p-1.5 rounded-lg transition-colors ${
+            className={`p-2 rounded-lg transition-colors ${
               application.notes
                 ? "text-primary bg-primary/10 hover:bg-primary/20"
                 : "text-secondary hover:bg-secondary/10"
@@ -169,7 +157,7 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
           </button>
           <button
             onClick={() => setIsEditing(true)}
-            className="p-1.5 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
+            className="p-2 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
             title="Edit"
           >
             <svg
@@ -183,12 +171,12 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
                 strokeLinejoin="round"
                 strokeWidth="2"
                 d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-              ></path>
+              />
             </svg>
           </button>
           <button
             onClick={() => onDelete(application.id)}
-            className="p-1.5 text-error hover:bg-error/10 rounded-lg transition-colors"
+            className="p-2 text-error hover:bg-error/10 rounded-lg transition-colors ml-auto"
             title="Delete"
           >
             <svg
@@ -202,11 +190,11 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
                 strokeLinejoin="round"
                 strokeWidth="2"
                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              ></path>
+              />
             </svg>
           </button>
         </div>
-      </td>
+      </div>
       {isNotesOpen &&
         createPortal(
           <NotesModal
@@ -221,6 +209,6 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
           />,
           document.body,
         )}
-    </tr>
+    </>
   );
 };
