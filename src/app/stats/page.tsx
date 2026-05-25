@@ -53,17 +53,7 @@ export default function StatsPage() {
     return data.map(
       (row): JobApplication => ({
         id: row.id,
-        company: row.company,
-        position: row.position,
         status: row.status,
-        dateApplied: row.date_applied,
-        notes: row.notes,
-        link: row.link ?? "",
-        checklist: {
-          resumeSent: false,
-          coverLetterSent: false,
-          followUpSent: false,
-        },
       }),
     );
   };
