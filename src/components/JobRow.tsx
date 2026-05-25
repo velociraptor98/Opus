@@ -1,5 +1,6 @@
 import { JobApplication, Status, STATUS_CONFIG } from "@/constants/generic";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 
 export interface JobRowProps {
   application: JobApplication;
@@ -108,7 +109,7 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
   }
 
   return (
-    <tr className="hover:bg-foreground/5 dark:hover:bg-foreground/5 transition-colors border-b border-foreground/5 dark:border-foreground/5 last:border-0">
+    <tr className="animate-row hover:bg-foreground/5 dark:hover:bg-foreground/5 transition-colors border-b border-foreground/5 dark:border-foreground/5 last:border-0">
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground dark:text-foreground">
         {application.company}
       </td>
@@ -133,6 +134,29 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground/70 dark:text-foreground/60">
         <div className="flex gap-3">
+          {application.link && (
+            <a
+              href={application.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1.5 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
+              title="Launch Application"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
+              </svg>
+            </a>
+          )}
           <button
             onClick={openNotes}
             className={`p-1.5 rounded-lg transition-colors ${
@@ -195,120 +219,121 @@ export const JobRow = ({ application, onUpdate, onDelete }: JobRowProps) => {
             </svg>
           </button>
         </div>
-        {isNotesOpen && (
+      </td>
+      {isNotesOpen && createPortal(
+        <div
+          className="animate-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setIsNotesOpen(false)}
+        >
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-            onClick={() => setIsNotesOpen(false)}
+            className="animate-modal bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div
-              className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="px-6 py-4 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center">
-                <h3 className="text-xl font-bold text-primary dark:text-primary">
-                  {application.company}
-                </h3>
-                <button
-                  onClick={() => setIsNotesOpen(false)}
-                  className="text-secondary hover:text-primary transition-colors"
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-primary dark:text-primary">
+                {application.company}
+              </h3>
+              <button
+                onClick={() => setIsNotesOpen(false)}
+                className="text-secondary hover:text-primary transition-colors"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-foreground/50 uppercase tracking-widest mb-1">
+                  Link
+                </label>
+                <input
+                  type="url"
+                  value={linkDraft}
+                  onChange={(e) => setLinkDraft(e.target.value)}
+                  placeholder="https://..."
+                  className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white focus:ring-2 focus:ring-secondary outline-none transition-all"
+                />
               </div>
-              <div className="p-6 space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-foreground/50 uppercase tracking-widest mb-1">
-                    Link
-                  </label>
+              <div>
+                <label className="block text-xs font-bold text-foreground/50 uppercase tracking-widest mb-1">
+                  Notes
+                </label>
+                <textarea
+                  value={noteDraft}
+                  onChange={(e) => setNoteDraft(e.target.value)}
+                  placeholder="Add notes about this application…"
+                  rows={5}
+                  className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white focus:ring-2 focus:ring-secondary outline-none transition-all resize-y"
+                  autoFocus
+                />
+              </div>
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer group">
                   <input
-                    type="url"
-                    value={linkDraft}
-                    onChange={(e) => setLinkDraft(e.target.value)}
-                    placeholder="https://..."
-                    className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white focus:ring-2 focus:ring-secondary outline-none transition-all"
+                    type="checkbox"
+                    checked={application.checklist.resumeSent}
+                    onChange={() => handleToggleChecklist("resumeSent")}
+                    className="rounded border-foreground/20 text-primary focus:ring-primary cursor-pointer"
                   />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-foreground/50 uppercase tracking-widest mb-1">
-                    Notes
-                  </label>
-                  <textarea
-                    value={noteDraft}
-                    onChange={(e) => setNoteDraft(e.target.value)}
-                    placeholder="Add notes about this application…"
-                    rows={5}
-                    className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white focus:ring-2 focus:ring-secondary outline-none transition-all resize-y"
-                    autoFocus
+                  <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
+                    Resume
+                  </span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={application.checklist.coverLetterSent}
+                    onChange={() => handleToggleChecklist("coverLetterSent")}
+                    className="rounded border-foreground/20 text-primary focus:ring-primary cursor-pointer"
                   />
-                </div>
-                <div className="flex gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={application.checklist.resumeSent}
-                      onChange={() => handleToggleChecklist("resumeSent")}
-                      className="rounded border-foreground/20 text-primary focus:ring-primary cursor-pointer"
-                    />
-                    <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
-                      Resume
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={application.checklist.coverLetterSent}
-                      onChange={() => handleToggleChecklist("coverLetterSent")}
-                      className="rounded border-foreground/20 text-primary focus:ring-primary cursor-pointer"
-                    />
-                    <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
-                      Cover Letter
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={application.checklist.followUpSent}
-                      onChange={() => handleToggleChecklist("followUpSent")}
-                      className="rounded border-foreground/20 text-primary focus:ring-primary cursor-pointer"
-                    />
-                    <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
-                      Follow-up
-                    </span>
-                  </label>
-                </div>
-                <div className="pt-4 border-t border-secondary/10 dark:border-zinc-800 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsNotesOpen(false)}
-                    className="flex-1 px-4 py-2 border border-secondary/30 text-secondary rounded-lg hover:bg-secondary/5 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSaveNotes}
-                    className="flex-1 px-4 py-2 bg-primary dark:bg-secondary text-white dark:text-zinc-900 rounded-lg hover:opacity-90 transition-colors font-semibold shadow-md shadow-primary/20"
-                  >
-                    Save
-                  </button>
-                </div>
+                  <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
+                    Cover Letter
+                  </span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={application.checklist.followUpSent}
+                    onChange={() => handleToggleChecklist("followUpSent")}
+                    className="rounded border-foreground/20 text-primary focus:ring-primary cursor-pointer"
+                  />
+                  <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
+                    Follow-up
+                  </span>
+                </label>
+              </div>
+              <div className="pt-4 border-t border-secondary/10 dark:border-zinc-800 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsNotesOpen(false)}
+                  className="flex-1 px-4 py-2 border border-secondary/30 text-secondary rounded-lg hover:bg-secondary/5 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveNotes}
+                  className="flex-1 px-4 py-2 bg-primary dark:bg-secondary text-white dark:text-zinc-900 rounded-lg hover:opacity-90 transition-colors font-semibold shadow-md shadow-primary/20"
+                >
+                  Save
+                </button>
               </div>
             </div>
           </div>
-        )}
-      </td>
+        </div>,
+        document.body
+      )}
     </tr>
   );
 };
