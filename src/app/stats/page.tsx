@@ -9,9 +9,9 @@ import {
   Legend,
   Tooltip,
 } from "recharts";
-import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 type Status = "Pending" | "Applied" | "Interviewing" | "Offered" | "Rejected";
 
@@ -39,74 +39,67 @@ export default function StatsPage() {
     rejected: 0,
   });
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace("/");
-      return;
+  const fetchJobs = async (): Promise<JobApplication[]> => {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("applications")
+      .select()
+      .order("created_at", { ascending: false });
+
+    if (error || !data) {
+      return [];
     }
 
-    const saved = localStorage.getItem("jobApplications");
-    let apps: JobApplication[] = [];
-
-    if (saved) {
-      apps = JSON.parse(saved);
-    } else {
-      // Use the same defaults as JobChecklist
-      apps = [
-        { id: 1, status: "Applied" } as JobApplication,
-        { id: 2, status: "Interviewing" } as JobApplication,
-        { id: 3, status: "Pending" } as JobApplication,
-        { id: 4, status: "Offered" } as JobApplication,
-        { id: 5, status: "Rejected" } as JobApplication,
-        { id: 6, status: "Pending" } as JobApplication,
-        { id: 7, status: "Pending" } as JobApplication,
-        { id: 8, status: "Pending" } as JobApplication,
-      ];
-    }
-
-    if (apps.length > 0) {
-      const counts = apps.reduce(
-        (acc, app) => {
-          acc[app.status] = (acc[app.status] || 0) + 1;
-          return acc;
+    return data.map(
+      (row): JobApplication => ({
+        id: row.id,
+        company: row.company,
+        position: row.position,
+        status: row.status,
+        dateApplied: row.date_applied,
+        notes: row.notes,
+        link: row.link ?? "",
+        checklist: {
+          resumeSent: false,
+          coverLetterSent: false,
+          followUpSent: false,
         },
-        {} as Record<string, number>,
-      );
-
-      const chartData = Object.entries(counts).map(([name, value]) => ({
-        name,
-        value,
-      }));
-      setData(chartData);
-      setTotals({
-        total: apps.length,
-        offered: counts["Offered"] || 0,
-        interviewing: counts["Interviewing"] || 0,
-        rejected: counts["Rejected"] || 0,
-      });
-    }
-  }, [isAuthenticated, router]);
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center p-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-black text-primary mb-4">
-            Access Denied
-          </h1>
-          <p className="text-foreground/50 mb-8">
-            Please sign in to view your statistics.
-          </p>
-          <Link
-            href="/"
-            className="px-8 py-3 bg-primary text-white rounded-xl font-bold transition-all hover:bg-primary/90 active:scale-95"
-          >
-            Go to Login
-          </Link>
-        </div>
-      </div>
+      }),
     );
-  }
+  };
+
+  useEffect(() => {
+    (async () => {
+      if (!isAuthenticated) {
+        router.replace("/");
+        return;
+      }
+
+      const apps = await fetchJobs();
+
+      if (apps.length > 0) {
+        const counts = apps.reduce(
+          (acc, app) => {
+            acc[app.status] = (acc[app.status] || 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>,
+        );
+
+        const chartData = Object.entries(counts).map(([name, value]) => ({
+          name,
+          value,
+        }));
+        setData(chartData);
+        setTotals({
+          total: apps.length,
+          offered: counts["Offered"] || 0,
+          interviewing: counts["Interviewing"] || 0,
+          rejected: counts["Rejected"] || 0,
+        });
+      }
+    })();
+  }, [isAuthenticated, router]);
 
   const statCards = [
     {
