@@ -7,10 +7,14 @@ import { createPortal } from "react-dom";
 import { NewJobModal } from "./NewJobModal";
 import { JobApplication } from "@/constants/types";
 
-const JobChecklist = () => {
+interface JobChecklistProps {
+  isModalOpen: boolean;
+  onModalClose: () => void;
+}
+
+const JobChecklist = ({ isModalOpen, onModalClose }: JobChecklistProps) => {
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [isMounted, setIsMounted] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchJobs = async (): Promise<JobApplication[]> => {
     const supabase = createClient();
@@ -118,30 +122,9 @@ const JobChecklist = () => {
 
   return (
     <div className="w-full flex flex-col gap-6">
-      <div className="flex justify-end items-center">
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-secondary text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md shadow-secondary/20 hover:bg-secondary/90 active:scale-95 flex items-center gap-2"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2.5"
-              d="M12 4v16m8-8H4"
-            ></path>
-          </svg>
-          Add Application
-        </button>
-      </div>
-
-      {/* Mobile card list */}
-      <div className="flex flex-col gap-3 ">
+      {/* Card list */}
+      <div className="bg-foreground/[0.03] dark:bg-white/[0.03] rounded-2xl border border-foreground/5 p-4 shadow-inner">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {applications.length > 0 ? (
           applications.map((app) => (
             <JobCard
@@ -170,10 +153,11 @@ const JobChecklist = () => {
           </div>
         )}
       </div>
+      </div>
       {createPortal(
         <NewJobModal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={onModalClose}
           onAdd={addNewJob}
         />,
         document.body,

@@ -32,7 +32,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <AuthProvider>
           <Navbar />
-          <div className="pt-24 flex-1">
+          <div className="pt-[4.5rem] flex-1">
             {children}
           </div>
         </AuthProvider>
