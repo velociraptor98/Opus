@@ -15,7 +15,7 @@ export default function Home() {
         <button
           onClick={() => setIsModalOpen(true)}
           title="Add Application"
-          className="fixed right-6 top-1/2 -translate-y-1/2 z-50 bg-secondary text-white w-10 h-10 rounded-full transition-all shadow-lg shadow-secondary/30 hover:bg-secondary/90 hover:scale-110 active:scale-95 flex items-center justify-center"
+          className="btn-glass fixed right-6 top-1/2 -translate-y-1/2 z-50 bg-secondary/20 border-secondary/30 text-secondary w-10 h-10 rounded-full hover:scale-110 active:scale-95 flex items-center justify-center"
         >
           <svg
             className="w-5 h-5"

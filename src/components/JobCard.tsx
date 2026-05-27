@@ -28,7 +28,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
 
   if (isEditing) {
     return (
-      <div className="animate-row bg-blue-50/30 dark:bg-blue-900/10 rounded-2xl border border-foreground/5 p-4 space-y-3">
+      <div className="card-glass animate-row rounded-2xl p-4 space-y-3">
         <input
           type="text"
           className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white text-sm outline-none focus:ring-2 focus:ring-secondary"
@@ -73,13 +73,13 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
         <div className="flex gap-2 pt-1">
           <button
             onClick={handleSaveEdit}
-            className="flex-1 py-2 bg-primary dark:bg-secondary text-white dark:text-zinc-900 rounded-lg text-sm font-semibold hover:opacity-90 transition-colors"
+            className="btn-glass flex-1 py-2 bg-primary/80 dark:bg-secondary/70 text-white rounded-lg text-sm font-semibold border-primary/40 dark:border-secondary/40"
           >
             Save
           </button>
           <button
             onClick={() => setIsEditing(false)}
-            className="flex-1 py-2 border border-secondary/30 text-secondary rounded-lg text-sm hover:bg-secondary/5 transition-colors"
+            className="btn-glass flex-1 py-2 text-secondary rounded-lg text-sm"
           >
             Cancel
           </button>
@@ -90,7 +90,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
 
   return (
     <>
-      <div className="animate-row bg-white dark:bg-[#343f44] rounded-2xl border border-foreground/5 shadow-sm p-4 transition-transform duration-200 hover:scale-[1.02] hover:shadow-md">
+      <div className="card-glass animate-row rounded-2xl p-4 hover:scale-[1.02]">
         <div className="flex items-start justify-between gap-2 mb-1">
           <h3 className="font-bold text-foreground text-base leading-tight">
             {application.company}

@@ -35,10 +35,10 @@ export const NotesModal = ({
       onClick={() => setIsNotesOpen(false)}
     >
       <div
-        className="animate-modal bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden"
+        className="animate-modal modal-glass rounded-xl w-full max-w-md overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-4 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center">
+        <div className="px-6 py-4 border-b border-white/20 dark:border-white/10 flex justify-between items-center">
           <h3 className="text-xl font-bold text-primary dark:text-primary">
             {application.company}
           </h3>
@@ -126,14 +126,14 @@ export const NotesModal = ({
             <button
               type="button"
               onClick={() => setIsNotesOpen(false)}
-              className="flex-1 px-4 py-2 border border-secondary/30 text-secondary rounded-lg hover:bg-secondary/5 transition-colors"
+              className="btn-glass flex-1 px-4 py-2 text-secondary rounded-lg"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSaveNotes}
-              className="flex-1 px-4 py-2 bg-primary dark:bg-secondary text-white dark:text-zinc-900 rounded-lg hover:opacity-90 transition-colors font-semibold shadow-md shadow-primary/20"
+              className="btn-glass flex-1 px-4 py-2 bg-primary/80 dark:bg-secondary/70 text-white rounded-lg font-semibold border-primary/40 dark:border-secondary/40"
             >
               Save
             </button>

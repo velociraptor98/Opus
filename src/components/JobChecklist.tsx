@@ -170,7 +170,7 @@ const JobChecklist = ({ isModalOpen, onModalClose }: JobChecklistProps) => {
           <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={currentPage === 0}
-            className="px-3 py-1.5 text-sm font-semibold rounded-lg border border-foreground/10 text-foreground/60 hover:text-foreground hover:border-foreground/20 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+            className="btn-glass px-3 py-1.5 text-sm font-semibold rounded-lg text-foreground/60 hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
           >
             ← Prev
           </button>
@@ -180,7 +180,7 @@ const JobChecklist = ({ isModalOpen, onModalClose }: JobChecklistProps) => {
           <button
             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={currentPage === totalPages - 1}
-            className="px-3 py-1.5 text-sm font-semibold rounded-lg border border-foreground/10 text-foreground/60 hover:text-foreground hover:border-foreground/20 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+            className="btn-glass px-3 py-1.5 text-sm font-semibold rounded-lg text-foreground/60 hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
           >
             Next →
           </button>

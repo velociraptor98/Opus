@@ -9,7 +9,7 @@ export default function Navbar() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-foreground/5 py-4 px-6 md:px-12">
+    <nav className="navbar-glass fixed top-0 left-0 right-0 z-50 py-4 px-6 md:px-12">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         <div className="flex items-baseline gap-8">
           <Link
@@ -42,7 +42,7 @@ export default function Navbar() {
               </Link>
               <button
                 onClick={logout}
-                className="px-4 py-2 text-sm font-bold text-error hover:bg-error/10 dark:hover:bg-error/20 rounded-lg transition-colors border border-error/30"
+                className="btn-glass px-4 py-2 text-sm font-bold text-error bg-error/10 border-error/25 rounded-lg"
               >
                 Sign Out
               </button>

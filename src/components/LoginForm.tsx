@@ -32,9 +32,9 @@ const LoginForm = () => {
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
-      <div className="bg-white dark:bg-[#343f44] p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-primary/10 dark:border-primary/10 w-full max-w-md">
+      <div className="modal-glass p-8 rounded-3xl w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 dark:bg-primary/15 mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl btn-glass bg-primary/10 mb-4">
             <svg
               className="w-7 h-7 text-primary"
               fill="none"
@@ -84,7 +84,7 @@ const LoginForm = () => {
             <input
               type="email"
               name="email"
-              className="w-full px-4 py-3 rounded-xl border border-primary/20 dark:border-primary/10 dark:bg-[#3d484d] dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-foreground/30"
+              className="w-full px-4 py-3 rounded-xl btn-glass bg-white/30 dark:bg-white/5 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-foreground/30"
               placeholder="Enter email"
               required
             />
@@ -96,7 +96,7 @@ const LoginForm = () => {
             <input
               type="password"
               name="password"
-              className="w-full px-4 py-3 rounded-xl border border-primary/20 dark:border-primary/10 dark:bg-[#3d484d] dark:text-foreground focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-foreground/30"
+              className="w-full px-4 py-3 rounded-xl btn-glass bg-white/30 dark:bg-white/5 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-foreground/30"
               placeholder="Enter password"
               required
             />
@@ -104,7 +104,7 @@ const LoginForm = () => {
           <button
             type="submit"
             disabled={pending}
-            className="w-full py-3.5 bg-primary text-white rounded-xl font-bold text-base shadow-md shadow-primary/25 hover:bg-primary/90 transition-all active:scale-[0.98] mt-4 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="btn-glass w-full py-3.5 bg-primary/80 dark:bg-primary/70 text-white rounded-xl font-bold text-base border-primary/40 mt-4 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {pending ? "Signing in…" : "Sign In"}
           </button>

@@ -135,10 +135,10 @@ export default function StatsPage() {
           {statCards.map((card) => (
             <div
               key={card.label}
-              className="bg-white dark:bg-[#343f44] rounded-2xl border border-foreground/5 p-5 shadow-sm"
+              className="card-glass rounded-2xl p-5"
             >
               <div
-                className={`inline-flex items-center justify-center w-9 h-9 rounded-xl ${card.bg} mb-3`}
+                className={`btn-glass inline-flex items-center justify-center w-9 h-9 rounded-xl ${card.bg} mb-3`}
               >
                 <span className={`text-lg font-black ${card.color}`}>
                   {card.value}
@@ -152,7 +152,7 @@ export default function StatsPage() {
           ))}
         </div>
 
-        <section className="bg-white dark:bg-[#343f44] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-foreground/5 dark:border-foreground/5 p-8">
+        <section className="card-glass rounded-3xl p-8">
           <h2 className="text-xl font-bold text-primary dark:text-primary mb-6">
             Status Distribution
           </h2>
