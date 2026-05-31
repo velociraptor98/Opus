@@ -1,0 +1,22 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Opus logo">
+  <defs>
+    <linearGradient id="opusTile" x1="6" y1="3" x2="58" y2="61" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#aecb86"/>
+      <stop offset="0.5" stop-color="#86c0b8"/>
+      <stop offset="1" stop-color="#d4a0c0"/>
+    </linearGradient>
+    <linearGradient id="opusSheen" x1="0" y1="2" x2="0" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="opusBorder" x1="0" y1="0" x2="0" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.15"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="62" height="62" rx="16" fill="url(#opusTile)"/>
+  <rect x="1" y="1" width="62" height="62" rx="16" fill="url(#opusSheen)"/>
+  <rect x="1.6" y="1.6" width="60.8" height="60.8" rx="15.2" fill="none" stroke="url(#opusBorder)" stroke-width="1.2"/>
+  <path d="M 39.18 16.59 A 17 17 0 1 1 24.82 16.59" stroke="#3f5b54" stroke-opacity="0.22" stroke-width="6" stroke-linecap="round" transform="translate(0,1.3)"/>
+  <path d="M 39.18 16.59 A 17 17 0 1 1 24.82 16.59" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+</svg>
