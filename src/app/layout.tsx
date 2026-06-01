@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
@@ -14,9 +14,24 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#8da101" },
+    { media: "(prefers-color-scheme: dark)", color: "#a7c080" },
+  ],
+};
+
 export const metadata: Metadata = {
   title: "Opus - Job Search Tracker",
   description: "Track your job applications with ease.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Opus",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
