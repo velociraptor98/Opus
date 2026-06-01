@@ -27,18 +27,14 @@ const STATUS_COLORS: Record<Status, string> = {
   Pending: "color-mix(in srgb, var(--color-foreground) 35%, transparent)",
 };
 
-interface JobChecklistProps {
-  isModalOpen: boolean;
-  onModalClose: () => void;
-}
-
 const PAGE_SIZE = 8;
 
-const JobChecklist = ({ isModalOpen, onModalClose }: JobChecklistProps) => {
+const JobChecklist = () => {
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<FilterOption>("All");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchJobs = async (): Promise<JobApplication[]> => {
     const supabase = createClient();
@@ -159,55 +155,83 @@ const JobChecklist = ({ isModalOpen, onModalClose }: JobChecklistProps) => {
 
   return (
     <div className="w-full flex flex-col md:flex-row gap-4 md:items-start">
-      {/* Filter strip — horizontal scrolling row on mobile, sticky vertical sidebar on desktop */}
-      <div className="filter-strip-glass sticky top-[4.5rem] z-40 rounded-2xl p-1.5 md:p-2 flex flex-row md:flex-col gap-1 md:shrink-0 overflow-x-auto md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {FILTER_OPTIONS.map((option) => {
-          const isActive = statusFilter === option;
-          const color =
-            option !== "All" ? STATUS_COLORS[option as Status] : undefined;
-          return (
-            <button
-              key={option}
-              onClick={() => {
-                setStatusFilter(option);
-                setPage(0);
-              }}
-              className="shrink-0 md:shrink flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 md:py-2 rounded-full md:rounded-xl text-xs md:text-sm font-semibold transition-all duration-200 active:scale-95 md:w-full"
-              style={
-                isActive
-                  ? {
-                      background: color
-                        ? `color-mix(in srgb, ${color} 14%, transparent)`
-                        : "rgba(0,0,0,0.08)",
-                      boxShadow: color
-                        ? `inset 0 0 0 1.5px color-mix(in srgb, ${color} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.5)`
-                        : "inset 0 0 0 1.5px rgba(0,0,0,0.15)",
-                      color: color ?? "inherit",
-                    }
-                  : {
-                      background: "rgba(255,255,255,0.0)",
-                      color: "color-mix(in srgb, currentColor 55%, transparent)",
-                    }
-              }
-            >
-              {option !== "All" && (
-                <span
-                  className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full shrink-0"
-                  style={{ background: color }}
-                />
-              )}
-              <span className="md:flex-1 md:text-left">{option}</span>
-              <span
-                className="text-xs font-medium opacity-55 tabular-nums"
-                style={isActive && color ? { color } : undefined}
+      {/* Left column: filter strip + add button */}
+      <div className="md:shrink-0 flex flex-col gap-2">
+        {/* Filter strip — horizontal scrolling row on mobile, sticky vertical sidebar on desktop */}
+        <div className="filter-strip-glass sticky top-[4.5rem] z-40 rounded-2xl p-1.5 md:p-2 flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {FILTER_OPTIONS.map((option) => {
+            const isActive = statusFilter === option;
+            const color =
+              option !== "All" ? STATUS_COLORS[option as Status] : undefined;
+            return (
+              <button
+                key={option}
+                onClick={() => {
+                  setStatusFilter(option);
+                  setPage(0);
+                }}
+                className="shrink-0 md:shrink flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 md:py-2 rounded-full md:rounded-xl text-xs md:text-sm font-semibold transition-all duration-200 active:scale-95 md:w-full"
+                style={
+                  isActive
+                    ? {
+                        background: color
+                          ? `color-mix(in srgb, ${color} 14%, transparent)`
+                          : "rgba(0,0,0,0.08)",
+                        boxShadow: color
+                          ? `inset 0 0 0 1.5px color-mix(in srgb, ${color} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.5)`
+                          : "inset 0 0 0 1.5px rgba(0,0,0,0.15)",
+                        color: color ?? "inherit",
+                      }
+                    : {
+                        background: "rgba(255,255,255,0.0)",
+                        color: "color-mix(in srgb, currentColor 55%, transparent)",
+                      }
+                }
               >
-                {option === "All"
-                  ? applications.length
-                  : applications.filter((a) => a.status === option).length}
-              </span>
-            </button>
-          );
-        })}
+                {option !== "All" && (
+                  <span
+                    className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full shrink-0"
+                    style={{ background: color }}
+                  />
+                )}
+                <span className="md:flex-1 md:text-left">{option}</span>
+                <span
+                  className="text-xs font-medium opacity-55 tabular-nums"
+                  style={isActive && color ? { color } : undefined}
+                >
+                  {option === "All"
+                    ? applications.length
+                    : applications.filter((a) => a.status === option).length}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Add application button */}
+        <button
+          onClick={() => setIsModalOpen(true)}
+          title="Add Application"
+          className="btn-glass w-full h-10 rounded-full flex items-center justify-center text-secondary transition-all duration-200 active:scale-95 hover:scale-[1.03]"
+          style={{
+            background: "color-mix(in srgb, var(--color-secondary) 10%, transparent)",
+            boxShadow: "inset 0 0 0 1.5px color-mix(in srgb, var(--color-secondary) 30%, transparent)",
+          }}
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2.5"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+        </button>
       </div>
 
       {/* Cards + pagination */}
@@ -270,7 +294,7 @@ const JobChecklist = ({ isModalOpen, onModalClose }: JobChecklistProps) => {
       {createPortal(
         <NewJobModal
           isOpen={isModalOpen}
-          onClose={onModalClose}
+          onClose={() => setIsModalOpen(false)}
           onAdd={addNewJob}
         />,
         document.body,
