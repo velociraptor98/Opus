@@ -158,9 +158,9 @@ const JobChecklist = ({ isModalOpen, onModalClose }: JobChecklistProps) => {
   );
 
   return (
-    <div className="w-full flex flex-row gap-4 items-start">
-      {/* Sticky left filter strip */}
-      <div className="filter-strip-glass sticky top-[4.5rem] z-40 rounded-2xl p-2 flex flex-col gap-1 shrink-0">
+    <div className="w-full flex flex-col md:flex-row gap-4 md:items-start">
+      {/* Filter strip — horizontal scrolling row on mobile, sticky vertical sidebar on desktop */}
+      <div className="filter-strip-glass sticky top-[4.5rem] z-40 rounded-2xl p-1.5 md:p-2 flex flex-row md:flex-col gap-1 md:shrink-0 overflow-x-auto md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {FILTER_OPTIONS.map((option) => {
           const isActive = statusFilter === option;
           const color =
@@ -172,7 +172,7 @@ const JobChecklist = ({ isModalOpen, onModalClose }: JobChecklistProps) => {
                 setStatusFilter(option);
                 setPage(0);
               }}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95 w-full"
+              className="shrink-0 md:shrink flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 md:py-2 rounded-full md:rounded-xl text-xs md:text-sm font-semibold transition-all duration-200 active:scale-95 md:w-full"
               style={
                 isActive
                   ? {
@@ -192,11 +192,11 @@ const JobChecklist = ({ isModalOpen, onModalClose }: JobChecklistProps) => {
             >
               {option !== "All" && (
                 <span
-                  className="w-2 h-2 rounded-full shrink-0"
+                  className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full shrink-0"
                   style={{ background: color }}
                 />
               )}
-              <span className="flex-1 text-left">{option}</span>
+              <span className="md:flex-1 md:text-left">{option}</span>
               <span
                 className="text-xs font-medium opacity-55 tabular-nums"
                 style={isActive && color ? { color } : undefined}
