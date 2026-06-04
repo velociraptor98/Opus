@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { BaseJobProps, JobApplication } from "@/constants/types";
+import { useToast } from "@/context/ToastContext";
 
 interface NotesModalProps extends BaseJobProps {
   noteDraft: string;
@@ -17,6 +19,16 @@ export const NotesModal = ({
   setLinkDraft,
   setIsNotesOpen,
 }: NotesModalProps) => {
+  const toast = useToast();
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsNotesOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [setIsNotesOpen]);
+
   const handleToggleChecklist = (field: keyof JobApplication["checklist"]) => {
     onUpdate(application.id, {
       checklist: {
@@ -28,6 +40,7 @@ export const NotesModal = ({
   const handleSaveNotes = () => {
     onUpdate(application.id, { notes: noteDraft, link: linkDraft });
     setIsNotesOpen(false);
+    toast.show("Notes saved", { variant: "success" });
   };
   return (
     <div

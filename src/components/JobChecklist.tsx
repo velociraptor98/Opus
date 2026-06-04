@@ -7,6 +7,8 @@ import { createPortal } from "react-dom";
 import { NewJobModal } from "./NewJobModal";
 import { JobApplication } from "@/constants/types";
 import { Status } from "@/constants/generic";
+import { useToast } from "@/context/ToastContext";
+import { JobChecklistSkeleton } from "./JobChecklistSkeleton";
 
 type FilterOption = "All" | Status;
 
@@ -35,6 +37,7 @@ const JobChecklist = () => {
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<FilterOption>("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const toast = useToast();
 
   const fetchJobs = async (): Promise<JobApplication[]> => {
     const supabase = createClient();
@@ -100,7 +103,24 @@ const JobChecklist = () => {
   };
 
   const deleteApplication = (id: string) => {
+    const index = applications.findIndex((app) => app.id === id);
+    if (index === -1) return;
+    const removed = applications[index];
+
     setApplications((apps) => apps.filter((app) => app.id !== id));
+
+    toast.show("Application deleted", {
+      variant: "error",
+      action: {
+        label: "Undo",
+        onClick: () =>
+          setApplications((current) =>
+            current.some((app) => app.id === removed.id)
+              ? current
+              : [...current.slice(0, index), removed, ...current.slice(index)],
+          ),
+      },
+    });
   };
 
   const addNewJob = async (
@@ -136,10 +156,11 @@ const JobChecklist = () => {
     };
     setApplications((apps) => [newJob, ...apps]);
     setPage(0);
+    toast.show("Application added", { variant: "success" });
     return { error: null };
   };
 
-  if (!isMounted) return null;
+  if (!isMounted) return <JobChecklistSkeleton />;
 
   const filtered =
     statusFilter === "All"

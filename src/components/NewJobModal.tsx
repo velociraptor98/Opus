@@ -1,6 +1,6 @@
 import { Status } from "@/constants/generic";
 import { JobApplication } from "@/constants/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface NewJobModalProps {
   isOpen: boolean;
@@ -24,6 +24,15 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
   });
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

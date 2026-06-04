@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 import { Status, STATUS_CONFIG } from "@/constants/generic";
 import { NotesModal } from "./NotesModal";
 import { BaseJobProps } from "@/constants/types";
+import { useToast } from "@/context/ToastContext";
+import { formatExactDate, formatRelativeDate } from "@/lib/date";
 
 export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -12,10 +14,12 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState(application.notes);
   const [linkDraft, setLinkDraft] = useState(application.link);
+  const toast = useToast();
 
   const handleSaveEdit = () => {
     onUpdate(application.id, editData);
     setIsEditing(false);
+    toast.show("Changes saved", { variant: "success" });
   };
 
   const openNotes = () => {
@@ -105,8 +109,11 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
         <p className="text-sm text-foreground/60 mb-1">
           {application.position}
         </p>
-        <p className="text-xs text-foreground/40 mb-3">
-          {application.dateApplied}
+        <p
+          className="text-xs text-foreground/40 mb-3"
+          title={formatExactDate(application.dateApplied)}
+        >
+          {formatRelativeDate(application.dateApplied)}
         </p>
         <div className="flex items-center gap-2 border-t border-foreground/5 pt-3">
           {application.link && (
