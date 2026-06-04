@@ -31,7 +31,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
       <div className="card-glass animate-row rounded-2xl p-4 space-y-3">
         <input
           type="text"
-          className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white text-sm outline-none focus:ring-2 focus:ring-secondary"
+          className="input-glass w-full px-3 py-2 rounded-lg text-sm"
           value={editData.company}
           onChange={(e) =>
             setEditData({ ...editData, company: e.target.value })
@@ -40,7 +40,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
         />
         <input
           type="text"
-          className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white text-sm outline-none focus:ring-2 focus:ring-secondary"
+          className="input-glass w-full px-3 py-2 rounded-lg text-sm"
           value={editData.position}
           onChange={(e) =>
             setEditData({ ...editData, position: e.target.value })
@@ -49,7 +49,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
         />
         <div className="grid grid-cols-2 gap-3">
           <select
-            className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white text-sm outline-none focus:ring-2 focus:ring-secondary"
+            className="input-glass w-full px-3 py-2 rounded-lg text-sm"
             value={editData.status}
             onChange={(e) =>
               setEditData({ ...editData, status: e.target.value as Status })
@@ -63,7 +63,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
           </select>
           <input
             type="date"
-            className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white text-sm outline-none focus:ring-2 focus:ring-secondary"
+            className="input-glass w-full px-3 py-2 rounded-lg text-sm"
             value={editData.dateApplied}
             onChange={(e) =>
               setEditData({ ...editData, dateApplied: e.target.value })

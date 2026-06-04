@@ -35,7 +35,7 @@ export const NotesModal = ({
       onClick={() => setIsNotesOpen(false)}
     >
       <div
-        className="animate-modal modal-glass rounded-xl w-full max-w-md overflow-hidden"
+        className="animate-modal modal-glass rounded-3xl w-full max-w-md overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 py-4 border-b border-white/20 dark:border-white/10 flex justify-between items-center">
@@ -71,7 +71,7 @@ export const NotesModal = ({
               value={linkDraft}
               onChange={(e) => setLinkDraft(e.target.value)}
               placeholder="https://..."
-              className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white focus:ring-2 focus:ring-secondary outline-none transition-all"
+              className="input-glass w-full px-3 py-2 rounded-lg"
             />
           </div>
           <div>
@@ -83,7 +83,7 @@ export const NotesModal = ({
               onChange={(e) => setNoteDraft(e.target.value)}
               placeholder="Add notes about this application…"
               rows={5}
-              className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white focus:ring-2 focus:ring-secondary outline-none transition-all resize-y"
+              className="input-glass w-full px-3 py-2 rounded-lg resize-y"
               autoFocus
             />
           </div>
@@ -93,7 +93,7 @@ export const NotesModal = ({
                 type="checkbox"
                 checked={application.checklist.resumeSent}
                 onChange={() => handleToggleChecklist("resumeSent")}
-                className="rounded border-foreground/20 text-primary focus:ring-primary cursor-pointer"
+                className="checkbox-glass"
               />
               <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
                 Resume
@@ -104,7 +104,7 @@ export const NotesModal = ({
                 type="checkbox"
                 checked={application.checklist.coverLetterSent}
                 onChange={() => handleToggleChecklist("coverLetterSent")}
-                className="rounded border-foreground/20 text-primary focus:ring-primary cursor-pointer"
+                className="checkbox-glass"
               />
               <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
                 Cover Letter
@@ -115,7 +115,7 @@ export const NotesModal = ({
                 type="checkbox"
                 checked={application.checklist.followUpSent}
                 onChange={() => handleToggleChecklist("followUpSent")}
-                className="rounded border-foreground/20 text-primary focus:ring-primary cursor-pointer"
+                className="checkbox-glass"
               />
               <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
                 Follow-up

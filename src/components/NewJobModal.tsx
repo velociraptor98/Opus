@@ -59,7 +59,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
 
   return (
     <div className="animate-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="animate-modal modal-glass rounded-xl w-full max-w-md overflow-hidden">
+      <div className="animate-modal modal-glass rounded-3xl w-full max-w-md overflow-hidden">
         <div className="px-6 py-4 border-b border-white/20 dark:border-white/10 flex justify-between items-center">
           <h3 className="text-xl font-bold text-primary dark:text-primary">
             Add New Job Application
@@ -109,7 +109,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
             <input
               required
               type="text"
-              className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white focus:ring-2 focus:ring-secondary outline-none transition-all"
+              className="input-glass w-full px-3 py-2 rounded-lg"
               value={formData.company}
               onChange={(e) =>
                 setFormData({ ...formData, company: e.target.value })
@@ -124,7 +124,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
             <input
               required
               type="text"
-              className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white focus:ring-2 focus:ring-secondary outline-none transition-all"
+              className="input-glass w-full px-3 py-2 rounded-lg"
               value={formData.position}
               onChange={(e) =>
                 setFormData({ ...formData, position: e.target.value })
@@ -138,7 +138,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
                 Status
               </label>
               <select
-                className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white focus:ring-2 focus:ring-secondary outline-none transition-all"
+                className="input-glass w-full px-3 py-2 rounded-lg"
                 value={formData.status}
                 onChange={(e) =>
                   setFormData({ ...formData, status: e.target.value as Status })
@@ -157,7 +157,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
               </label>
               <input
                 type="date"
-                className="w-full px-3 py-2 border border-secondary/30 rounded-lg dark:bg-zinc-800 dark:border-zinc-700 dark:text-white focus:ring-2 focus:ring-secondary outline-none transition-all"
+                className="input-glass w-full px-3 py-2 rounded-lg"
                 value={formData.dateApplied}
                 onChange={(e) =>
                   setFormData({ ...formData, dateApplied: e.target.value })

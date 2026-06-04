@@ -183,10 +183,13 @@ export default function StatsPage() {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#18181b",
-                      border: "none",
-                      borderRadius: "12px",
+                      background: "rgba(45, 53, 59, 0.72)",
+                      backdropFilter: "blur(20px) saturate(180%)",
+                      WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      borderRadius: "14px",
                       color: "#fff",
+                      boxShadow: "0 8px 32px rgba(0, 0, 0, 0.25)",
                     }}
                     itemStyle={{ color: "#fff" }}
                   />

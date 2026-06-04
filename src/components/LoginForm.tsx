@@ -140,7 +140,7 @@ const LoginForm = () => {
             <input
               type="email"
               name="email"
-              className="w-full px-4 py-3 rounded-xl btn-glass bg-white/30 dark:bg-white/5 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-foreground/30"
+              className="input-glass w-full px-4 py-3 rounded-xl"
               placeholder="Enter email"
               required
             />
@@ -152,7 +152,7 @@ const LoginForm = () => {
             <input
               type="password"
               name="password"
-              className="w-full px-4 py-3 rounded-xl btn-glass bg-white/30 dark:bg-white/5 focus:ring-2 focus:ring-primary outline-none transition-all placeholder:text-foreground/30"
+              className="input-glass w-full px-4 py-3 rounded-xl"
               placeholder="Enter password"
               required
             />

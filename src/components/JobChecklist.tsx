@@ -236,7 +236,7 @@ const JobChecklist = () => {
 
       {/* Cards + pagination */}
       <div className="flex-1 flex flex-col gap-4 min-w-0">
-        <div className="bg-foreground/[0.03] dark:bg-white/[0.03] rounded-2xl border border-foreground/5 p-4 shadow-inner">
+        <div className="glass-well rounded-2xl p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {paginated.length > 0 ? (
               paginated.map((app) => (
