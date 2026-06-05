@@ -9,6 +9,7 @@ import { JobApplication } from "@/constants/types";
 import { Status } from "@/constants/generic";
 import { useToast } from "@/context/ToastContext";
 import { JobChecklistSkeleton } from "./JobChecklistSkeleton";
+import { create } from "domain";
 
 type FilterOption = "All" | Status;
 
@@ -103,25 +104,16 @@ const JobChecklist = () => {
     }
   };
 
-  const deleteApplication = (id: string) => {
-    const index = applications.findIndex((app) => app.id === id);
-    if (index === -1) return;
-    const removed = applications[index];
-
-    setApplications((apps) => apps.filter((app) => app.id !== id));
-
-    toast.show("Application deleted", {
-      variant: "error",
-      action: {
-        label: "Undo",
-        onClick: () =>
-          setApplications((current) =>
-            current.some((app) => app.id === removed.id)
-              ? current
-              : [...current.slice(0, index), removed, ...current.slice(index)],
-          ),
-      },
-    });
+  const deleteApplication = async (id: string) => {
+    const supabase = createClient();
+    const { error } = await supabase.from("applications").delete().eq("id", id);
+    if (error) return;
+    if (!error) {
+      setApplications((apps) => apps.filter((app) => app.id !== id));
+      toast.show("Application deleted", {
+        variant: "error",
+      });
+    }
   };
 
   const addNewJob = async (
@@ -211,7 +203,8 @@ const JobChecklist = () => {
                       }
                     : {
                         background: "rgba(255,255,255,0.0)",
-                        color: "color-mix(in srgb, currentColor 55%, transparent)",
+                        color:
+                          "color-mix(in srgb, currentColor 55%, transparent)",
                       }
                 }
               >
@@ -293,8 +286,10 @@ const JobChecklist = () => {
           title="Add Application"
           className="btn-glass w-full h-10 rounded-full flex items-center justify-center text-secondary transition-all duration-200 active:scale-95 hover:scale-[1.03]"
           style={{
-            background: "color-mix(in srgb, var(--color-secondary) 10%, transparent)",
-            boxShadow: "inset 0 0 0 1.5px color-mix(in srgb, var(--color-secondary) 30%, transparent)",
+            background:
+              "color-mix(in srgb, var(--color-secondary) 10%, transparent)",
+            boxShadow:
+              "inset 0 0 0 1.5px color-mix(in srgb, var(--color-secondary) 30%, transparent)",
           }}
         >
           <svg
