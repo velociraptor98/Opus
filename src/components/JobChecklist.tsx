@@ -36,6 +36,7 @@ const JobChecklist = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<FilterOption>("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const toast = useToast();
 
@@ -162,10 +163,15 @@ const JobChecklist = () => {
 
   if (!isMounted) return <JobChecklistSkeleton />;
 
-  const filtered =
-    statusFilter === "All"
-      ? applications
-      : applications.filter((a) => a.status === statusFilter);
+  const query = searchQuery.trim().toLowerCase();
+  const filtered = applications.filter((a) => {
+    const matchesStatus = statusFilter === "All" || a.status === statusFilter;
+    const matchesQuery =
+      query === "" ||
+      a.company.toLowerCase().includes(query) ||
+      a.position.toLowerCase().includes(query);
+    return matchesStatus && matchesQuery;
+  });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages - 1);
@@ -229,6 +235,58 @@ const JobChecklist = () => {
           })}
         </div>
 
+        {/* Search — filter by company name or job role */}
+        <div className="relative">
+          <svg
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"
+            />
+          </svg>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(0);
+            }}
+            placeholder="Search company or role"
+            aria-label="Search applications by company or role"
+            className="input-glass w-full h-10 pl-9 pr-8 rounded-full text-sm"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setPage(0);
+              }}
+              aria-label="Clear search"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full text-foreground/40 hover:text-foreground transition-colors active:scale-90"
+            >
+              <svg
+                className="w-3.5 h-3.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2.5"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
+
         {/* Add application button */}
         <button
           onClick={() => setIsModalOpen(true)}
@@ -258,15 +316,23 @@ const JobChecklist = () => {
       {/* Cards + pagination */}
       <div className="flex-1 flex flex-col gap-4 min-w-0">
         <div className="glass-well rounded-2xl p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div
+            key={`${statusFilter}-${query}-${currentPage}`}
+            className="grid grid-cols-1 md:grid-cols-2 gap-3"
+          >
             {paginated.length > 0 ? (
-              paginated.map((app) => (
-                <JobCard
+              paginated.map((app, i) => (
+                <div
                   key={app.id}
-                  application={app}
-                  onUpdate={updateApplication}
-                  onDelete={deleteApplication}
-                />
+                  className="animate-card"
+                  style={{ animationDelay: `${i * 45}ms` }}
+                >
+                  <JobCard
+                    application={app}
+                    onUpdate={updateApplication}
+                    onDelete={deleteApplication}
+                  />
+                </div>
               ))
             ) : (
               <div className="py-12 text-center text-primary/40 dark:text-zinc-500 flex flex-col items-center gap-2">
@@ -283,7 +349,11 @@ const JobChecklist = () => {
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                <p className="font-medium italic">No applications created</p>
+                <p className="font-medium italic">
+                  {query || statusFilter !== "All"
+                    ? "No matching applications"
+                    : "No applications created"}
+                </p>
               </div>
             )}
           </div>
