@@ -9,7 +9,6 @@ import { JobApplication } from "@/constants/types";
 import { Status } from "@/constants/generic";
 import { useToast } from "@/context/ToastContext";
 import { JobChecklistSkeleton } from "./JobChecklistSkeleton";
-import { create } from "domain";
 
 type FilterOption = "All" | Status;
 
