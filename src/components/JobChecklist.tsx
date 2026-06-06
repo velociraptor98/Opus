@@ -6,28 +6,14 @@ import { createClient } from "@/lib/supabase/client";
 import { createPortal } from "react-dom";
 import { NewJobModal } from "./NewJobModal";
 import { JobApplication } from "@/constants/types";
-import {
-  FILTER_OPTIONS,
-  FilterOption,
-  Status,
-  needsFollowUp,
-} from "@/constants/generic";
+import { FilterOption, needsFollowUp } from "@/constants/generic";
 import { useToast } from "@/context/ToastContext";
 import { JobChecklistSkeleton } from "./JobChecklistSkeleton";
 import { EmptyContainer } from "./EmptyContainer";
 import { NavigationPanel } from "./NavigationPanel";
 import { AddApplication } from "./AddApplication";
 import { SearchBar } from "./SearchBar";
-
-const FOLLOW_UP_COLOR = "var(--color-warning)";
-
-const STATUS_COLORS: Record<Status, string> = {
-  Applied: "var(--color-secondary)",
-  Interviewing: "var(--color-warning)",
-  Offered: "var(--color-primary)",
-  Rejected: "var(--color-error)",
-  Pending: "color-mix(in srgb, var(--color-foreground) 60%, transparent)",
-};
+import { FilterPanel } from "./FilterPanel";
 
 const PAGE_SIZE = 8;
 
@@ -178,67 +164,13 @@ const JobChecklist = () => {
 
   return (
     <div className="w-full flex flex-col md:flex-row gap-4 md:items-start">
-      {/* Left column: filter strip + add button */}
       <div className="md:shrink-0 flex flex-col gap-2">
-        {/* Filter strip — horizontal scrolling row on mobile, sticky vertical sidebar on desktop */}
-        <div className="filter-strip-glass sticky top-18 z-40 rounded-2xl p-1.5 md:p-2 flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-visible scrollbar-none [&::-webkit-scrollbar]:hidden">
-          {FILTER_OPTIONS.map((option) => {
-            const isActive = statusFilter === option;
-            const color =
-              option === "All"
-                ? undefined
-                : option === "Follow-up"
-                  ? FOLLOW_UP_COLOR
-                  : STATUS_COLORS[option as Status];
-            return (
-              <button
-                key={option}
-                onClick={() => {
-                  setStatusFilter(option);
-                  setPage(0);
-                }}
-                className="shrink-0 md:shrink flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 md:py-2 rounded-full md:rounded-xl text-xs md:text-sm font-semibold transition-all duration-200 active:scale-95 md:w-full"
-                style={
-                  isActive
-                    ? {
-                        background: color
-                          ? `color-mix(in srgb, ${color} 14%, transparent)`
-                          : "rgba(0,0,0,0.08)",
-                        boxShadow: color
-                          ? `inset 0 0 0 1.5px color-mix(in srgb, ${color} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.5)`
-                          : "inset 0 0 0 1.5px rgba(0,0,0,0.15)",
-                        color: color ?? "inherit",
-                      }
-                    : {
-                        background: "rgba(255,255,255,0.0)",
-                        color:
-                          "color-mix(in srgb, currentColor 55%, transparent)",
-                      }
-                }
-              >
-                {option !== "All" && (
-                  <span
-                    className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full shrink-0"
-                    style={{ background: color }}
-                  />
-                )}
-                <span className="md:flex-1 md:text-left">{option}</span>
-                <span
-                  className="text-xs font-medium opacity-75 tabular-nums"
-                  style={isActive && color ? { color } : undefined}
-                >
-                  {option === "All"
-                    ? applications.length
-                    : option === "Follow-up"
-                      ? applications.filter((a) =>
-                          needsFollowUp(a.status, a.dateApplied),
-                        ).length
-                      : applications.filter((a) => a.status === option).length}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <FilterPanel
+          setPage={setPage}
+          setStatusFilter={setStatusFilter}
+          statusFilter={statusFilter}
+          applications={applications}
+        />
         <SearchBar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -246,7 +178,6 @@ const JobChecklist = () => {
         />
         <AddApplication setIsModalOpen={setIsModalOpen} />
       </div>
-      {/* Cards + pagination */}
       <div className="flex-1 flex flex-col gap-4 min-w-0">
         <div className="glass-well rounded-2xl p-4">
           <div

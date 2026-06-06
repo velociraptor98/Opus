@@ -53,3 +53,12 @@ export const FILTER_OPTIONS: FilterOption[] = [
   "Rejected",
   "Pending",
 ];
+export const FOLLOW_UP_COLOR = "var(--color-warning)";
+
+export const STATUS_COLORS: Record<Status, string> = {
+  Applied: "var(--color-secondary)",
+  Interviewing: "var(--color-warning)",
+  Offered: "var(--color-primary)",
+  Rejected: "var(--color-error)",
+  Pending: "color-mix(in srgb, var(--color-foreground) 60%, transparent)",
+};
