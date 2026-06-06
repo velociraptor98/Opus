@@ -10,6 +10,7 @@ import { Status, needsFollowUp } from "@/constants/generic";
 import { useToast } from "@/context/ToastContext";
 import { JobChecklistSkeleton } from "./JobChecklistSkeleton";
 import { EmptyContainer } from "./EmptyContainer";
+import { NavigationPanel } from "./NavigationPanel";
 
 type FilterOption = "All" | "Follow-up" | Status;
 
@@ -185,7 +186,7 @@ const JobChecklist = () => {
       {/* Left column: filter strip + add button */}
       <div className="md:shrink-0 flex flex-col gap-2">
         {/* Filter strip — horizontal scrolling row on mobile, sticky vertical sidebar on desktop */}
-        <div className="filter-strip-glass sticky top-[4.5rem] z-40 rounded-2xl p-1.5 md:p-2 flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="filter-strip-glass sticky top-18 z-40 rounded-2xl p-1.5 md:p-2 flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-visible scrollbar-none [&::-webkit-scrollbar]:hidden">
           {FILTER_OPTIONS.map((option) => {
             const isActive = statusFilter === option;
             const color =
@@ -329,7 +330,7 @@ const JobChecklist = () => {
         <div className="glass-well rounded-2xl p-4">
           <div
             key={`${statusFilter}-${query}-${currentPage}`}
-            className="grid grid-cols-1 md:grid-cols-2 gap-3"
+            className={`grid grid-cols-1 md:grid-cols-${paginated.length > 0 ? 2 : 1} gap-3`}
           >
             {paginated.length > 0 ? (
               paginated.map((app, i) => (
@@ -350,30 +351,12 @@ const JobChecklist = () => {
             )}
           </div>
         </div>
-
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-1">
-            <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={currentPage === 0}
-              className="btn-glass px-3 py-1.5 text-sm font-semibold rounded-lg text-foreground/75 hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
-            >
-              ← Prev
-            </button>
-            <span className="text-sm text-foreground/65 font-medium">
-              {currentPage + 1} / {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={currentPage === totalPages - 1}
-              className="btn-glass px-3 py-1.5 text-sm font-semibold rounded-lg text-foreground/75 hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
-            >
-              Next →
-            </button>
-          </div>
-        )}
+        <NavigationPanel
+          totalPages={totalPages}
+          currentPage={currentPage}
+          setPage={setPage}
+        />
       </div>
-
       {createPortal(
         <NewJobModal
           isOpen={isModalOpen}
