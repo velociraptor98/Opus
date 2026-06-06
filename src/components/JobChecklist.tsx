@@ -6,31 +6,14 @@ import { createClient } from "@/lib/supabase/client";
 import { createPortal } from "react-dom";
 import { NewJobModal } from "./NewJobModal";
 import { JobApplication } from "@/constants/types";
-import { Status, needsFollowUp } from "@/constants/generic";
+import { FilterOption, needsFollowUp } from "@/constants/generic";
 import { useToast } from "@/context/ToastContext";
 import { JobChecklistSkeleton } from "./JobChecklistSkeleton";
-
-type FilterOption = "All" | "Follow-up" | Status;
-
-const FILTER_OPTIONS: FilterOption[] = [
-  "All",
-  "Follow-up",
-  "Applied",
-  "Interviewing",
-  "Offered",
-  "Rejected",
-  "Pending",
-];
-
-const FOLLOW_UP_COLOR = "var(--color-warning)";
-
-const STATUS_COLORS: Record<Status, string> = {
-  Applied: "var(--color-secondary)",
-  Interviewing: "var(--color-warning)",
-  Offered: "var(--color-primary)",
-  Rejected: "var(--color-error)",
-  Pending: "color-mix(in srgb, var(--color-foreground) 60%, transparent)",
-};
+import { EmptyContainer } from "./EmptyContainer";
+import { NavigationPanel } from "./NavigationPanel";
+import { AddApplication } from "./AddApplication";
+import { SearchBar } from "./SearchBar";
+import { FilterPanel } from "./FilterPanel";
 
 const PAGE_SIZE = 8;
 
@@ -181,154 +164,25 @@ const JobChecklist = () => {
 
   return (
     <div className="w-full flex flex-col md:flex-row gap-4 md:items-start">
-      {/* Left column: filter strip + add button */}
       <div className="md:shrink-0 flex flex-col gap-2">
-        {/* Filter strip — horizontal scrolling row on mobile, sticky vertical sidebar on desktop */}
-        <div className="filter-strip-glass sticky top-[4.5rem] z-40 rounded-2xl p-1.5 md:p-2 flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {FILTER_OPTIONS.map((option) => {
-            const isActive = statusFilter === option;
-            const color =
-              option === "All"
-                ? undefined
-                : option === "Follow-up"
-                  ? FOLLOW_UP_COLOR
-                  : STATUS_COLORS[option as Status];
-            return (
-              <button
-                key={option}
-                onClick={() => {
-                  setStatusFilter(option);
-                  setPage(0);
-                }}
-                className="shrink-0 md:shrink flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 md:py-2 rounded-full md:rounded-xl text-xs md:text-sm font-semibold transition-all duration-200 active:scale-95 md:w-full"
-                style={
-                  isActive
-                    ? {
-                        background: color
-                          ? `color-mix(in srgb, ${color} 14%, transparent)`
-                          : "rgba(0,0,0,0.08)",
-                        boxShadow: color
-                          ? `inset 0 0 0 1.5px color-mix(in srgb, ${color} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.5)`
-                          : "inset 0 0 0 1.5px rgba(0,0,0,0.15)",
-                        color: color ?? "inherit",
-                      }
-                    : {
-                        background: "rgba(255,255,255,0.0)",
-                        color:
-                          "color-mix(in srgb, currentColor 55%, transparent)",
-                      }
-                }
-              >
-                {option !== "All" && (
-                  <span
-                    className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full shrink-0"
-                    style={{ background: color }}
-                  />
-                )}
-                <span className="md:flex-1 md:text-left">{option}</span>
-                <span
-                  className="text-xs font-medium opacity-75 tabular-nums"
-                  style={isActive && color ? { color } : undefined}
-                >
-                  {option === "All"
-                    ? applications.length
-                    : option === "Follow-up"
-                      ? applications.filter((a) =>
-                          needsFollowUp(a.status, a.dateApplied),
-                        ).length
-                      : applications.filter((a) => a.status === option).length}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Search — filter by company name or job role */}
-        <div className="relative">
-          <svg
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"
-            />
-          </svg>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setPage(0);
-            }}
-            placeholder="Search company or role"
-            aria-label="Search applications by company or role"
-            className="input-glass w-full h-10 pl-9 pr-8 rounded-full text-sm"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setPage(0);
-              }}
-              aria-label="Clear search"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full text-foreground/40 hover:text-foreground transition-colors active:scale-90"
-            >
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2.5"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          )}
-        </div>
-
-        {/* Add application button */}
-        <button
-          onClick={() => setIsModalOpen(true)}
-          title="Add Application"
-          className="btn-glass w-full h-10 rounded-full flex items-center justify-center text-secondary transition-all duration-200 active:scale-95 hover:scale-[1.03]"
-          style={{
-            background:
-              "color-mix(in srgb, var(--color-secondary) 10%, transparent)",
-            boxShadow:
-              "inset 0 0 0 1.5px color-mix(in srgb, var(--color-secondary) 30%, transparent)",
-          }}
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2.5"
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-        </button>
+        <FilterPanel
+          setPage={setPage}
+          setStatusFilter={setStatusFilter}
+          statusFilter={statusFilter}
+          applications={applications}
+        />
+        <SearchBar
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          setPage={setPage}
+        />
+        <AddApplication setIsModalOpen={setIsModalOpen} />
       </div>
-
-      {/* Cards + pagination */}
       <div className="flex-1 flex flex-col gap-4 min-w-0">
         <div className="glass-well rounded-2xl p-4">
           <div
             key={`${statusFilter}-${query}-${currentPage}`}
-            className="grid grid-cols-1 md:grid-cols-2 gap-3"
+            className={`grid grid-cols-1 gap-3 ${paginated.length > 0 ? "md:grid-cols-2" : "md:grid-cols-1"}`}
           >
             {paginated.length > 0 ? (
               paginated.map((app, i) => (
@@ -345,53 +199,16 @@ const JobChecklist = () => {
                 </div>
               ))
             ) : (
-              <div className="py-12 text-center text-primary/40 dark:text-zinc-500 flex flex-col items-center gap-2">
-                <svg
-                  className="w-12 h-12 opacity-20"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                <p className="font-medium italic">
-                  {query || statusFilter !== "All"
-                    ? "No matching applications"
-                    : "No applications created"}
-                </p>
-              </div>
+              <EmptyContainer query={query} statusFilter={statusFilter} />
             )}
           </div>
         </div>
-
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-1">
-            <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={currentPage === 0}
-              className="btn-glass px-3 py-1.5 text-sm font-semibold rounded-lg text-foreground/75 hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
-            >
-              ← Prev
-            </button>
-            <span className="text-sm text-foreground/65 font-medium">
-              {currentPage + 1} / {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={currentPage === totalPages - 1}
-              className="btn-glass px-3 py-1.5 text-sm font-semibold rounded-lg text-foreground/75 hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
-            >
-              Next →
-            </button>
-          </div>
-        )}
+        <NavigationPanel
+          totalPages={totalPages}
+          currentPage={currentPage}
+          setPage={setPage}
+        />
       </div>
-
       {createPortal(
         <NewJobModal
           isOpen={isModalOpen}

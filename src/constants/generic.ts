@@ -7,6 +7,8 @@ export type Status =
   | "Offered"
   | "Rejected";
 
+export type FilterOption = "All" | "Follow-up" | Status;
+
 /** Days of inactivity after which an active application is flagged for follow-up. */
 export const FOLLOW_UP_DAYS = 7;
 
@@ -41,4 +43,22 @@ export const STATUS_CONFIG: Record<
     bg: "bg-foreground/5",
     text: "text-foreground/70",
   },
+};
+export const FILTER_OPTIONS: FilterOption[] = [
+  "All",
+  "Follow-up",
+  "Applied",
+  "Interviewing",
+  "Offered",
+  "Rejected",
+  "Pending",
+];
+export const FOLLOW_UP_COLOR = "var(--color-warning)";
+
+export const STATUS_COLORS: Record<Status, string> = {
+  Applied: "var(--color-secondary)",
+  Interviewing: "var(--color-warning)",
+  Offered: "var(--color-primary)",
+  Rejected: "var(--color-error)",
+  Pending: "color-mix(in srgb, var(--color-foreground) 60%, transparent)",
 };

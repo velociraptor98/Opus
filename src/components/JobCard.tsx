@@ -117,113 +117,13 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
           >
             {formatRelativeDate(application.dateApplied)}
           </p>
-          {followUp && (
-            <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-warning/15 text-warning"
-              title="No movement in a while — time to follow up"
-            >
-              <svg
-                className="w-2.5 h-2.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2.5"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              Follow up
-            </span>
-          )}
+          {followUp && <FollowUpPill />}
         </div>
         <div className="flex items-center gap-2 border-t border-foreground/5 pt-3">
-          {application.link && (
-            <a
-              href={application.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
-              title="Open link"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                />
-              </svg>
-            </a>
-          )}
-          <button
-            onClick={openNotes}
-            className={`p-2 rounded-lg transition-colors ${
-              application.notes
-                ? "text-primary bg-primary/10 hover:bg-primary/20"
-                : "text-secondary hover:bg-secondary/10"
-            }`}
-            title="Notes & checklist"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-          </button>
-          <button
-            onClick={() => setIsEditing(true)}
-            className="p-2 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-              />
-            </svg>
-          </button>
-          <button
-            onClick={() => onDelete(application.id)}
-            className="p-2 text-error hover:bg-error/10 rounded-lg transition-colors ml-auto"
-            title="Delete"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
-          </button>
+          {application.link && <ExternalLink link={application.link} />}
+          <NotesButton notes={application.notes} openNotes={openNotes} />
+          <EditButton setIsEditing={setIsEditing} />
+          <DeleteButton id={application.id} onDelete={onDelete} />
         </div>
       </div>
       {isNotesOpen &&
@@ -241,5 +141,147 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
           document.body,
         )}
     </>
+  );
+};
+
+const DeleteButton = ({
+  id,
+  onDelete,
+}: {
+  id: string;
+  onDelete: BaseJobProps["onDelete"];
+}) => {
+  return (
+    <button
+      onClick={() => onDelete(id)}
+      className="p-2 text-error hover:bg-error/10 rounded-lg transition-colors ml-auto"
+      title="Delete"
+    >
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+        />
+      </svg>
+    </button>
+  );
+};
+
+const EditButton = ({
+  setIsEditing,
+}: {
+  setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
+}) => {
+  return (
+    <button
+      onClick={() => setIsEditing(true)}
+      className="p-2 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
+      title="Edit"
+    >
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+        />
+      </svg>
+    </button>
+  );
+};
+
+const NotesButton = ({
+  notes,
+  openNotes,
+}: {
+  notes: string;
+  openNotes: () => void;
+}) => {
+  return (
+    <button
+      onClick={openNotes}
+      className={`p-2 rounded-lg transition-colors ${
+        notes
+          ? "text-primary bg-primary/10 hover:bg-primary/20"
+          : "text-secondary hover:bg-secondary/10"
+      }`}
+      title="Notes & checklist"
+    >
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
+      </svg>
+    </button>
+  );
+};
+
+const ExternalLink = ({ link }: { link: string }) => {
+  return (
+    <a
+      href={link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="p-2 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
+      title="Open link"
+    >
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+        />
+      </svg>
+    </a>
+  );
+};
+
+const FollowUpPill = () => {
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-warning/15 text-warning"
+      title="No movement in a while — time to follow up"
+    >
+      <svg
+        className="w-2.5 h-2.5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2.5"
+          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      Follow up
+    </span>
   );
 };
