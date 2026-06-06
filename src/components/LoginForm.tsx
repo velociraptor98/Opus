@@ -108,7 +108,7 @@ const LoginForm = () => {
           <h2 className="text-3xl font-extrabold text-primary dark:text-primary mb-1">
             Welcome back
           </h2>
-          <p className="text-sm text-foreground/50">
+          <p className="text-sm text-foreground/70">
             Sign in to your job search tracker
           </p>
         </div>

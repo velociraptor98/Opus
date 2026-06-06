@@ -6,8 +6,8 @@
 
 :root {
   color-scheme: light;
-  --background: #fdf6e3;
-  --foreground: #5c6a72;
+  --background: #f3ead3; /* Everforest light "soft" bg — dimmer than the medium #fdf6e3 */
+  --foreground: #4f585e; /* darkened from #5c6a72 for stronger contrast on the lighter bg */
   --primary: #8da101;   /* Green */
   --secondary: #3a94c5; /* Blue */
   --accent: #35a77c;    /* Aqua */
@@ -260,7 +260,7 @@ body {
 }
 
 .input-glass::placeholder {
-  color: color-mix(in srgb, var(--foreground) 35%, transparent);
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
 }
 
 .input-glass:focus,

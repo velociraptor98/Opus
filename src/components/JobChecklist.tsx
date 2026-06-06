@@ -6,14 +6,15 @@ import { createClient } from "@/lib/supabase/client";
 import { createPortal } from "react-dom";
 import { NewJobModal } from "./NewJobModal";
 import { JobApplication } from "@/constants/types";
-import { Status } from "@/constants/generic";
+import { Status, needsFollowUp } from "@/constants/generic";
 import { useToast } from "@/context/ToastContext";
 import { JobChecklistSkeleton } from "./JobChecklistSkeleton";
 
-type FilterOption = "All" | Status;
+type FilterOption = "All" | "Follow-up" | Status;
 
 const FILTER_OPTIONS: FilterOption[] = [
   "All",
+  "Follow-up",
   "Applied",
   "Interviewing",
   "Offered",
@@ -21,12 +22,14 @@ const FILTER_OPTIONS: FilterOption[] = [
   "Pending",
 ];
 
+const FOLLOW_UP_COLOR = "var(--color-warning)";
+
 const STATUS_COLORS: Record<Status, string> = {
   Applied: "var(--color-secondary)",
   Interviewing: "var(--color-warning)",
   Offered: "var(--color-primary)",
   Rejected: "var(--color-error)",
-  Pending: "color-mix(in srgb, var(--color-foreground) 35%, transparent)",
+  Pending: "color-mix(in srgb, var(--color-foreground) 60%, transparent)",
 };
 
 const PAGE_SIZE = 8;
@@ -156,7 +159,12 @@ const JobChecklist = () => {
 
   const query = searchQuery.trim().toLowerCase();
   const filtered = applications.filter((a) => {
-    const matchesStatus = statusFilter === "All" || a.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "All"
+        ? true
+        : statusFilter === "Follow-up"
+          ? needsFollowUp(a.status, a.dateApplied)
+          : a.status === statusFilter;
     const matchesQuery =
       query === "" ||
       a.company.toLowerCase().includes(query) ||
@@ -180,7 +188,11 @@ const JobChecklist = () => {
           {FILTER_OPTIONS.map((option) => {
             const isActive = statusFilter === option;
             const color =
-              option !== "All" ? STATUS_COLORS[option as Status] : undefined;
+              option === "All"
+                ? undefined
+                : option === "Follow-up"
+                  ? FOLLOW_UP_COLOR
+                  : STATUS_COLORS[option as Status];
             return (
               <button
                 key={option}
@@ -215,12 +227,16 @@ const JobChecklist = () => {
                 )}
                 <span className="md:flex-1 md:text-left">{option}</span>
                 <span
-                  className="text-xs font-medium opacity-55 tabular-nums"
+                  className="text-xs font-medium opacity-75 tabular-nums"
                   style={isActive && color ? { color } : undefined}
                 >
                   {option === "All"
                     ? applications.length
-                    : applications.filter((a) => a.status === option).length}
+                    : option === "Follow-up"
+                      ? applications.filter((a) =>
+                          needsFollowUp(a.status, a.dateApplied),
+                        ).length
+                      : applications.filter((a) => a.status === option).length}
                 </span>
               </button>
             );
@@ -358,17 +374,17 @@ const JobChecklist = () => {
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={currentPage === 0}
-              className="btn-glass px-3 py-1.5 text-sm font-semibold rounded-lg text-foreground/60 hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
+              className="btn-glass px-3 py-1.5 text-sm font-semibold rounded-lg text-foreground/75 hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
             >
               ← Prev
             </button>
-            <span className="text-sm text-foreground/40 font-medium">
+            <span className="text-sm text-foreground/65 font-medium">
               {currentPage + 1} / {totalPages}
             </span>
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={currentPage === totalPages - 1}
-              className="btn-glass px-3 py-1.5 text-sm font-semibold rounded-lg text-foreground/60 hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
+              className="btn-glass px-3 py-1.5 text-sm font-semibold rounded-lg text-foreground/75 hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
             >
               Next →
             </button>

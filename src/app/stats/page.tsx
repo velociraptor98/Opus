@@ -147,7 +147,7 @@ export default function StatsPage() {
               <p className="text-sm font-semibold text-foreground/80">
                 {card.label}
               </p>
-              <p className="text-xs text-foreground/40 mt-0.5">{card.sub}</p>
+              <p className="text-xs text-foreground/60 mt-0.5">{card.sub}</p>
             </div>
           ))}
         </div>

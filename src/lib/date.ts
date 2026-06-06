@@ -11,6 +11,16 @@ function parseLocalDate(dateStr: string): Date | null {
 const startOfDay = (d: Date) =>
   new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
+/** Whole days between `dateStr` and today (positive = in the past). Null if unparseable. */
+export function daysSince(dateStr: string): number | null {
+  if (!dateStr) return null;
+  const date = parseLocalDate(dateStr);
+  if (!date) return null;
+  return Math.round(
+    (startOfDay(new Date()).getTime() - startOfDay(date).getTime()) / 86_400_000,
+  );
+}
+
 /** Human-friendly relative date, e.g. "Today", "3 days ago", "2 weeks ago". */
 export function formatRelativeDate(dateStr: string): string {
   if (!dateStr) return "";

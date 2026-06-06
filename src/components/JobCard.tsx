@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { Status, STATUS_CONFIG } from "@/constants/generic";
+import { Status, STATUS_CONFIG, needsFollowUp } from "@/constants/generic";
 import { NotesModal } from "./NotesModal";
 import { BaseJobProps } from "@/constants/types";
 import { useToast } from "@/context/ToastContext";
@@ -29,6 +29,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
   };
 
   const cfg = STATUS_CONFIG[application.status];
+  const followUp = needsFollowUp(application.status, application.dateApplied);
 
   if (isEditing) {
     return (
@@ -106,15 +107,38 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
             {application.status}
           </span>
         </div>
-        <p className="text-sm text-foreground/60 mb-1">
+        <p className="text-sm text-foreground/80 mb-1">
           {application.position}
         </p>
-        <p
-          className="text-xs text-foreground/40 mb-3"
-          title={formatExactDate(application.dateApplied)}
-        >
-          {formatRelativeDate(application.dateApplied)}
-        </p>
+        <div className="flex items-center gap-2 mb-3">
+          <p
+            className="text-xs text-foreground/60"
+            title={formatExactDate(application.dateApplied)}
+          >
+            {formatRelativeDate(application.dateApplied)}
+          </p>
+          {followUp && (
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-warning/15 text-warning"
+              title="No movement in a while — time to follow up"
+            >
+              <svg
+                className="w-2.5 h-2.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2.5"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Follow up
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-2 border-t border-foreground/5 pt-3">
           {application.link && (
             <a

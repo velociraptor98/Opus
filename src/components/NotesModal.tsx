@@ -76,7 +76,7 @@ export const NotesModal = ({
         </div>
         <div className="p-6 space-y-4">
           <div>
-            <label className="block text-xs font-bold text-foreground/50 uppercase tracking-widest mb-1">
+            <label className="block text-xs font-bold text-foreground/70 uppercase tracking-widest mb-1">
               Link
             </label>
             <input
@@ -88,7 +88,7 @@ export const NotesModal = ({
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-foreground/50 uppercase tracking-widest mb-1">
+            <label className="block text-xs font-bold text-foreground/70 uppercase tracking-widest mb-1">
               Notes
             </label>
             <textarea
