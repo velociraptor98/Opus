@@ -6,23 +6,15 @@ import { createClient } from "@/lib/supabase/client";
 import { createPortal } from "react-dom";
 import { NewJobModal } from "./NewJobModal";
 import { JobApplication } from "@/constants/types";
-import { Status, needsFollowUp } from "@/constants/generic";
+import { FILTER_OPTIONS, Status, needsFollowUp } from "@/constants/generic";
 import { useToast } from "@/context/ToastContext";
 import { JobChecklistSkeleton } from "./JobChecklistSkeleton";
 import { EmptyContainer } from "./EmptyContainer";
 import { NavigationPanel } from "./NavigationPanel";
+import { AddApplication } from "./AddApplication";
+import { SearchBar } from "./SearchBar";
 
 type FilterOption = "All" | "Follow-up" | Status;
-
-const FILTER_OPTIONS: FilterOption[] = [
-  "All",
-  "Follow-up",
-  "Applied",
-  "Interviewing",
-  "Offered",
-  "Rejected",
-  "Pending",
-];
 
 const FOLLOW_UP_COLOR = "var(--color-warning)";
 
@@ -244,87 +236,13 @@ const JobChecklist = () => {
             );
           })}
         </div>
-
-        {/* Search — filter by company name or job role */}
-        <div className="relative">
-          <svg
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"
-            />
-          </svg>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setPage(0);
-            }}
-            placeholder="Search company or role"
-            aria-label="Search applications by company or role"
-            className="input-glass w-full h-10 pl-9 pr-8 rounded-full text-sm"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setPage(0);
-              }}
-              aria-label="Clear search"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full text-foreground/40 hover:text-foreground transition-colors active:scale-90"
-            >
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2.5"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          )}
-        </div>
-
-        {/* Add application button */}
-        <button
-          onClick={() => setIsModalOpen(true)}
-          title="Add Application"
-          className="btn-glass w-full h-10 rounded-full flex items-center justify-center text-secondary transition-all duration-200 active:scale-95 hover:scale-[1.03]"
-          style={{
-            background:
-              "color-mix(in srgb, var(--color-secondary) 10%, transparent)",
-            boxShadow:
-              "inset 0 0 0 1.5px color-mix(in srgb, var(--color-secondary) 30%, transparent)",
-          }}
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2.5"
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-        </button>
+        <SearchBar
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          setPage={setPage}
+        />
+        <AddApplication setIsModalOpen={setIsModalOpen} />
       </div>
-
       {/* Cards + pagination */}
       <div className="flex-1 flex flex-col gap-4 min-w-0">
         <div className="glass-well rounded-2xl p-4">

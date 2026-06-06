@@ -42,3 +42,12 @@ export const STATUS_CONFIG: Record<
     text: "text-foreground/70",
   },
 };
+export const FILTER_OPTIONS: FilterOption[] = [
+  "All",
+  "Follow-up",
+  "Applied",
+  "Interviewing",
+  "Offered",
+  "Rejected",
+  "Pending",
+];
