@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 interface NewJobModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (job: Omit<JobApplication, "id">) => Promise<{ error: string | null }>;
+  onAdd: (
+    job: Omit<JobApplication, "id" | "lastActivityAt">,
+  ) => Promise<{ error: string | null }>;
 }
 
 export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {

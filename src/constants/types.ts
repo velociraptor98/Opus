@@ -6,6 +6,8 @@ export interface JobApplication {
   position: string;
   status: Status;
   dateApplied: string;
+  /** Timestamp of the last meaningful change (e.g. status move); drives follow-up. */
+  lastActivityAt: string;
   notes: string;
   link: string;
   checklist: {
@@ -17,6 +19,7 @@ export interface JobApplication {
 
 export interface BaseJobProps {
   application: JobApplication;
-  onUpdate: (id: string, updates: Partial<JobApplication>) => void;
+  /** Resolves `true` when the change was persisted, `false` on failure. */
+  onUpdate: (id: string, updates: Partial<JobApplication>) => Promise<boolean>;
   onDelete: (id: string) => void;
 }

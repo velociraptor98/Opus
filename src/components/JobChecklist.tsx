@@ -44,6 +44,7 @@ const JobChecklist = () => {
         position: row.position,
         status: row.status,
         dateApplied: row.date_applied,
+        lastActivityAt: row.updated_at ?? row.created_at ?? row.date_applied,
         notes: row.notes,
         link: row.link ?? "",
         checklist: {
@@ -66,7 +67,7 @@ const JobChecklist = () => {
   const updateApplication = async (
     id: string,
     updates: Partial<JobApplication>,
-  ) => {
+  ): Promise<boolean> => {
     const supabase = createClient();
     const dbUpdates: Record<string, unknown> = {};
     if (updates.company !== undefined) dbUpdates.company = updates.company;
@@ -77,16 +78,30 @@ const JobChecklist = () => {
     if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
     if (updates.link !== undefined) dbUpdates.link = updates.link;
 
+    // A status move counts as activity — reset the follow-up clock.
+    const activityStamp =
+      updates.status !== undefined ? new Date().toISOString() : null;
+    if (activityStamp) dbUpdates.updated_at = activityStamp;
+
     const { error } = await supabase
       .from("applications")
       .update(dbUpdates)
       .eq("id", id);
 
-    if (!error) {
-      setApplications((apps) =>
-        apps.map((app) => (app.id === id ? { ...app, ...updates } : app)),
-      );
-    }
+    if (error) return false;
+
+    setApplications((apps) =>
+      apps.map((app) =>
+        app.id === id
+          ? {
+              ...app,
+              ...updates,
+              ...(activityStamp ? { lastActivityAt: activityStamp } : {}),
+            }
+          : app,
+      ),
+    );
+    return true;
   };
 
   const deleteApplication = async (id: string) => {
@@ -102,7 +117,7 @@ const JobChecklist = () => {
   };
 
   const addNewJob = async (
-    newJobData: Omit<JobApplication, "id">,
+    newJobData: Omit<JobApplication, "id" | "lastActivityAt">,
   ): Promise<{ error: string | null }> => {
     const supabase = createClient();
     const { data, error } = await supabase
@@ -128,6 +143,7 @@ const JobChecklist = () => {
       position: data.position,
       status: data.status,
       dateApplied: data.date_applied,
+      lastActivityAt: data.updated_at ?? data.created_at ?? data.date_applied,
       notes: data.notes,
       link: data.link ?? "",
       checklist: newJobData.checklist,
@@ -146,7 +162,7 @@ const JobChecklist = () => {
       statusFilter === "All"
         ? true
         : statusFilter === "Follow-up"
-          ? needsFollowUp(a.status, a.dateApplied)
+          ? needsFollowUp(a.status, a.lastActivityAt)
           : a.status === statusFilter;
     const matchesQuery =
       query === "" ||

@@ -16,9 +16,9 @@ export const FOLLOW_UP_DAYS = 7;
 const ACTIVE_STATUSES: Status[] = ["Pending", "Applied", "Interviewing"];
 
 /** True when an active application has gone quiet past the follow-up threshold. */
-export function needsFollowUp(status: Status, dateApplied: string): boolean {
+export function needsFollowUp(status: Status, lastActivityAt: string): boolean {
   if (!ACTIVE_STATUSES.includes(status)) return false;
-  const days = daysSince(dateApplied);
+  const days = daysSince(lastActivityAt);
   return days !== null && days >= FOLLOW_UP_DAYS;
 }
 

@@ -16,8 +16,12 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
   const [linkDraft, setLinkDraft] = useState(application.link);
   const toast = useToast();
 
-  const handleSaveEdit = () => {
-    onUpdate(application.id, editData);
+  const handleSaveEdit = async () => {
+    const ok = await onUpdate(application.id, editData);
+    if (!ok) {
+      toast.show("Couldn't save changes", { variant: "error" });
+      return;
+    }
     setIsEditing(false);
     toast.show("Changes saved", { variant: "success" });
   };
@@ -29,7 +33,10 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
   };
 
   const cfg = STATUS_CONFIG[application.status];
-  const followUp = needsFollowUp(application.status, application.dateApplied);
+  const followUp = needsFollowUp(
+    application.status,
+    application.lastActivityAt,
+  );
 
   if (isEditing) {
     return (

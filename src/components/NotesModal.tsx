@@ -37,8 +37,15 @@ export const NotesModal = ({
       },
     });
   };
-  const handleSaveNotes = () => {
-    onUpdate(application.id, { notes: noteDraft, link: linkDraft });
+  const handleSaveNotes = async () => {
+    const ok = await onUpdate(application.id, {
+      notes: noteDraft,
+      link: linkDraft,
+    });
+    if (!ok) {
+      toast.show("Couldn't save notes", { variant: "error" });
+      return;
+    }
     setIsNotesOpen(false);
     toast.show("Notes saved", { variant: "success" });
   };

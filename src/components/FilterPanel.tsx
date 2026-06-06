@@ -70,7 +70,7 @@ export const FilterPanel = ({
                 ? applications.length
                 : option === "Follow-up"
                   ? applications.filter((a) =>
-                      needsFollowUp(a.status, a.dateApplied),
+                      needsFollowUp(a.status, a.lastActivityAt),
                     ).length
                   : applications.filter((a) => a.status === option).length}
             </span>
