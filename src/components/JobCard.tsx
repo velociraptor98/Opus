@@ -120,7 +120,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
           {followUp && <FollowUpPill />}
         </div>
         <div className="flex items-center gap-2 border-t border-foreground/5 pt-3">
-          {application.link && <NotesLink link={application.link} />}
+          {application.link && <ExternalLink link={application.link} />}
           <NotesButton notes={application.notes} openNotes={openNotes} />
           <EditButton setIsEditing={setIsEditing} />
           <DeleteButton id={application.id} onDelete={onDelete} />
@@ -236,7 +236,7 @@ const NotesButton = ({
   );
 };
 
-const NotesLink = ({ link }: { link: string }) => {
+const ExternalLink = ({ link }: { link: string }) => {
   return (
     <a
       href={link}

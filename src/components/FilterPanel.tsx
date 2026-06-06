@@ -15,7 +15,7 @@ export const FilterPanel = ({
   setPage,
   applications,
 }: {
-  statusFilter: string;
+  statusFilter: FilterOption;
   setStatusFilter: React.Dispatch<React.SetStateAction<FilterOption>>;
   setPage: React.Dispatch<React.SetStateAction<number>>;
   applications: JobApplication[];
