@@ -7,6 +7,8 @@ export type Status =
   | "Offered"
   | "Rejected";
 
+export type FilterOption = "All" | "Follow-up" | Status;
+
 /** Days of inactivity after which an active application is flagged for follow-up. */
 export const FOLLOW_UP_DAYS = 7;
 

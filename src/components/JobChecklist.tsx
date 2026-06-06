@@ -6,15 +6,18 @@ import { createClient } from "@/lib/supabase/client";
 import { createPortal } from "react-dom";
 import { NewJobModal } from "./NewJobModal";
 import { JobApplication } from "@/constants/types";
-import { FILTER_OPTIONS, Status, needsFollowUp } from "@/constants/generic";
+import {
+  FILTER_OPTIONS,
+  FilterOption,
+  Status,
+  needsFollowUp,
+} from "@/constants/generic";
 import { useToast } from "@/context/ToastContext";
 import { JobChecklistSkeleton } from "./JobChecklistSkeleton";
 import { EmptyContainer } from "./EmptyContainer";
 import { NavigationPanel } from "./NavigationPanel";
 import { AddApplication } from "./AddApplication";
 import { SearchBar } from "./SearchBar";
-
-type FilterOption = "All" | "Follow-up" | Status;
 
 const FOLLOW_UP_COLOR = "var(--color-warning)";
 
@@ -248,7 +251,7 @@ const JobChecklist = () => {
         <div className="glass-well rounded-2xl p-4">
           <div
             key={`${statusFilter}-${query}-${currentPage}`}
-            className={`grid grid-cols-1 md:grid-cols-${paginated.length > 0 ? 2 : 1} gap-3`}
+            className={`grid grid-cols-1 gap-3 ${paginated.length > 0 ? "md:grid-cols-2" : "md:grid-cols-1"}`}
           >
             {paginated.length > 0 ? (
               paginated.map((app, i) => (
