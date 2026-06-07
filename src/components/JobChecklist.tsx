@@ -6,7 +6,12 @@ import { createClient } from "@/lib/supabase/client";
 import { createPortal } from "react-dom";
 import { NewJobModal } from "./NewJobModal";
 import { JobApplication } from "@/constants/types";
-import { FilterOption, needsFollowUp } from "@/constants/generic";
+import {
+  FilterOption,
+  needsFollowUp,
+  SortOption,
+  sortApplications,
+} from "@/constants/generic";
 import { useToast } from "@/context/ToastContext";
 import { JobChecklistSkeleton } from "./JobChecklistSkeleton";
 import { EmptyContainer } from "./EmptyContainer";
@@ -14,6 +19,7 @@ import { NavigationPanel } from "./NavigationPanel";
 import { AddApplication } from "./AddApplication";
 import { SearchBar } from "./SearchBar";
 import { FilterPanel } from "./FilterPanel";
+import { SortBar } from "./SortBar";
 
 const PAGE_SIZE = 8;
 
@@ -22,6 +28,7 @@ const JobChecklist = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<FilterOption>("All");
+  const [sort, setSort] = useState<SortOption>("Recently added");
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const toast = useToast();
@@ -179,9 +186,10 @@ const JobChecklist = () => {
       },
     };
     setApplications((apps) => [newJob, ...apps]);
-    // Clear any active filter/search so the new card is always visible.
+    // Clear any active filter/search/sort so the new card surfaces at the top.
     setStatusFilter("All");
     setSearchQuery("");
+    setSort("Recently added");
     setPage(0);
     toast.show("Application added", { variant: "success" });
     return { error: null };
@@ -204,9 +212,11 @@ const JobChecklist = () => {
     return matchesStatus && matchesQuery;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const sorted = sortApplications(filtered, sort);
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages - 1);
-  const paginated = filtered.slice(
+  const paginated = sorted.slice(
     currentPage * PAGE_SIZE,
     currentPage * PAGE_SIZE + PAGE_SIZE,
   );
@@ -225,12 +235,13 @@ const JobChecklist = () => {
           setSearchQuery={setSearchQuery}
           setPage={setPage}
         />
+        <SortBar sort={sort} setSort={setSort} setPage={setPage} />
         <AddApplication setIsModalOpen={setIsModalOpen} />
       </div>
       <div className="flex-1 flex flex-col gap-4 min-w-0">
         <div className="glass-well rounded-2xl p-4">
           <div
-            key={`${statusFilter}-${query}-${currentPage}`}
+            key={`${statusFilter}-${sort}-${query}-${currentPage}`}
             className={`grid grid-cols-1 gap-3 ${paginated.length > 0 ? "md:grid-cols-2" : "md:grid-cols-1"}`}
           >
             {paginated.length > 0 ? (
