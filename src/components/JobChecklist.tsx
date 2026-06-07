@@ -48,9 +48,9 @@ const JobChecklist = () => {
         notes: row.notes,
         link: row.link ?? "",
         checklist: {
-          resumeSent: false,
-          coverLetterSent: false,
-          followUpSent: false,
+          resumeSent: row.resume_sent ?? false,
+          coverLetterSent: row.cover_letter_sent ?? false,
+          followUpSent: row.follow_up_sent ?? false,
         },
       }),
     );
@@ -77,6 +77,11 @@ const JobChecklist = () => {
       dbUpdates.date_applied = updates.dateApplied;
     if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
     if (updates.link !== undefined) dbUpdates.link = updates.link;
+    if (updates.checklist !== undefined) {
+      dbUpdates.resume_sent = updates.checklist.resumeSent;
+      dbUpdates.cover_letter_sent = updates.checklist.coverLetterSent;
+      dbUpdates.follow_up_sent = updates.checklist.followUpSent;
+    }
 
     // A status move counts as activity — reset the follow-up clock.
     const activityStamp =
@@ -129,6 +134,9 @@ const JobChecklist = () => {
         date_applied: newJobData.dateApplied,
         notes: newJobData.notes,
         link: newJobData.link,
+        resume_sent: newJobData.checklist.resumeSent,
+        cover_letter_sent: newJobData.checklist.coverLetterSent,
+        follow_up_sent: newJobData.checklist.followUpSent,
       })
       .select()
       .single();
@@ -146,7 +154,11 @@ const JobChecklist = () => {
       lastActivityAt: data.updated_at ?? data.created_at ?? data.date_applied,
       notes: data.notes,
       link: data.link ?? "",
-      checklist: newJobData.checklist,
+      checklist: {
+        resumeSent: data.resume_sent ?? false,
+        coverLetterSent: data.cover_letter_sent ?? false,
+        followUpSent: data.follow_up_sent ?? false,
+      },
     };
     setApplications((apps) => [newJob, ...apps]);
     setPage(0);

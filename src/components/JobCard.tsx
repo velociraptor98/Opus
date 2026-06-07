@@ -72,6 +72,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
             <option value="Interviewing">Interviewing</option>
             <option value="Offered">Offered</option>
             <option value="Rejected">Rejected</option>
+            <option value="Closed">Closed</option>
           </select>
           <input
             type="date"

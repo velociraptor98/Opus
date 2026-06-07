@@ -160,6 +160,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
                 <option value="Interviewing">Interviewing</option>
                 <option value="Offered">Offered</option>
                 <option value="Rejected">Rejected</option>
+                <option value="Closed">Closed</option>
               </select>
             </div>
             <div>

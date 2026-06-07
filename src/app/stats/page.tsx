@@ -59,6 +59,7 @@ const MONTH_LABEL = (key: string) => {
 interface Derived {
   total: number;
   statusCounts: Record<string, number>;
+  submitted: number;
   interviewRate: number;
   offerRate: number;
   followUpsDue: number;
@@ -82,6 +83,13 @@ function derive(apps: JobApplication[]): Derived {
   const offered = statusCounts["Offered"] || 0;
   const rejected = statusCounts["Rejected"] || 0;
   const interviewing = statusCounts["Interviewing"] || 0;
+  const pending = statusCounts["Pending"] || 0;
+  const closed = statusCounts["Closed"] || 0;
+
+  // Applications you actually submitted — exclude Pending (not sent yet) and
+  // Closed (posting closed before you could apply). These are the fair
+  // denominator for conversion rates.
+  const submitted = total - pending - closed;
 
   // Anyone currently interviewing or with an offer has earned a conversation.
   const advanced = interviewing + offered;
@@ -145,8 +153,9 @@ function derive(apps: JobApplication[]): Derived {
   return {
     total,
     statusCounts,
-    interviewRate: total > 0 ? Math.round((advanced / total) * 100) : 0,
-    offerRate: total > 0 ? Math.round((offered / total) * 100) : 0,
+    submitted,
+    interviewRate: submitted > 0 ? Math.round((advanced / submitted) * 100) : 0,
+    offerRate: submitted > 0 ? Math.round((offered / submitted) * 100) : 0,
     followUpsDue,
     winRate: decided > 0 ? Math.round((offered / decided) * 100) : null,
     decided,
@@ -214,7 +223,7 @@ export default function StatsPage() {
     {
       label: "Interview Rate",
       value: `${stats.interviewRate}%`,
-      sub: "advanced to interview",
+      sub: "of apps submitted",
       color: "text-warning",
       bg: "bg-warning/10",
     },
@@ -224,7 +233,7 @@ export default function StatsPage() {
       sub:
         stats.winRate !== null
           ? `${stats.winRate}% of decided`
-          : "of all applications",
+          : "of apps submitted",
       color: "text-primary",
       bg: "bg-primary/10",
     },

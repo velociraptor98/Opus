@@ -5,14 +5,15 @@ export type Status =
   | "Applied"
   | "Interviewing"
   | "Offered"
-  | "Rejected";
+  | "Rejected"
+  | "Closed";
 
 export type FilterOption = "All" | "Follow-up" | Status;
 
 /** Days of inactivity after which an active application is flagged for follow-up. */
 export const FOLLOW_UP_DAYS = 7;
 
-/** Statuses still in play — terminal ones (Offered/Rejected) never need a nudge. */
+/** Statuses still in play — terminal ones (Offered/Rejected/Closed) never need a nudge. */
 const ACTIVE_STATUSES: Status[] = ["Pending", "Applied", "Interviewing"];
 
 /** True when an active application has gone quiet past the follow-up threshold. */
@@ -38,6 +39,7 @@ export const STATUS_CONFIG: Record<
   },
   Offered: { dot: "bg-primary", bg: "bg-primary/10", text: "text-primary" },
   Rejected: { dot: "bg-error", bg: "bg-error/10", text: "text-error" },
+  Closed: { dot: "bg-accent", bg: "bg-accent/10", text: "text-accent" },
   Pending: {
     dot: "bg-foreground/40",
     bg: "bg-foreground/5",
@@ -51,6 +53,7 @@ export const FILTER_OPTIONS: FilterOption[] = [
   "Interviewing",
   "Offered",
   "Rejected",
+  "Closed",
   "Pending",
 ];
 export const FOLLOW_UP_COLOR = "var(--color-warning)";
@@ -60,5 +63,6 @@ export const STATUS_COLORS: Record<Status, string> = {
   Interviewing: "var(--color-warning)",
   Offered: "var(--color-primary)",
   Rejected: "var(--color-error)",
+  Closed: "var(--color-accent)",
   Pending: "color-mix(in srgb, var(--color-foreground) 60%, transparent)",
 };
