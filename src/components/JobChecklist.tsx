@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { JobCard } from "./JobCard";
 import { createClient } from "@/lib/supabase/client";
 import { createPortal } from "react-dom";
@@ -26,14 +26,20 @@ const JobChecklist = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const toast = useToast();
 
-  const fetchJobs = async (): Promise<JobApplication[]> => {
+  const fetchJobs = useCallback(async (): Promise<JobApplication[]> => {
     const supabase = createClient();
     const { data, error } = await supabase
       .from("applications")
       .select()
       .order("created_at", { ascending: false });
 
-    if (error || !data) {
+    if (error) {
+      toast.show(error.message || "Couldn't load applications", {
+        variant: "error",
+      });
+      return [];
+    }
+    if (!data) {
       return [];
     }
 
@@ -54,7 +60,7 @@ const JobChecklist = () => {
         },
       }),
     );
-  };
+  }, [toast]);
 
   useEffect(() => {
     (async () => {
@@ -62,7 +68,7 @@ const JobChecklist = () => {
       setApplications(jobs);
       setIsMounted(true);
     })();
-  }, []);
+  }, [fetchJobs]);
 
   const updateApplication = async (
     id: string,
@@ -101,7 +107,10 @@ const JobChecklist = () => {
       .update(dbUpdates)
       .eq("id", id);
 
-    if (error) return false;
+    if (error) {
+      toast.show(error.message || "Couldn't save changes", { variant: "error" });
+      return false;
+    }
 
     setApplications((apps) =>
       apps.map((app) =>
@@ -120,13 +129,14 @@ const JobChecklist = () => {
   const deleteApplication = async (id: string) => {
     const supabase = createClient();
     const { error } = await supabase.from("applications").delete().eq("id", id);
-    if (error) return;
-    if (!error) {
-      setApplications((apps) => apps.filter((app) => app.id !== id));
-      toast.show("Application deleted", {
+    if (error) {
+      toast.show(error.message || "Couldn't delete application", {
         variant: "error",
       });
+      return;
     }
+    setApplications((apps) => apps.filter((app) => app.id !== id));
+    toast.show("Application deleted", { variant: "success" });
   };
 
   const addNewJob = async (

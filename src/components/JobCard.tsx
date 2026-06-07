@@ -20,10 +20,8 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
 
   const handleSaveEdit = async () => {
     const ok = await onUpdate(application.id, editData);
-    if (!ok) {
-      toast.show("Couldn't save changes", { variant: "error" });
-      return;
-    }
+    // The specific failure reason is surfaced by onUpdate itself.
+    if (!ok) return;
     setIsEditing(false);
     toast.show("Changes saved", { variant: "success" });
   };

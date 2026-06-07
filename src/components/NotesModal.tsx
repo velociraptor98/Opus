@@ -42,10 +42,8 @@ export const NotesModal = ({
       notes: noteDraft,
       link: linkDraft,
     });
-    if (!ok) {
-      toast.show("Couldn't save notes", { variant: "error" });
-      return;
-    }
+    // The specific failure reason is surfaced by onUpdate itself.
+    if (!ok) return;
     setIsNotesOpen(false);
     toast.show("Notes saved", { variant: "success" });
   };
