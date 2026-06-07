@@ -23,7 +23,7 @@ import { Status, STATUS_COLORS, needsFollowUp } from "@/constants/generic";
 import { daysSince } from "@/lib/date";
 
 interface JobApplication {
-  id: number;
+  id: string;
   company: string;
   status: Status;
   dateApplied: string;

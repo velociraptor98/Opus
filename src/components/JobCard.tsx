@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Status, STATUS_CONFIG, needsFollowUp } from "@/constants/generic";
 import { NotesModal } from "./NotesModal";
+import { ConfirmModal } from "./ConfirmModal";
 import { BaseJobProps } from "@/constants/types";
 import { useToast } from "@/context/ToastContext";
 import { formatExactDate, formatRelativeDate } from "@/lib/date";
@@ -12,6 +13,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(application);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState(application.notes);
   const [linkDraft, setLinkDraft] = useState(application.link);
   const toast = useToast();
@@ -131,7 +133,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
           {application.link && <ExternalLink link={application.link} />}
           <NotesButton notes={application.notes} openNotes={openNotes} />
           <EditButton setIsEditing={setIsEditing} />
-          <DeleteButton id={application.id} onDelete={onDelete} />
+          <DeleteButton onClick={() => setIsDeleteOpen(true)} />
         </div>
       </div>
       {isNotesOpen &&
@@ -148,20 +150,28 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
           />,
           document.body,
         )}
+      {isDeleteOpen &&
+        createPortal(
+          <ConfirmModal
+            title="Delete application?"
+            message={`This will permanently remove ${application.company} — ${application.position}. This can't be undone.`}
+            confirmLabel="Delete"
+            onConfirm={() => {
+              setIsDeleteOpen(false);
+              onDelete(application.id);
+            }}
+            onCancel={() => setIsDeleteOpen(false)}
+          />,
+          document.body,
+        )}
     </>
   );
 };
 
-const DeleteButton = ({
-  id,
-  onDelete,
-}: {
-  id: string;
-  onDelete: BaseJobProps["onDelete"];
-}) => {
+const DeleteButton = ({ onClick }: { onClick: () => void }) => {
   return (
     <button
-      onClick={() => onDelete(id)}
+      onClick={onClick}
       className="p-2 text-error hover:bg-error/10 rounded-lg transition-colors ml-auto"
       title="Delete"
     >

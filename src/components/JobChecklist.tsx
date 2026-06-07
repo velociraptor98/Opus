@@ -83,9 +83,17 @@ const JobChecklist = () => {
       dbUpdates.follow_up_sent = updates.checklist.followUpSent;
     }
 
-    // A status move counts as activity — reset the follow-up clock.
+    // A status move, or marking a follow-up as just sent, counts as activity —
+    // reset the follow-up clock. Only the transition to checked counts, so
+    // unchecking it (or toggling the other checklist items) won't reset it.
+    const prev = applications.find((app) => app.id === id);
+    const followUpJustSent =
+      updates.checklist?.followUpSent === true &&
+      prev?.checklist.followUpSent === false;
     const activityStamp =
-      updates.status !== undefined ? new Date().toISOString() : null;
+      updates.status !== undefined || followUpJustSent
+        ? new Date().toISOString()
+        : null;
     if (activityStamp) dbUpdates.updated_at = activityStamp;
 
     const { error } = await supabase
@@ -161,6 +169,9 @@ const JobChecklist = () => {
       },
     };
     setApplications((apps) => [newJob, ...apps]);
+    // Clear any active filter/search so the new card is always visible.
+    setStatusFilter("All");
+    setSearchQuery("");
     setPage(0);
     toast.show("Application added", { variant: "success" });
     return { error: null };
