@@ -32,9 +32,9 @@ export default function Navbar() {
                   y2="61"
                   gradientUnits="userSpaceOnUse"
                 >
-                  <stop offset="0" stopColor="#aecb86" />
-                  <stop offset="0.5" stopColor="#86c0b8" />
-                  <stop offset="1" stopColor="#d4a0c0" />
+                  <stop offset="0" stopColor="#1a1a1a" />
+                  <stop offset="0.5" stopColor="#000000" />
+                  <stop offset="1" stopColor="#1a1a1a" />
                 </linearGradient>
                 <linearGradient
                   id="navSheen"
@@ -58,6 +58,27 @@ export default function Navbar() {
                   <stop offset="0" stopColor="#ffffff" stopOpacity="0.9" />
                   <stop offset="1" stopColor="#ffffff" stopOpacity="0.15" />
                 </linearGradient>
+                <linearGradient
+                  id="navRingGlass"
+                  x1="32"
+                  y1="14"
+                  x2="32"
+                  y2="50"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop offset="0" stopColor="#ffffff" stopOpacity="1" />
+                  <stop offset="0.45" stopColor="#ffffff" stopOpacity="0.85" />
+                  <stop offset="1" stopColor="#ffffff" stopOpacity="0.5" />
+                </linearGradient>
+                <filter
+                  id="navRingGlow"
+                  x="-50%"
+                  y="-50%"
+                  width="200%"
+                  height="200%"
+                >
+                  <feGaussianBlur stdDeviation="2.4" />
+                </filter>
               </defs>
               <rect x="1" y="1" width="62" height="62" rx="16" fill="url(#navTile)" />
               <rect x="1" y="1" width="62" height="62" rx="16" fill="url(#navSheen)" />
@@ -73,20 +94,48 @@ export default function Navbar() {
               />
               <path
                 d="M 39.18 16.59 A 17 17 0 1 1 24.82 16.59"
-                stroke="#3f5b54"
-                strokeOpacity="0.22"
+                stroke="#000000"
+                strokeOpacity="0.35"
                 strokeWidth="6"
                 strokeLinecap="round"
                 transform="translate(0,1.3)"
               />
+              {/* soft bloom behind the ring */}
               <path
                 d="M 39.18 16.59 A 17 17 0 1 1 24.82 16.59"
                 stroke="#ffffff"
+                strokeOpacity="0.45"
+                strokeWidth="6"
+                strokeLinecap="round"
+                filter="url(#navRingGlow)"
+              />
+              {/* glass body with vertical translucency */}
+              <path
+                d="M 39.18 16.59 A 17 17 0 1 1 24.82 16.59"
+                stroke="url(#navRingGlass)"
                 strokeWidth="6"
                 strokeLinecap="round"
               />
+              {/* inner refraction line */}
+              <path
+                d="M 39.18 16.59 A 17 17 0 1 1 24.82 16.59"
+                stroke="#ffffff"
+                strokeOpacity="0.35"
+                strokeWidth="2"
+                strokeLinecap="round"
+                transform="translate(0,-0.9)"
+              />
+              {/* specular glint along the top edge */}
+              <path
+                d="M 40.5 17.28 A 17 17 0 0 0 23.5 17.28"
+                stroke="#ffffff"
+                strokeOpacity="0.95"
+                strokeWidth="2"
+                strokeLinecap="round"
+                fill="none"
+              />
             </svg>
-            <span className="text-4xl font-black text-primary dark:text-primary tracking-tighter leading-none">
+            <span className="text-4xl font-black text-black dark:text-white tracking-tighter leading-none">
               Opus
             </span>
           </Link>
