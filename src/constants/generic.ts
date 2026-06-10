@@ -24,7 +24,7 @@ export const STATUS_OPTIONS: Status[] = [
 export const FOLLOW_UP_DAYS = 7;
 
 /** Statuses still in play — terminal ones (Offered/Rejected/Closed) never need a nudge. */
-const ACTIVE_STATUSES: Status[] = ["Pending", "Applied", "Interviewing"];
+export const ACTIVE_STATUSES: Status[] = ["Pending", "Applied", "Interviewing"];
 
 /**
  * True when an active application has gone quiet past the follow-up threshold.

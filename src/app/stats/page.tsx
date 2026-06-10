@@ -15,14 +15,30 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
+  FunnelChart,
+  Funnel,
+  LabelList,
 } from "recharts";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Status, STATUS_COLORS, needsFollowUp } from "@/constants/generic";
+import {
+  ACTIVE_STATUSES,
+  FOLLOW_UP_DAYS,
+  Status,
+  STATUS_COLORS,
+  STATUS_CONFIG,
+  needsFollowUp,
+} from "@/constants/generic";
 import { daysSince } from "@/lib/date";
 import { JobApplication } from "@/constants/types";
 import { mapRowToApplication } from "@/lib/applications";
+import { reachedStages } from "@/lib/pipeline";
+
+/** Historical statuses per application id, from application_events. */
+type StatusHistory = Record<string, Status[]>;
+
+const MUTED_BAR = "color-mix(in srgb, var(--color-foreground) 28%, transparent)";
 
 /** Shared glass tooltip styling for every chart. */
 const TOOLTIP_STYLE = {
@@ -64,10 +80,25 @@ interface Derived {
   byMonth: { month: string; count: number }[];
   busiestMonth: { month: string; count: number } | null;
   topCompanies: { company: string; count: number }[];
-  bySource: { source: string; count: number }[];
+  /** Ever-reached stage counts (history-aware, not a snapshot). */
+  funnel: { submitted: number; interviewed: number; offered: number };
+  sourceConversion: {
+    source: string;
+    offered: number;
+    interviewed: number;
+    noInterview: number;
+  }[];
+  /** Active apps with no scheduled next step, most neglected first. */
+  staleness: {
+    id: string;
+    company: string;
+    position: string;
+    status: Status;
+    daysQuiet: number;
+  }[];
 }
 
-function derive(apps: JobApplication[]): Derived {
+function derive(apps: JobApplication[], history: StatusHistory): Derived {
   const total = apps.length;
 
   const statusCounts = apps.reduce<Record<string, number>>((acc, a) => {
@@ -77,18 +108,46 @@ function derive(apps: JobApplication[]): Derived {
 
   const offered = statusCounts["Offered"] || 0;
   const rejected = statusCounts["Rejected"] || 0;
-  const interviewing = statusCounts["Interviewing"] || 0;
-  const pending = statusCounts["Pending"] || 0;
-  const closed = statusCounts["Closed"] || 0;
 
-  // Applications you actually submitted — exclude Pending (not sent yet) and
-  // Closed (posting closed before you could apply). These are the fair
-  // denominator for conversion rates.
-  const submitted = total - pending - closed;
+  // Ever-reached stage counts: current status plus recorded history, so an
+  // app that interviewed and was later rejected still counts as interviewed.
+  // These are the fair numbers for the funnel and conversion rates.
+  const stages = apps.map((a) => reachedStages(a.status, history[a.id]));
+  const funnel = {
+    submitted: stages.filter((s) => s.submitted).length,
+    interviewed: stages.filter((s) => s.interviewed).length,
+    offered: stages.filter((s) => s.offered).length,
+  };
+  const submitted = funnel.submitted;
 
-  // Anyone currently interviewing or with an offer has earned a conversation.
-  const advanced = interviewing + offered;
   const decided = offered + rejected;
+
+  // Conversion by source, among submitted apps only. Buckets are exclusive:
+  // an app counts once, at the furthest stage it reached.
+  const conversionBySource: Record<
+    string,
+    { offered: number; interviewed: number; noInterview: number }
+  > = {};
+  apps.forEach((a, i) => {
+    if (!stages[i].submitted) return;
+    const key = a.source?.trim() || "Untagged";
+    const bucket = (conversionBySource[key] ??= {
+      offered: 0,
+      interviewed: 0,
+      noInterview: 0,
+    });
+    if (stages[i].offered) bucket.offered += 1;
+    else if (stages[i].interviewed) bucket.interviewed += 1;
+    else bucket.noInterview += 1;
+  });
+  const sourceConversion = Object.entries(conversionBySource)
+    .map(([source, counts]) => ({ source, ...counts }))
+    .sort(
+      (a, b) =>
+        b.offered + b.interviewed + b.noInterview -
+        (a.offered + a.interviewed + a.noInterview),
+    )
+    .slice(0, 8);
 
   const followUpsDue = apps.filter((a) =>
     needsFollowUp(a.status, a.lastActivityAt, a.nextActionDate),
@@ -145,24 +204,33 @@ function derive(apps: JobApplication[]): Derived {
     .sort((a, b) => b.count - a.count)
     .slice(0, 6);
 
-  // Group untagged applications under one bucket so the chart stays honest
-  // about how much of the pipeline has a known source.
-  const sourceCounts = apps.reduce<Record<string, number>>((acc, a) => {
-    const key = a.source?.trim() || "Untagged";
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
-  const bySource = Object.entries(sourceCounts)
-    .map(([source, count]) => ({ source, count }))
-    .sort((a, b) => b.count - a.count)
+  // The neglect list: in-play applications, stalest first. Apps with an
+  // upcoming next step are excluded — a booked interview isn't neglect.
+  const staleness = apps
+    .filter((a) => {
+      if (!ACTIVE_STATUSES.includes(a.status)) return false;
+      if (!a.nextActionDate) return true;
+      const untilAction = daysSince(a.nextActionDate);
+      return untilAction === null || untilAction > 0;
+    })
+    .map((a) => ({
+      id: a.id,
+      company: a.company,
+      position: a.position,
+      status: a.status,
+      daysQuiet: daysSince(a.lastActivityAt) ?? 0,
+    }))
+    .sort((a, b) => b.daysQuiet - a.daysQuiet)
     .slice(0, 8);
 
   return {
     total,
     statusCounts,
     submitted,
-    interviewRate: submitted > 0 ? Math.round((advanced / submitted) * 100) : 0,
-    offerRate: submitted > 0 ? Math.round((offered / submitted) * 100) : 0,
+    interviewRate:
+      submitted > 0 ? Math.round((funnel.interviewed / submitted) * 100) : 0,
+    offerRate:
+      submitted > 0 ? Math.round((funnel.offered / submitted) * 100) : 0,
     followUpsDue,
     winRate: decided > 0 ? Math.round((offered / decided) * 100) : null,
     decided,
@@ -171,7 +239,9 @@ function derive(apps: JobApplication[]): Derived {
     byMonth,
     busiestMonth,
     topCompanies,
-    bySource,
+    funnel,
+    sourceConversion,
+    staleness,
   };
 }
 
@@ -179,6 +249,7 @@ export default function StatsPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [apps, setApps] = useState<JobApplication[]>([]);
+  const [history, setHistory] = useState<StatusHistory>({});
 
   useEffect(() => {
     (async () => {
@@ -187,18 +258,35 @@ export default function StatsPage() {
         return;
       }
       const supabase = createClient();
-      const { data, error } = await supabase
-        .from("applications")
-        .select()
-        .order("created_at", { ascending: false });
+      const [appsRes, eventsRes] = await Promise.all([
+        supabase
+          .from("applications")
+          .select()
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("application_events")
+          .select("application_id, from_status, to_status"),
+      ]);
 
-      if (error || !data) return;
+      if (appsRes.error || !appsRes.data) return;
+      setApps(appsRes.data.map(mapRowToApplication));
 
-      setApps(data.map(mapRowToApplication));
+      // History is an enhancement — without it (e.g. migration not run yet)
+      // the funnel still works from current statuses alone.
+      if (!eventsRes.error && eventsRes.data) {
+        const byApp: StatusHistory = {};
+        for (const e of eventsRes.data) {
+          const statuses = (byApp[e.application_id] ??= []);
+          // A transition proves both endpoints were visited.
+          if (e.from_status) statuses.push(e.from_status as Status);
+          statuses.push(e.to_status as Status);
+        }
+        setHistory(byApp);
+      }
     })();
   }, [isAuthenticated, router]);
 
-  const stats = useMemo(() => derive(apps), [apps]);
+  const stats = useMemo(() => derive(apps, history), [apps, history]);
 
   const pieData = useMemo(
     () =>
@@ -292,6 +380,171 @@ export default function StatsPage() {
           </section>
         ) : (
           <>
+            {stats.funnel.submitted > 0 && (
+              <>
+                {/* Pipeline funnel — ever-reached stages, not a snapshot */}
+                <section className="card-glass rounded-3xl p-8">
+                  <h2 className="text-xl font-bold text-primary mb-1">
+                    Pipeline Funnel
+                  </h2>
+                  <p className="text-xs text-foreground/60 mb-4">
+                    Every stage an application has ever reached
+                  </p>
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <FunnelChart>
+                        <Tooltip
+                          contentStyle={TOOLTIP_STYLE}
+                          itemStyle={{ color: "#fff" }}
+                        />
+                        <Funnel
+                          dataKey="value"
+                          data={[
+                            {
+                              name: "Submitted",
+                              value: stats.funnel.submitted,
+                              fill: "var(--color-secondary)",
+                            },
+                            {
+                              name: "Interviewed",
+                              value: stats.funnel.interviewed,
+                              fill: "var(--color-warning)",
+                            },
+                            {
+                              name: "Offered",
+                              value: stats.funnel.offered,
+                              fill: "var(--color-primary)",
+                            },
+                          ]}
+                          isAnimationActive
+                          animationDuration={900}
+                        >
+                          <LabelList
+                            dataKey="name"
+                            position="right"
+                            fill={AXIS_TICK.fill}
+                            stroke="none"
+                            fontSize={12}
+                          />
+                        </Funnel>
+                      </FunnelChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-foreground/5 text-center">
+                    {[
+                      {
+                        label: "Submitted → Interview",
+                        from: stats.funnel.submitted,
+                        to: stats.funnel.interviewed,
+                      },
+                      {
+                        label: "Interview → Offer",
+                        from: stats.funnel.interviewed,
+                        to: stats.funnel.offered,
+                      },
+                      {
+                        label: "Overall",
+                        from: stats.funnel.submitted,
+                        to: stats.funnel.offered,
+                      },
+                    ].map((step) => (
+                      <div key={step.label}>
+                        <p className="text-lg font-black text-foreground">
+                          {step.from > 0
+                            ? `${Math.round((step.to / step.from) * 100)}%`
+                            : "—"}
+                        </p>
+                        <p className="text-[10px] uppercase tracking-wide font-semibold text-foreground/55">
+                          {step.label}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Conversion by source */}
+                {stats.sourceConversion.some((s) => s.source !== "Untagged") && (
+                  <section className="card-glass rounded-3xl p-8">
+                    <h2 className="text-xl font-bold text-primary mb-1">
+                      Source Conversion
+                    </h2>
+                    <p className="text-xs text-foreground/60 mb-4">
+                      How far applications from each source get
+                    </p>
+                    <div
+                      className="w-full"
+                      style={{
+                        height: Math.max(
+                          stats.sourceConversion.length * 48 + 60,
+                          200,
+                        ),
+                      }}
+                    >
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={stats.sourceConversion}
+                          layout="vertical"
+                          margin={{ top: 0, right: 16, left: 8, bottom: 0 }}
+                        >
+                          <CartesianGrid
+                            horizontal={false}
+                            strokeDasharray="3 3"
+                            stroke={GRID_STROKE}
+                          />
+                          <XAxis
+                            type="number"
+                            allowDecimals={false}
+                            tick={AXIS_TICK}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <YAxis
+                            type="category"
+                            dataKey="source"
+                            tick={AXIS_TICK}
+                            tickLine={false}
+                            axisLine={false}
+                            width={110}
+                          />
+                          <Tooltip
+                            cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                            contentStyle={TOOLTIP_STYLE}
+                            itemStyle={{ color: "#fff" }}
+                          />
+                          <Legend
+                            wrapperStyle={{ fontSize: 12 }}
+                            iconSize={10}
+                          />
+                          <Bar
+                            dataKey="offered"
+                            name="Offered"
+                            stackId="pipeline"
+                            fill="var(--color-primary)"
+                            animationDuration={900}
+                          />
+                          <Bar
+                            dataKey="interviewed"
+                            name="Interviewed"
+                            stackId="pipeline"
+                            fill="var(--color-warning)"
+                            animationDuration={900}
+                          />
+                          <Bar
+                            dataKey="noInterview"
+                            name="No interview yet"
+                            stackId="pipeline"
+                            fill={MUTED_BAR}
+                            radius={[0, 8, 8, 0]}
+                            animationDuration={900}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Status distribution */}
               <section className="card-glass rounded-3xl p-8">
@@ -388,6 +641,74 @@ export default function StatsPage() {
               </section>
             </div>
 
+            {/* Pipeline staleness — who's been left waiting */}
+            {stats.staleness.length > 0 && (
+              <section className="card-glass rounded-3xl p-8">
+                <h2 className="text-xl font-bold text-primary mb-1">
+                  Pipeline Staleness
+                </h2>
+                <p className="text-xs text-foreground/60 mb-6">
+                  Active applications by time since last movement — apps with a
+                  scheduled next step aren&apos;t shown
+                </p>
+                <div className="space-y-3">
+                  {stats.staleness.map((row) => {
+                    const cfg = STATUS_CONFIG[row.status];
+                    const tone =
+                      row.daysQuiet >= FOLLOW_UP_DAYS * 2
+                        ? "text-error"
+                        : row.daysQuiet >= FOLLOW_UP_DAYS
+                          ? "text-warning"
+                          : "text-foreground/50";
+                    const barColor =
+                      row.daysQuiet >= FOLLOW_UP_DAYS * 2
+                        ? "var(--color-error)"
+                        : row.daysQuiet >= FOLLOW_UP_DAYS
+                          ? "var(--color-warning)"
+                          : "var(--color-secondary)";
+                    return (
+                      <div key={row.id} className="flex items-center gap-3">
+                        <div className="w-40 md:w-56 shrink-0 min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">
+                            {row.company}
+                          </p>
+                          <p className="text-xs text-foreground/60 truncate">
+                            {row.position}
+                          </p>
+                        </div>
+                        <span
+                          className={`hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${cfg.bg} ${cfg.text}`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`}
+                          />
+                          {row.status}
+                        </span>
+                        <div className="flex-1 h-1.5 rounded-full bg-foreground/5 overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all"
+                            style={{
+                              // Saturates at four weeks of silence.
+                              width: `${Math.min(row.daysQuiet / 28, 1) * 100}%`,
+                              background: barColor,
+                              opacity: 0.7,
+                            }}
+                          />
+                        </div>
+                        <p
+                          className={`w-20 shrink-0 text-right text-xs font-bold tabular-nums ${tone}`}
+                        >
+                          {row.daysQuiet <= 0
+                            ? "Today"
+                            : `${row.daysQuiet} day${row.daysQuiet === 1 ? "" : "s"}`}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
             {/* Top companies */}
             {stats.topCompanies.length > 0 && (
               <section className="card-glass rounded-3xl p-8">
@@ -433,60 +754,6 @@ export default function StatsPage() {
                       <Bar
                         dataKey="count"
                         fill="var(--color-primary)"
-                        radius={[0, 8, 8, 0]}
-                        animationDuration={900}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </section>
-            )}
-
-            {/* Where applications come from */}
-            {stats.bySource.some((s) => s.source !== "Untagged") && (
-              <section className="card-glass rounded-3xl p-8">
-                <h2 className="text-xl font-bold text-primary mb-6">
-                  Application Sources
-                </h2>
-                <div
-                  className="w-full"
-                  style={{ height: stats.bySource.length * 48 + 24 }}
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={stats.bySource}
-                      layout="vertical"
-                      margin={{ top: 0, right: 16, left: 8, bottom: 0 }}
-                    >
-                      <CartesianGrid
-                        horizontal={false}
-                        strokeDasharray="3 3"
-                        stroke={GRID_STROKE}
-                      />
-                      <XAxis
-                        type="number"
-                        allowDecimals={false}
-                        tick={AXIS_TICK}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <YAxis
-                        type="category"
-                        dataKey="source"
-                        tick={AXIS_TICK}
-                        tickLine={false}
-                        axisLine={false}
-                        width={120}
-                      />
-                      <Tooltip
-                        cursor={{ fill: "rgba(255,255,255,0.04)" }}
-                        contentStyle={TOOLTIP_STYLE}
-                        itemStyle={{ color: "#fff" }}
-                        formatter={(value) => [value, "Applications"]}
-                      />
-                      <Bar
-                        dataKey="count"
-                        fill="var(--color-secondary)"
                         radius={[0, 8, 8, 0]}
                         animationDuration={900}
                       />
