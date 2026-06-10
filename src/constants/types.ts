@@ -10,6 +10,16 @@ export interface JobApplication {
   lastActivityAt: string;
   notes: string;
   link: string;
+  location: string;
+  salary: string;
+  /** Where the application came from, e.g. "LinkedIn", "Referral". */
+  source: string;
+  /** Recruiter / hiring contact, free-form ("Jane Doe <jane@acme.com>"). */
+  contact: string;
+  /** Next scheduled step ("YYYY-MM-DD"); empty when nothing is scheduled. */
+  nextActionDate: string;
+  /** Short label for the next step, e.g. "Phone screen". */
+  nextActionNote: string;
   checklist: {
     resumeSent: boolean;
     coverLetterSent: boolean;

@@ -1,25 +1,37 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BaseJobProps, JobApplication } from "@/constants/types";
+import { SOURCE_OPTIONS } from "@/constants/generic";
 import { useToast } from "@/context/ToastContext";
 
-interface NotesModalProps extends BaseJobProps {
-  noteDraft: string;
-  setNoteDraft: (v: string) => void;
-  linkDraft: string;
-  setLinkDraft: (v: string) => void;
+interface NotesModalProps extends Omit<BaseJobProps, "onDelete"> {
   setIsNotesOpen: (open: boolean) => void;
 }
 
+/**
+ * Details editor for everything beyond the card's core fields: link,
+ * location, salary, source, contact, next scheduled step, notes, and the
+ * outreach checklist. Drafts are local; nothing persists until Save (the
+ * checklist toggles save immediately, as before).
+ */
 export const NotesModal = ({
   application,
   onUpdate,
-  noteDraft,
-  setNoteDraft,
-  linkDraft,
-  setLinkDraft,
   setIsNotesOpen,
 }: NotesModalProps) => {
   const toast = useToast();
+  const [draft, setDraft] = useState({
+    notes: application.notes,
+    link: application.link,
+    location: application.location,
+    salary: application.salary,
+    source: application.source,
+    contact: application.contact,
+    nextActionDate: application.nextActionDate,
+    nextActionNote: application.nextActionNote,
+  });
+
+  const setField = (field: keyof typeof draft) => (value: string) =>
+    setDraft((d) => ({ ...d, [field]: value }));
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -37,23 +49,25 @@ export const NotesModal = ({
       },
     });
   };
-  const handleSaveNotes = async () => {
-    const ok = await onUpdate(application.id, {
-      notes: noteDraft,
-      link: linkDraft,
-    });
+
+  const handleSave = async () => {
+    const ok = await onUpdate(application.id, draft);
     // The specific failure reason is surfaced by onUpdate itself.
     if (!ok) return;
     setIsNotesOpen(false);
-    toast.show("Notes saved", { variant: "success" });
+    toast.show("Details saved", { variant: "success" });
   };
+
+  const labelCls =
+    "block text-xs font-bold text-foreground/70 uppercase tracking-widest mb-1";
+
   return (
     <div
       className="animate-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
       onClick={() => setIsNotesOpen(false)}
     >
       <div
-        className="animate-modal modal-glass rounded-3xl w-full max-w-md overflow-hidden"
+        className="animate-modal modal-glass rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 py-4 border-b border-white/20 dark:border-white/10 flex justify-between items-center">
@@ -81,26 +95,93 @@ export const NotesModal = ({
         </div>
         <div className="p-6 space-y-4">
           <div>
-            <label className="block text-xs font-bold text-foreground/70 uppercase tracking-widest mb-1">
-              Link
-            </label>
+            <label className={labelCls}>Link</label>
             <input
               type="url"
-              value={linkDraft}
-              onChange={(e) => setLinkDraft(e.target.value)}
+              value={draft.link}
+              onChange={(e) => setField("link")(e.target.value)}
               placeholder="https://..."
               className="input-glass w-full px-3 py-2 rounded-lg"
             />
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Location</label>
+              <input
+                type="text"
+                value={draft.location}
+                onChange={(e) => setField("location")(e.target.value)}
+                placeholder="e.g. Remote"
+                className="input-glass w-full px-3 py-2 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Salary</label>
+              <input
+                type="text"
+                value={draft.salary}
+                onChange={(e) => setField("salary")(e.target.value)}
+                placeholder="e.g. $140k–$170k"
+                className="input-glass w-full px-3 py-2 rounded-lg"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Source</label>
+              <input
+                type="text"
+                list="source-options"
+                value={draft.source}
+                onChange={(e) => setField("source")(e.target.value)}
+                placeholder="e.g. LinkedIn"
+                className="input-glass w-full px-3 py-2 rounded-lg"
+              />
+              <datalist id="source-options">
+                {SOURCE_OPTIONS.map((s) => (
+                  <option key={s} value={s} />
+                ))}
+              </datalist>
+            </div>
+            <div>
+              <label className={labelCls}>Contact</label>
+              <input
+                type="text"
+                value={draft.contact}
+                onChange={(e) => setField("contact")(e.target.value)}
+                placeholder="Recruiter name / email"
+                className="input-glass w-full px-3 py-2 rounded-lg"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Next step date</label>
+              <input
+                type="date"
+                value={draft.nextActionDate}
+                onChange={(e) => setField("nextActionDate")(e.target.value)}
+                className="input-glass w-full px-3 py-2 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Next step</label>
+              <input
+                type="text"
+                value={draft.nextActionNote}
+                onChange={(e) => setField("nextActionNote")(e.target.value)}
+                placeholder="e.g. Phone screen"
+                className="input-glass w-full px-3 py-2 rounded-lg"
+              />
+            </div>
+          </div>
           <div>
-            <label className="block text-xs font-bold text-foreground/70 uppercase tracking-widest mb-1">
-              Notes
-            </label>
+            <label className={labelCls}>Notes</label>
             <textarea
-              value={noteDraft}
-              onChange={(e) => setNoteDraft(e.target.value)}
+              value={draft.notes}
+              onChange={(e) => setField("notes")(e.target.value)}
               placeholder="Add notes about this application…"
-              rows={5}
+              rows={4}
               className="input-glass w-full px-3 py-2 rounded-lg resize-y"
               autoFocus
             />
@@ -150,7 +231,7 @@ export const NotesModal = ({
             </button>
             <button
               type="button"
-              onClick={handleSaveNotes}
+              onClick={handleSave}
               className="btn-glass flex-1 px-4 py-2 bg-primary/80 dark:bg-secondary/70 text-white rounded-lg font-semibold border-primary/40 dark:border-secondary/40"
             >
               Save

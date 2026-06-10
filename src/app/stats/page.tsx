@@ -21,14 +21,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Status, STATUS_COLORS, needsFollowUp } from "@/constants/generic";
 import { daysSince } from "@/lib/date";
-
-interface JobApplication {
-  id: string;
-  company: string;
-  status: Status;
-  dateApplied: string;
-  lastActivityAt: string;
-}
+import { JobApplication } from "@/constants/types";
+import { mapRowToApplication } from "@/lib/applications";
 
 /** Shared glass tooltip styling for every chart. */
 const TOOLTIP_STYLE = {
@@ -70,6 +64,7 @@ interface Derived {
   byMonth: { month: string; count: number }[];
   busiestMonth: { month: string; count: number } | null;
   topCompanies: { company: string; count: number }[];
+  bySource: { source: string; count: number }[];
 }
 
 function derive(apps: JobApplication[]): Derived {
@@ -96,7 +91,7 @@ function derive(apps: JobApplication[]): Derived {
   const decided = offered + rejected;
 
   const followUpsDue = apps.filter((a) =>
-    needsFollowUp(a.status, a.lastActivityAt),
+    needsFollowUp(a.status, a.lastActivityAt, a.nextActionDate),
   ).length;
 
   let thisWeek = 0;
@@ -150,6 +145,18 @@ function derive(apps: JobApplication[]): Derived {
     .sort((a, b) => b.count - a.count)
     .slice(0, 6);
 
+  // Group untagged applications under one bucket so the chart stays honest
+  // about how much of the pipeline has a known source.
+  const sourceCounts = apps.reduce<Record<string, number>>((acc, a) => {
+    const key = a.source?.trim() || "Untagged";
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  const bySource = Object.entries(sourceCounts)
+    .map(([source, count]) => ({ source, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+
   return {
     total,
     statusCounts,
@@ -164,6 +171,7 @@ function derive(apps: JobApplication[]): Derived {
     byMonth,
     busiestMonth,
     topCompanies,
+    bySource,
   };
 }
 
@@ -186,18 +194,7 @@ export default function StatsPage() {
 
       if (error || !data) return;
 
-      setApps(
-        data.map(
-          (row): JobApplication => ({
-            id: row.id,
-            company: row.company,
-            status: row.status,
-            dateApplied: row.date_applied,
-            lastActivityAt:
-              row.updated_at ?? row.created_at ?? row.date_applied,
-          }),
-        ),
-      );
+      setApps(data.map(mapRowToApplication));
     })();
   }, [isAuthenticated, router]);
 
@@ -436,6 +433,60 @@ export default function StatsPage() {
                       <Bar
                         dataKey="count"
                         fill="var(--color-primary)"
+                        radius={[0, 8, 8, 0]}
+                        animationDuration={900}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </section>
+            )}
+
+            {/* Where applications come from */}
+            {stats.bySource.some((s) => s.source !== "Untagged") && (
+              <section className="card-glass rounded-3xl p-8">
+                <h2 className="text-xl font-bold text-primary mb-6">
+                  Application Sources
+                </h2>
+                <div
+                  className="w-full"
+                  style={{ height: stats.bySource.length * 48 + 24 }}
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={stats.bySource}
+                      layout="vertical"
+                      margin={{ top: 0, right: 16, left: 8, bottom: 0 }}
+                    >
+                      <CartesianGrid
+                        horizontal={false}
+                        strokeDasharray="3 3"
+                        stroke={GRID_STROKE}
+                      />
+                      <XAxis
+                        type="number"
+                        allowDecimals={false}
+                        tick={AXIS_TICK}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        type="category"
+                        dataKey="source"
+                        tick={AXIS_TICK}
+                        tickLine={false}
+                        axisLine={false}
+                        width={120}
+                      />
+                      <Tooltip
+                        cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                        contentStyle={TOOLTIP_STYLE}
+                        itemStyle={{ color: "#fff" }}
+                        formatter={(value) => [value, "Applications"]}
+                      />
+                      <Bar
+                        dataKey="count"
+                        fill="var(--color-secondary)"
                         radius={[0, 8, 8, 0]}
                         animationDuration={900}
                       />

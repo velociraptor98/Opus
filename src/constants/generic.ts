@@ -11,18 +11,50 @@ export type Status =
 
 export type FilterOption = "All" | "Follow-up" | Status;
 
+export const STATUS_OPTIONS: Status[] = [
+  "Pending",
+  "Applied",
+  "Interviewing",
+  "Offered",
+  "Rejected",
+  "Closed",
+];
+
 /** Days of inactivity after which an active application is flagged for follow-up. */
 export const FOLLOW_UP_DAYS = 7;
 
 /** Statuses still in play — terminal ones (Offered/Rejected/Closed) never need a nudge. */
 const ACTIVE_STATUSES: Status[] = ["Pending", "Applied", "Interviewing"];
 
-/** True when an active application has gone quiet past the follow-up threshold. */
-export function needsFollowUp(status: Status, lastActivityAt: string): boolean {
+/**
+ * True when an active application has gone quiet past the follow-up threshold.
+ * A scheduled next action today or later suppresses the nudge — you already
+ * know your next step. Once that date passes, normal staleness rules resume.
+ */
+export function needsFollowUp(
+  status: Status,
+  lastActivityAt: string,
+  nextActionDate?: string,
+): boolean {
   if (!ACTIVE_STATUSES.includes(status)) return false;
+  if (nextActionDate) {
+    const untilAction = daysSince(nextActionDate);
+    if (untilAction !== null && untilAction <= 0) return false;
+  }
   const days = daysSince(lastActivityAt);
   return days !== null && days >= FOLLOW_UP_DAYS;
 }
+
+/** Common application sources; the UI also accepts free text. */
+export const SOURCE_OPTIONS = [
+  "LinkedIn",
+  "Referral",
+  "Company site",
+  "Job board",
+  "Recruiter",
+  "Career fair",
+  "Other",
+] as const;
 
 export const STATUS_CONFIG: Record<
   Status,
@@ -114,8 +146,12 @@ export function sortApplications(
       return copy.sort((a, b) => dateDesc(a.lastActivityAt, b.lastActivityAt));
     case "Follow-up first":
       return copy.sort((a, b) => {
-        const fa = needsFollowUp(a.status, a.lastActivityAt) ? 0 : 1;
-        const fb = needsFollowUp(b.status, b.lastActivityAt) ? 0 : 1;
+        const fa = needsFollowUp(a.status, a.lastActivityAt, a.nextActionDate)
+          ? 0
+          : 1;
+        const fb = needsFollowUp(b.status, b.lastActivityAt, b.nextActionDate)
+          ? 0
+          : 1;
         if (fa !== fb) return fa - fb;
         // Within the flagged group, the most stale (oldest activity) comes first.
         return dateAsc(a.lastActivityAt, b.lastActivityAt);

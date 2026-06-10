@@ -26,6 +26,12 @@ function makeApp(overrides: Partial<JobApplication> = {}): JobApplication {
     lastActivityAt: "2026-06-07T00:00:00",
     notes: "",
     link: "",
+    location: "",
+    salary: "",
+    source: "",
+    contact: "",
+    nextActionDate: "",
+    nextActionNote: "",
     checklist: { resumeSent: false, coverLetterSent: false, followUpSent: false },
     ...overrides,
   };
@@ -56,7 +62,35 @@ describe("JobCard", () => {
     renderCard({ company: "Globex", position: "Designer", status: "Interviewing" });
     expect(screen.getByRole("heading", { name: "Globex" })).toBeInTheDocument();
     expect(screen.getByText("Designer")).toBeInTheDocument();
-    expect(screen.getByText("Interviewing")).toBeInTheDocument();
+    // The status pill text and its dropdown's selected option both say
+    // "Interviewing" — assert via the select's value.
+    expect(screen.getByRole("combobox", { name: "Change status" })).toHaveValue(
+      "Interviewing",
+    );
+  });
+
+  it("changes status straight from the pill without entering edit mode", async () => {
+    vi.useRealTimers();
+    const user = userEvent.setup();
+    const { onUpdate } = renderCard({ status: "Applied" });
+
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Change status" }),
+      "Interviewing",
+    );
+
+    expect(onUpdate).toHaveBeenCalledWith("job-1", { status: "Interviewing" });
+  });
+
+  it("shows the scheduled next step instead of a follow-up nudge", () => {
+    renderCard({
+      status: "Applied",
+      lastActivityAt: "2026-05-01T00:00:00",
+      nextActionDate: "2026-06-10",
+      nextActionNote: "Phone screen",
+    });
+    expect(screen.getByText(/phone screen/i)).toBeInTheDocument();
+    expect(screen.queryByText(/follow up/i)).not.toBeInTheDocument();
   });
 
   it("shows the follow-up pill for a stale active application", () => {

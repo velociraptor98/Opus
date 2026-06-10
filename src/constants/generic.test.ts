@@ -24,6 +24,12 @@ function makeApp(overrides: Partial<JobApplication> = {}): JobApplication {
     lastActivityAt: "2026-06-01T00:00:00",
     notes: "",
     link: "",
+    location: "",
+    salary: "",
+    source: "",
+    contact: "",
+    nextActionDate: "",
+    nextActionNote: "",
     checklist: {
       resumeSent: false,
       coverLetterSent: false,
@@ -55,6 +61,20 @@ describe("needsFollowUp", () => {
 
   it("does not flag when the activity date is missing", () => {
     expect(needsFollowUp("Applied", "")).toBe(false);
+  });
+
+  it("suppresses the nudge when a next action is scheduled today or later", () => {
+    // Stale, but an interview is on the calendar — no nudge needed.
+    expect(needsFollowUp("Applied", "2026-05-01", "2026-06-08")).toBe(false);
+    expect(needsFollowUp("Applied", "2026-05-01", "2026-06-20")).toBe(false);
+  });
+
+  it("resumes nudging once the scheduled next action has passed", () => {
+    expect(needsFollowUp("Applied", "2026-05-01", "2026-06-05")).toBe(true);
+  });
+
+  it("ignores an unparseable next action date", () => {
+    expect(needsFollowUp("Applied", "2026-05-01", "not-a-date")).toBe(true);
   });
 });
 

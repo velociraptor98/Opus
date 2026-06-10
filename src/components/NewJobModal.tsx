@@ -1,6 +1,26 @@
-import { Status } from "@/constants/generic";
+import { SOURCE_OPTIONS, Status, STATUS_OPTIONS } from "@/constants/generic";
 import { JobApplication } from "@/constants/types";
 import { useEffect, useState } from "react";
+
+const emptyForm = () => ({
+  company: "",
+  position: "",
+  status: "Pending" as Status,
+  dateApplied: new Date().toISOString().split("T")[0],
+  notes: "",
+  link: "",
+  location: "",
+  salary: "",
+  source: "",
+  contact: "",
+  nextActionDate: "",
+  nextActionNote: "",
+  checklist: {
+    resumeSent: false,
+    coverLetterSent: false,
+    followUpSent: false,
+  },
+});
 
 interface NewJobModalProps {
   isOpen: boolean;
@@ -11,19 +31,7 @@ interface NewJobModalProps {
 }
 
 export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
-  const [formData, setFormData] = useState({
-    company: "",
-    position: "",
-    status: "Pending" as Status,
-    dateApplied: new Date().toISOString().split("T")[0],
-    notes: "",
-    link: "",
-    checklist: {
-      resumeSent: false,
-      coverLetterSent: false,
-      followUpSent: false,
-    },
-  });
+  const [formData, setFormData] = useState(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -51,19 +59,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
       return;
     }
 
-    setFormData({
-      company: "",
-      position: "",
-      status: "Pending",
-      dateApplied: new Date().toISOString().split("T")[0],
-      notes: "",
-      link: "",
-      checklist: {
-        resumeSent: false,
-        coverLetterSent: false,
-        followUpSent: false,
-      },
-    });
+    setFormData(emptyForm());
     setSubmitting(false);
     onClose();
   };
@@ -155,12 +151,11 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
                   setFormData({ ...formData, status: e.target.value as Status })
                 }
               >
-                <option value="Pending">Pending</option>
-                <option value="Applied">Applied</option>
-                <option value="Interviewing">Interviewing</option>
-                <option value="Offered">Offered</option>
-                <option value="Rejected">Rejected</option>
-                <option value="Closed">Closed</option>
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -176,6 +171,56 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
                 }
               />
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-primary/80 dark:text-secondary mb-1">
+                Location
+              </label>
+              <input
+                type="text"
+                className="input-glass w-full px-3 py-2 rounded-lg"
+                value={formData.location}
+                onChange={(e) =>
+                  setFormData({ ...formData, location: e.target.value })
+                }
+                placeholder="e.g. Remote"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-primary/80 dark:text-secondary mb-1">
+                Source
+              </label>
+              <input
+                type="text"
+                list="new-job-source-options"
+                className="input-glass w-full px-3 py-2 rounded-lg"
+                value={formData.source}
+                onChange={(e) =>
+                  setFormData({ ...formData, source: e.target.value })
+                }
+                placeholder="e.g. LinkedIn"
+              />
+              <datalist id="new-job-source-options">
+                {SOURCE_OPTIONS.map((s) => (
+                  <option key={s} value={s} />
+                ))}
+              </datalist>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-primary/80 dark:text-secondary mb-1">
+              Link
+            </label>
+            <input
+              type="url"
+              className="input-glass w-full px-3 py-2 rounded-lg"
+              value={formData.link}
+              onChange={(e) =>
+                setFormData({ ...formData, link: e.target.value })
+              }
+              placeholder="https://..."
+            />
           </div>
           <div className="pt-4 border-t border-secondary/10 dark:border-zinc-800 flex gap-3">
             <button

@@ -2,20 +2,23 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { Status, STATUS_CONFIG, needsFollowUp } from "@/constants/generic";
+import {
+  Status,
+  STATUS_CONFIG,
+  STATUS_OPTIONS,
+  needsFollowUp,
+} from "@/constants/generic";
 import { NotesModal } from "./NotesModal";
 import { ConfirmModal } from "./ConfirmModal";
-import { BaseJobProps } from "@/constants/types";
+import { BaseJobProps, JobApplication } from "@/constants/types";
 import { useToast } from "@/context/ToastContext";
-import { formatExactDate, formatRelativeDate } from "@/lib/date";
+import { daysSince, formatExactDate, formatRelativeDate } from "@/lib/date";
 
 export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(application);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [noteDraft, setNoteDraft] = useState(application.notes);
-  const [linkDraft, setLinkDraft] = useState(application.link);
   const toast = useToast();
 
   const handleSaveEdit = async () => {
@@ -26,17 +29,22 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
     toast.show("Changes saved", { variant: "success" });
   };
 
-  const openNotes = () => {
-    setNoteDraft(application.notes);
-    setLinkDraft(application.link);
-    setIsNotesOpen(true);
+  const handleQuickStatusChange = async (status: Status) => {
+    if (status === application.status) return;
+    const ok = await onUpdate(application.id, { status });
+    // The specific failure reason is surfaced by onUpdate itself.
+    if (!ok) return;
+    toast.show(`Moved to ${status}`, { variant: "success" });
   };
 
-  const cfg = STATUS_CONFIG[application.status];
   const followUp = needsFollowUp(
     application.status,
     application.lastActivityAt,
+    application.nextActionDate,
   );
+  const detailLine = [application.location, application.salary]
+    .filter(Boolean)
+    .join(" · ");
 
   if (isEditing) {
     return (
@@ -67,12 +75,11 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
               setEditData({ ...editData, status: e.target.value as Status })
             }
           >
-            <option value="Pending">Pending</option>
-            <option value="Applied">Applied</option>
-            <option value="Interviewing">Interviewing</option>
-            <option value="Offered">Offered</option>
-            <option value="Rejected">Rejected</option>
-            <option value="Closed">Closed</option>
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
           </select>
           <input
             type="date"
@@ -108,17 +115,18 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
           <h3 className="font-bold text-foreground text-base leading-tight">
             {application.company}
           </h3>
-          <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 ${cfg.bg} ${cfg.text}`}
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-            {application.status}
-          </span>
+          <StatusPill
+            status={application.status}
+            onChange={handleQuickStatusChange}
+          />
         </div>
         <p className="text-sm text-foreground/80 mb-1">
           {application.position}
         </p>
-        <div className="flex items-center gap-2 mb-3">
+        {detailLine && (
+          <p className="text-xs text-foreground/60 mb-1">{detailLine}</p>
+        )}
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
           <p
             className="text-xs text-foreground/60"
             title={formatExactDate(application.dateApplied)}
@@ -126,10 +134,14 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
             {formatRelativeDate(application.dateApplied)}
           </p>
           {followUp && <FollowUpPill />}
+          <NextActionPill application={application} />
         </div>
         <div className="flex items-center gap-2 border-t border-foreground/5 pt-3">
           {application.link && <ExternalLink link={application.link} />}
-          <NotesButton notes={application.notes} openNotes={openNotes} />
+          <NotesButton
+            notes={application.notes}
+            openNotes={() => setIsNotesOpen(true)}
+          />
           <EditButton setIsEditing={setIsEditing} />
           <DeleteButton onClick={() => setIsDeleteOpen(true)} />
         </div>
@@ -139,11 +151,6 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
           <NotesModal
             application={application}
             onUpdate={onUpdate}
-            onDelete={onDelete}
-            noteDraft={noteDraft}
-            setNoteDraft={setNoteDraft}
-            linkDraft={linkDraft}
-            setLinkDraft={setLinkDraft}
             setIsNotesOpen={setIsNotesOpen}
           />,
           document.body,
@@ -163,6 +170,93 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
           document.body,
         )}
     </>
+  );
+};
+
+/**
+ * The status pill doubles as a dropdown: an invisible native select sits on
+ * top, so moving an application along the pipeline never requires edit mode.
+ */
+const StatusPill = ({
+  status,
+  onChange,
+}: {
+  status: Status;
+  onChange: (status: Status) => void;
+}) => {
+  const cfg = STATUS_CONFIG[status];
+  return (
+    <span
+      className={`relative inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 cursor-pointer transition-transform hover:scale-105 ${cfg.bg} ${cfg.text}`}
+      title="Change status"
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {status}
+      <svg
+        className="w-2.5 h-2.5 opacity-60"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="3"
+          d="M19 9l-7 7-7-7"
+        />
+      </svg>
+      <select
+        aria-label="Change status"
+        value={status}
+        onChange={(e) => onChange(e.target.value as Status)}
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+      >
+        {STATUS_OPTIONS.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
+    </span>
+  );
+};
+
+/** Scheduled next step: upcoming in secondary, due today in warning, missed in error. */
+const NextActionPill = ({ application }: { application: JobApplication }) => {
+  if (!application.nextActionDate) return null;
+  const days = daysSince(application.nextActionDate);
+  if (days === null) return null;
+
+  const overdue = days > 0;
+  const tone = overdue
+    ? "bg-error/10 text-error"
+    : days === 0
+      ? "bg-warning/15 text-warning"
+      : "bg-secondary/10 text-secondary";
+  const when = days === 0 ? "Today" : formatRelativeDate(application.nextActionDate);
+  const label = application.nextActionNote || "Next step";
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${tone}`}
+      title={formatExactDate(application.nextActionDate)}
+    >
+      <svg
+        className="w-2.5 h-2.5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2.5"
+          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
+      </svg>
+      {overdue ? `${label} · missed` : `${label} · ${when}`}
+    </span>
   );
 };
 

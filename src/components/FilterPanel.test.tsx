@@ -25,6 +25,12 @@ function makeApp(overrides: Partial<JobApplication> = {}): JobApplication {
     lastActivityAt: "2026-06-07T00:00:00",
     notes: "",
     link: "",
+    location: "",
+    salary: "",
+    source: "",
+    contact: "",
+    nextActionDate: "",
+    nextActionNote: "",
     checklist: { resumeSent: false, coverLetterSent: false, followUpSent: false },
     ...overrides,
   };
