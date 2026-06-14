@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Status,
+  STATUS_COLORS,
   STATUS_CONFIG,
   STATUS_OPTIONS,
   needsFollowUp,
@@ -110,7 +111,12 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
 
   return (
     <>
-      <div className="card-glass animate-row rounded-2xl p-4 hover:scale-[1.02]">
+      <div className="card-glass animate-row rounded-2xl p-4 pl-5 hover:scale-[1.02] relative overflow-hidden">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 left-0 w-1.5"
+          style={{ background: STATUS_COLORS[application.status] }}
+        />
         <div className="flex items-start justify-between gap-2 mb-1">
           <h3 className="font-bold text-foreground text-base leading-tight">
             {application.company}
