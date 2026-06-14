@@ -5,6 +5,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  Label,
   ResponsiveContainer,
   Legend,
   Tooltip,
@@ -76,6 +77,7 @@ interface Derived {
   winRate: number | null;
   decided: number;
   thisWeek: number;
+  lastWeek: number;
   thisMonth: number;
   byMonth: { month: string; count: number }[];
   busiestMonth: { month: string; count: number } | null;
@@ -154,6 +156,7 @@ function derive(apps: JobApplication[], history: StatusHistory): Derived {
   ).length;
 
   let thisWeek = 0;
+  let lastWeek = 0;
   let thisMonth = 0;
   const monthCounts: Record<string, number> = {};
 
@@ -161,6 +164,7 @@ function derive(apps: JobApplication[], history: StatusHistory): Derived {
     const d = daysSince(a.dateApplied);
     if (d !== null && d >= 0) {
       if (d < 7) thisWeek += 1;
+      else if (d < 14) lastWeek += 1;
       if (d < 30) thisMonth += 1;
     }
     const parts = a.dateApplied?.split("-");
@@ -235,6 +239,7 @@ function derive(apps: JobApplication[], history: StatusHistory): Derived {
     winRate: decided > 0 ? Math.round((offered / decided) * 100) : null,
     decided,
     thisWeek,
+    lastWeek,
     thisMonth,
     byMonth,
     busiestMonth,
@@ -245,43 +250,86 @@ function derive(apps: JobApplication[], history: StatusHistory): Derived {
   };
 }
 
+/** Up/down/flat arrow with magnitude, green for gains and red for losses. */
+function TrendChip({ delta }: { delta: number }) {
+  const flat = delta === 0;
+  const up = delta > 0;
+  const tone = flat ? "text-foreground/40" : up ? "text-primary" : "text-error";
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 text-xs font-bold tabular-nums ${tone}`}
+      title={`${up ? "Up" : flat ? "No change" : "Down"} vs last week`}
+    >
+      <svg
+        className="w-3 h-3"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2.5"
+          d={flat ? "M5 12h14" : up ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"}
+        />
+      </svg>
+      {Math.abs(delta)}
+    </span>
+  );
+}
+
+/** Centered placeholder shown in a chart slot when there isn't enough data. */
+function ChartEmpty({ message }: { message: string }) {
+  return (
+    <div className="h-full w-full flex items-center justify-center text-center px-6">
+      <p className="text-sm italic text-foreground/45 max-w-xs">{message}</p>
+    </div>
+  );
+}
+
 export default function StatsPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [apps, setApps] = useState<JobApplication[]>([]);
   const [history, setHistory] = useState<StatusHistory>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("/");
+      return;
+    }
     (async () => {
-      if (!isAuthenticated) {
-        router.replace("/");
-        return;
-      }
-      const supabase = createClient();
-      const [appsRes, eventsRes] = await Promise.all([
-        supabase
-          .from("applications")
-          .select()
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("application_events")
-          .select("application_id, from_status, to_status"),
-      ]);
+      try {
+        const supabase = createClient();
+        const [appsRes, eventsRes] = await Promise.all([
+          supabase
+            .from("applications")
+            .select()
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("application_events")
+            .select("application_id, from_status, to_status"),
+        ]);
 
-      if (appsRes.error || !appsRes.data) return;
-      setApps(appsRes.data.map(mapRowToApplication));
+        if (appsRes.error || !appsRes.data) return;
+        setApps(appsRes.data.map(mapRowToApplication));
 
-      // History is an enhancement — without it (e.g. migration not run yet)
-      // the funnel still works from current statuses alone.
-      if (!eventsRes.error && eventsRes.data) {
-        const byApp: StatusHistory = {};
-        for (const e of eventsRes.data) {
-          const statuses = (byApp[e.application_id] ??= []);
-          // A transition proves both endpoints were visited.
-          if (e.from_status) statuses.push(e.from_status as Status);
-          statuses.push(e.to_status as Status);
+        // History is an enhancement — without it (e.g. migration not run yet)
+        // the funnel still works from current statuses alone.
+        if (!eventsRes.error && eventsRes.data) {
+          const byApp: StatusHistory = {};
+          for (const e of eventsRes.data) {
+            const statuses = (byApp[e.application_id] ??= []);
+            // A transition proves both endpoints were visited.
+            if (e.from_status) statuses.push(e.from_status as Status);
+            statuses.push(e.to_status as Status);
+          }
+          setHistory(byApp);
         }
-        setHistory(byApp);
+      } finally {
+        setLoading(false);
       }
     })();
   }, [isAuthenticated, router]);
@@ -297,13 +345,21 @@ export default function StatsPage() {
     [stats.statusCounts],
   );
 
-  const statCards = [
+  const statCards: {
+    label: string;
+    value: string | number;
+    sub: string;
+    color: string;
+    bg: string;
+    trend?: { delta: number; label: string };
+  }[] = [
     {
       label: "Total Applications",
       value: stats.total,
       sub: "tracked",
       color: "text-secondary",
       bg: "bg-secondary/10",
+      trend: { delta: stats.thisWeek - stats.lastWeek, label: "vs last week" },
     },
     {
       label: "Interview Rate",
@@ -348,6 +404,32 @@ export default function StatsPage() {
 
   const hasData = stats.total > 0;
 
+  if (loading) {
+    return (
+      <div className="min-h-[calc(100vh-6rem)] p-4 md:p-8">
+        <main className="max-w-4xl mx-auto space-y-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="card-glass rounded-2xl p-5">
+                <div className="skeleton h-9 w-12 rounded-xl mb-3" />
+                <div className="skeleton h-4 w-24 rounded mb-1.5" />
+                <div className="skeleton h-3 w-16 rounded" />
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <section key={i} className="card-glass rounded-3xl p-8">
+                <div className="skeleton h-6 w-40 rounded mb-6" />
+                <div className="skeleton h-[280px] w-full rounded-2xl" />
+              </section>
+            ))}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[calc(100vh-6rem)] p-4 md:p-8 transition-colors">
       <main className="max-w-4xl mx-auto space-y-6">
@@ -355,17 +437,24 @@ export default function StatsPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {statCards.map((card) => (
             <div key={card.label} className="card-glass rounded-2xl p-5">
-              <div
-                className={`btn-glass inline-flex items-center justify-center min-w-9 h-9 px-2 rounded-xl ${card.bg} mb-3`}
-              >
-                <span className={`text-lg font-black ${card.color}`}>
-                  {card.value}
-                </span>
+              <div className="flex items-center gap-2 mb-3">
+                <div
+                  className={`btn-glass inline-flex items-center justify-center min-w-9 h-9 px-2 rounded-xl ${card.bg}`}
+                >
+                  <span className={`text-lg font-black ${card.color}`}>
+                    {card.value}
+                  </span>
+                </div>
+                {card.trend && <TrendChip delta={card.trend.delta} />}
               </div>
               <p className="text-sm font-semibold text-foreground/80">
                 {card.label}
               </p>
-              <p className="text-xs text-foreground/60 mt-0.5">{card.sub}</p>
+              <p className="text-xs text-foreground/60 mt-0.5">
+                {card.trend
+                  ? `${card.trend.delta >= 0 ? "+" : ""}${card.trend.delta} ${card.trend.label}`
+                  : card.sub}
+              </p>
             </div>
           ))}
         </div>
@@ -573,6 +662,45 @@ export default function StatsPage() {
                             }
                           />
                         ))}
+                        <Label
+                          position="center"
+                          content={({ viewBox }) => {
+                            const { cx, cy } = (viewBox ?? {}) as {
+                              cx?: number;
+                              cy?: number;
+                            };
+                            if (cx == null || cy == null) return null;
+                            return (
+                              <text textAnchor="middle">
+                                <tspan
+                                  x={cx}
+                                  y={cy}
+                                  dy="-0.1em"
+                                  style={{
+                                    fill: "var(--color-foreground)",
+                                    fontSize: 32,
+                                    fontWeight: 800,
+                                  }}
+                                >
+                                  {stats.total}
+                                </tspan>
+                                <tspan
+                                  x={cx}
+                                  y={cy}
+                                  dy="1.5em"
+                                  style={{
+                                    fill: "color-mix(in srgb, var(--color-foreground) 60%, transparent)",
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                    letterSpacing: "0.08em",
+                                  }}
+                                >
+                                  APPLICATIONS
+                                </tspan>
+                              </text>
+                            );
+                          }}
+                        />
                       </Pie>
                       <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: "#fff" }} />
                       <Legend verticalAlign="bottom" height={36} />
@@ -587,6 +715,9 @@ export default function StatsPage() {
                   Applications Over Time
                 </h2>
                 <div className="h-[320px] w-full">
+                  {stats.byMonth.length === 0 ? (
+                    <ChartEmpty message="No dated applications yet — add an application date to see your trend over time." />
+                  ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
                       data={stats.byMonth}
@@ -637,6 +768,7 @@ export default function StatsPage() {
                       />
                     </AreaChart>
                   </ResponsiveContainer>
+                  )}
                 </div>
               </section>
             </div>

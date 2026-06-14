@@ -133,10 +133,24 @@ body::before {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-card {
-    animation: none;
-    opacity: 1;
+  /* Collapse every animation/transition to near-instant rather than removing
+     them, so JS that waits on animationend (modal/toast teardown) still fires. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
+}
+
+/* Keyboard focus ring for custom buttons — tinted to the control's own colour
+   via currentColor, so it reads on red/green/blue actions alike. */
+.focus-ring:focus-visible,
+.focus-ring-within:focus-within {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 30%, transparent);
 }
 
 .card-glass {

@@ -117,21 +117,24 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
           className="pointer-events-none absolute inset-y-0 left-0 w-1.5"
           style={{ background: STATUS_COLORS[application.status] }}
         />
-        <div className="flex items-start justify-between gap-2 mb-1">
-          <h3 className="font-bold text-foreground text-base leading-tight">
-            {application.company}
-          </h3>
-          <StatusPill
-            status={application.status}
-            onChange={handleQuickStatusChange}
-          />
+        <div className="flex items-start gap-3 mb-1">
+          <CompanyAvatar company={application.company} />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="font-bold text-foreground text-base leading-tight">
+                {application.company}
+              </h3>
+              <StatusPill
+                status={application.status}
+                onChange={handleQuickStatusChange}
+              />
+            </div>
+            <p className="text-sm text-foreground/80">{application.position}</p>
+            {detailLine && (
+              <p className="text-xs text-foreground/60">{detailLine}</p>
+            )}
+          </div>
         </div>
-        <p className="text-sm text-foreground/80 mb-1">
-          {application.position}
-        </p>
-        {detailLine && (
-          <p className="text-xs text-foreground/60 mb-1">{detailLine}</p>
-        )}
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           <p
             className="text-xs text-foreground/60"
@@ -179,6 +182,42 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
   );
 };
 
+/** Palette the company initial-tile is tinted from, keyed by name hash. */
+const AVATAR_COLORS = [
+  "var(--color-primary)",
+  "var(--color-secondary)",
+  "var(--color-accent)",
+  "var(--color-warning)",
+  "var(--color-error)",
+];
+
+/**
+ * Tinted initial-tile standing in for a company logo. The colour is picked
+ * deterministically from the name, so a given company always looks the same.
+ */
+const CompanyAvatar = ({ company }: { company: string }) => {
+  const name = company.trim();
+  const initial = name ? name[0].toUpperCase() : "?";
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  }
+  const color = AVATAR_COLORS[hash % AVATAR_COLORS.length];
+  return (
+    <span
+      aria-hidden
+      className="shrink-0 inline-grid place-content-center w-9 h-9 rounded-xl text-sm font-black"
+      style={{
+        background: `color-mix(in srgb, ${color} 16%, transparent)`,
+        color,
+        boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${color} 30%, transparent)`,
+      }}
+    >
+      {initial}
+    </span>
+  );
+};
+
 /**
  * The status pill doubles as a dropdown: an invisible native select sits on
  * top, so moving an application along the pipeline never requires edit mode.
@@ -193,7 +232,7 @@ const StatusPill = ({
   const cfg = STATUS_CONFIG[status];
   return (
     <span
-      className={`relative inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 cursor-pointer transition-transform hover:scale-105 ${cfg.bg} ${cfg.text}`}
+      className={`focus-ring-within relative inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 cursor-pointer transition-transform hover:scale-105 ${cfg.bg} ${cfg.text}`}
       title="Change status"
     >
       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
@@ -270,7 +309,7 @@ const DeleteButton = ({ onClick }: { onClick: () => void }) => {
   return (
     <button
       onClick={onClick}
-      className="p-2 text-error hover:bg-error/10 rounded-lg transition-colors ml-auto"
+      className="focus-ring p-2 text-error hover:bg-error/10 rounded-lg transition-colors ml-auto"
       title="Delete"
     >
       <svg
@@ -298,7 +337,7 @@ const EditButton = ({
   return (
     <button
       onClick={() => setIsEditing(true)}
-      className="p-2 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
+      className="focus-ring p-2 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
       title="Edit"
     >
       <svg
@@ -328,7 +367,7 @@ const NotesButton = ({
   return (
     <button
       onClick={openNotes}
-      className={`p-2 rounded-lg transition-colors ${
+      className={`focus-ring p-2 rounded-lg transition-colors ${
         notes
           ? "text-primary bg-primary/10 hover:bg-primary/20"
           : "text-secondary hover:bg-secondary/10"
@@ -358,7 +397,7 @@ const ExternalLink = ({ link }: { link: string }) => {
       href={link}
       target="_blank"
       rel="noopener noreferrer"
-      className="p-2 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
+      className="focus-ring p-2 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
       title="Open link"
     >
       <svg

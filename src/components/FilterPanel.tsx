@@ -21,7 +21,7 @@ export const FilterPanel = ({
   applications: JobApplication[];
 }) => {
   return (
-    <div className="filter-strip-glass sticky top-18 z-40 rounded-2xl p-1.5 md:p-2 flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-visible scrollbar-none [&::-webkit-scrollbar]:hidden">
+    <div className="flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-visible scrollbar-none [&::-webkit-scrollbar]:hidden">
       {FILTER_OPTIONS.map((option) => {
         const isActive = statusFilter === option;
         const color =
