@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
+import { ChangePasswordModal } from "./ChangePasswordModal";
 
 export default function Navbar() {
   const { isAuthenticated, logout } = useAuth();
   const pathname = usePathname();
+  const [isPasswordOpen, setIsPasswordOpen] = useState(false);
 
   return (
     <nav className="navbar-glass fixed top-0 left-0 right-0 z-50 py-4 px-6 md:px-12">
@@ -160,6 +163,27 @@ export default function Navbar() {
                 )}
               </Link>
               <button
+                onClick={() => setIsPasswordOpen(true)}
+                title="Change password"
+                aria-label="Change password"
+                className="btn-glass flex items-center justify-center h-9 w-9 shrink-0 text-secondary bg-secondary/10 border-secondary/25 rounded-lg"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                  />
+                </svg>
+              </button>
+              <button
                 onClick={logout}
                 title="Sign out"
                 aria-label="Sign out"
@@ -184,6 +208,8 @@ export default function Navbar() {
           )}
         </div>
       </div>
+
+      {isPasswordOpen && <ChangePasswordModal setIsOpen={setIsPasswordOpen} />}
     </nav>
   );
 }
