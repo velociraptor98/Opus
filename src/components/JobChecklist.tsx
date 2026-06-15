@@ -238,7 +238,7 @@ const JobChecklist = () => {
 
   return (
     <div className="w-full flex flex-col md:flex-row gap-4 md:items-stretch">
-      <div className="md:shrink-0 flex flex-col gap-2 glass-well rounded-2xl p-4 self-start md:self-stretch">
+      <div className="w-full md:w-auto md:shrink-0 flex flex-col gap-2 glass-well rounded-2xl p-4 self-stretch md:self-stretch">
         <FilterPanel
           setPage={setPage}
           setStatusFilter={setStatusFilter}

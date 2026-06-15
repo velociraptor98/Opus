@@ -41,16 +41,19 @@ type StatusHistory = Record<string, Status[]>;
 
 const MUTED_BAR = "color-mix(in srgb, var(--color-foreground) 28%, transparent)";
 
-/** Shared glass tooltip styling for every chart. */
+/** Shared glass tooltip styling for every chart — theme-aware via tokens. */
 const TOOLTIP_STYLE = {
-  background: "rgba(45, 53, 59, 0.72)",
+  background: "color-mix(in srgb, var(--background) 82%, transparent)",
   backdropFilter: "blur(20px) saturate(180%)",
   WebkitBackdropFilter: "blur(20px) saturate(180%)",
-  border: "1px solid rgba(255, 255, 255, 0.12)",
+  border: "1px solid color-mix(in srgb, var(--foreground) 14%, transparent)",
   borderRadius: "14px",
-  color: "#fff",
-  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.25)",
+  color: "var(--foreground)",
+  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.18)",
 } as const;
+
+/** Item (series) text colour inside tooltips — follows the foreground token. */
+const TOOLTIP_ITEM_STYLE = { color: "var(--foreground)" } as const;
 
 const AXIS_TICK = {
   fill: "color-mix(in srgb, var(--color-foreground) 55%, transparent)",
@@ -250,6 +253,50 @@ function derive(apps: JobApplication[], history: StatusHistory): Derived {
   };
 }
 
+interface StatCardData {
+  label: string;
+  value: string | number;
+  sub?: string;
+  color: string;
+  bg: string;
+  accent: string;
+  trend?: { delta: number; label: string };
+}
+
+/**
+ * Headline metric tile — glass pill value, colour-keyed left accent strip and
+ * staggered entrance, matching the job cards on the board.
+ */
+function StatCard({ card, index }: { card: StatCardData; index: number }) {
+  const sub = card.trend
+    ? `${card.trend.delta >= 0 ? "+" : ""}${card.trend.delta} ${card.trend.label}`
+    : card.sub;
+  return (
+    <div
+      className="card-glass animate-card rounded-2xl p-5 pl-6 relative overflow-hidden"
+      style={{ animationDelay: `${index * 50}ms` }}
+    >
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 left-0 w-1.5"
+        style={{ background: card.accent }}
+      />
+      <div className="flex items-center gap-2 mb-3">
+        <div
+          className={`btn-glass inline-flex items-center justify-center min-w-9 h-9 px-2 rounded-xl ${card.bg}`}
+        >
+          <span className={`text-lg font-black whitespace-nowrap ${card.color}`}>
+            {card.value}
+          </span>
+        </div>
+        {card.trend && <TrendChip delta={card.trend.delta} />}
+      </div>
+      <p className="text-sm font-semibold text-foreground/80">{card.label}</p>
+      {sub && <p className="text-xs text-foreground/60 mt-0.5">{sub}</p>}
+    </div>
+  );
+}
+
 /** Up/down/flat arrow with magnitude, green for gains and red for losses. */
 function TrendChip({ delta }: { delta: number }) {
   const flat = delta === 0;
@@ -345,20 +392,14 @@ export default function StatsPage() {
     [stats.statusCounts],
   );
 
-  const statCards: {
-    label: string;
-    value: string | number;
-    sub: string;
-    color: string;
-    bg: string;
-    trend?: { delta: number; label: string };
-  }[] = [
+  const statCards: StatCardData[] = [
     {
       label: "Total Applications",
       value: stats.total,
       sub: "tracked",
       color: "text-secondary",
       bg: "bg-secondary/10",
+      accent: "var(--color-secondary)",
       trend: { delta: stats.thisWeek - stats.lastWeek, label: "vs last week" },
     },
     {
@@ -367,6 +408,7 @@ export default function StatsPage() {
       sub: "of apps submitted",
       color: "text-warning",
       bg: "bg-warning/10",
+      accent: "var(--color-warning)",
     },
     {
       label: "Offer Rate",
@@ -377,6 +419,7 @@ export default function StatsPage() {
           : "of apps submitted",
       color: "text-primary",
       bg: "bg-primary/10",
+      accent: "var(--color-primary)",
     },
     {
       label: "Follow-ups Due",
@@ -384,21 +427,42 @@ export default function StatsPage() {
       sub: "need a nudge",
       color: "text-error",
       bg: "bg-error/10",
+      accent: "var(--color-error)",
     },
   ];
 
-  const highlights = [
-    { label: "Applied this week", value: stats.thisWeek },
-    { label: "Applied this month", value: stats.thisMonth },
+  const highlights: StatCardData[] = [
+    {
+      label: "Applied this week",
+      value: stats.thisWeek,
+      sub: "in the last 7 days",
+      color: "text-secondary",
+      bg: "bg-secondary/10",
+      accent: "var(--color-secondary)",
+    },
+    {
+      label: "Applied this month",
+      value: stats.thisMonth,
+      sub: "in the last 30 days",
+      color: "text-accent",
+      bg: "bg-accent/10",
+      accent: "var(--color-accent)",
+    },
     {
       label: "Win rate (decided)",
       value: stats.winRate !== null ? `${stats.winRate}%` : "—",
       sub: stats.decided > 0 ? `${stats.decided} decided` : "no outcomes yet",
+      color: "text-primary",
+      bg: "bg-primary/10",
+      accent: "var(--color-primary)",
     },
     {
       label: "Busiest month",
       value: stats.busiestMonth ? MONTH_LABEL(stats.busiestMonth.month) : "—",
-      sub: stats.busiestMonth ? `${stats.busiestMonth.count} apps` : undefined,
+      sub: stats.busiestMonth ? `${stats.busiestMonth.count} apps` : "—",
+      color: "text-warning",
+      bg: "bg-warning/10",
+      accent: "var(--color-warning)",
     },
   ];
 
@@ -419,7 +483,7 @@ export default function StatsPage() {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {Array.from({ length: 2 }).map((_, i) => (
-              <section key={i} className="card-glass rounded-3xl p-8">
+              <section key={i} className="card-glass animate-card rounded-2xl p-8">
                 <div className="skeleton h-6 w-40 rounded mb-6" />
                 <div className="skeleton h-[280px] w-full rounded-2xl" />
               </section>
@@ -435,32 +499,13 @@ export default function StatsPage() {
       <main className="max-w-4xl mx-auto space-y-6">
         {/* Headline KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {statCards.map((card) => (
-            <div key={card.label} className="card-glass rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <div
-                  className={`btn-glass inline-flex items-center justify-center min-w-9 h-9 px-2 rounded-xl ${card.bg}`}
-                >
-                  <span className={`text-lg font-black ${card.color}`}>
-                    {card.value}
-                  </span>
-                </div>
-                {card.trend && <TrendChip delta={card.trend.delta} />}
-              </div>
-              <p className="text-sm font-semibold text-foreground/80">
-                {card.label}
-              </p>
-              <p className="text-xs text-foreground/60 mt-0.5">
-                {card.trend
-                  ? `${card.trend.delta >= 0 ? "+" : ""}${card.trend.delta} ${card.trend.label}`
-                  : card.sub}
-              </p>
-            </div>
+          {statCards.map((card, i) => (
+            <StatCard key={card.label} card={card} index={i} />
           ))}
         </div>
 
         {!hasData ? (
-          <section className="card-glass rounded-3xl p-8">
+          <section className="card-glass animate-card rounded-2xl p-8">
             <div className="py-20 text-center text-gray-500">
               <p className="text-lg italic">
                 No data available to visualize. Add some applications first!
@@ -472,7 +517,7 @@ export default function StatsPage() {
             {stats.funnel.submitted > 0 && (
               <>
                 {/* Pipeline funnel — ever-reached stages, not a snapshot */}
-                <section className="card-glass rounded-3xl p-8">
+                <section className="card-glass animate-card rounded-2xl p-8">
                   <h2 className="text-xl font-bold text-primary mb-1">
                     Pipeline Funnel
                   </h2>
@@ -484,7 +529,7 @@ export default function StatsPage() {
                       <FunnelChart>
                         <Tooltip
                           contentStyle={TOOLTIP_STYLE}
-                          itemStyle={{ color: "#fff" }}
+                          itemStyle={TOOLTIP_ITEM_STYLE}
                         />
                         <Funnel
                           dataKey="value"
@@ -553,7 +598,7 @@ export default function StatsPage() {
 
                 {/* Conversion by source */}
                 {stats.sourceConversion.some((s) => s.source !== "Untagged") && (
-                  <section className="card-glass rounded-3xl p-8">
+                  <section className="card-glass animate-card rounded-2xl p-8">
                     <h2 className="text-xl font-bold text-primary mb-1">
                       Source Conversion
                     </h2>
@@ -598,7 +643,7 @@ export default function StatsPage() {
                           <Tooltip
                             cursor={{ fill: "rgba(255,255,255,0.04)" }}
                             contentStyle={TOOLTIP_STYLE}
-                            itemStyle={{ color: "#fff" }}
+                            itemStyle={TOOLTIP_ITEM_STYLE}
                           />
                           <Legend
                             wrapperStyle={{ fontSize: 12 }}
@@ -636,7 +681,7 @@ export default function StatsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Status distribution */}
-              <section className="card-glass rounded-3xl p-8">
+              <section className="card-glass animate-card rounded-2xl p-8">
                 <h2 className="text-xl font-bold text-primary mb-6">
                   Status Distribution
                 </h2>
@@ -702,7 +747,7 @@ export default function StatsPage() {
                           }}
                         />
                       </Pie>
-                      <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={{ color: "#fff" }} />
+                      <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={TOOLTIP_ITEM_STYLE} />
                       <Legend verticalAlign="bottom" height={36} />
                     </PieChart>
                   </ResponsiveContainer>
@@ -710,7 +755,7 @@ export default function StatsPage() {
               </section>
 
               {/* Applications over time */}
-              <section className="card-glass rounded-3xl p-8">
+              <section className="card-glass animate-card rounded-2xl p-8">
                 <h2 className="text-xl font-bold text-primary mb-6">
                   Applications Over Time
                 </h2>
@@ -754,7 +799,7 @@ export default function StatsPage() {
                       />
                       <Tooltip
                         contentStyle={TOOLTIP_STYLE}
-                        itemStyle={{ color: "#fff" }}
+                        itemStyle={TOOLTIP_ITEM_STYLE}
                         labelFormatter={(label) => MONTH_LABEL(String(label))}
                         formatter={(value) => [value, "Applications"]}
                       />
@@ -775,7 +820,7 @@ export default function StatsPage() {
 
             {/* Pipeline staleness — who's been left waiting */}
             {stats.staleness.length > 0 && (
-              <section className="card-glass rounded-3xl p-8">
+              <section className="card-glass animate-card rounded-2xl p-8">
                 <h2 className="text-xl font-bold text-primary mb-1">
                   Pipeline Staleness
                 </h2>
@@ -843,7 +888,7 @@ export default function StatsPage() {
 
             {/* Top companies */}
             {stats.topCompanies.length > 0 && (
-              <section className="card-glass rounded-3xl p-8">
+              <section className="card-glass animate-card rounded-2xl p-8">
                 <h2 className="text-xl font-bold text-primary mb-6">
                   Top Companies
                 </h2>
@@ -880,7 +925,7 @@ export default function StatsPage() {
                       <Tooltip
                         cursor={{ fill: "rgba(255,255,255,0.04)" }}
                         contentStyle={TOOLTIP_STYLE}
-                        itemStyle={{ color: "#fff" }}
+                        itemStyle={TOOLTIP_ITEM_STYLE}
                         formatter={(value) => [value, "Applications"]}
                       />
                       <Bar
@@ -897,18 +942,8 @@ export default function StatsPage() {
 
             {/* Quick highlights */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {highlights.map((h) => (
-                <div key={h.label} className="card-glass rounded-2xl p-5">
-                  <p className="text-2xl font-black text-foreground">
-                    {h.value}
-                  </p>
-                  <p className="text-sm font-semibold text-foreground/80 mt-1">
-                    {h.label}
-                  </p>
-                  {h.sub && (
-                    <p className="text-xs text-foreground/60 mt-0.5">{h.sub}</p>
-                  )}
-                </div>
+              {highlights.map((h, i) => (
+                <StatCard key={h.label} card={h} index={i} />
               ))}
             </div>
           </>
