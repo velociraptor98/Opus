@@ -4,17 +4,22 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+type Mode = "signIn" | "forgot";
+
 const LoginForm = () => {
   const router = useRouter();
+  const [mode, setMode] = useState<Mode>("signIn");
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setPending(true);
+  const switchMode = (next: Mode) => {
+    setMode(next);
     setError(null);
+    setInfo(null);
+  };
 
-    const formData = new FormData(e.currentTarget);
+  const handleSignIn = async (formData: FormData) => {
     const supabase = createClient();
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: String(formData.get("email") ?? ""),
@@ -28,6 +33,42 @@ const LoginForm = () => {
     }
 
     router.refresh();
+  };
+
+  const handleForgot = async (formData: FormData) => {
+    const email = String(formData.get("email") ?? "");
+    const supabase = createClient();
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+      email,
+      {
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      },
+    );
+
+    if (resetError) {
+      setError(resetError.message);
+      setPending(false);
+      return;
+    }
+
+    setInfo(
+      `If an account exists for ${email}, a password reset link is on its way.`,
+    );
+    setPending(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setPending(true);
+    setError(null);
+    setInfo(null);
+
+    const formData = new FormData(e.currentTarget);
+    if (mode === "forgot") {
+      await handleForgot(formData);
+    } else {
+      await handleSignIn(formData);
+    }
   };
 
   return (
@@ -155,10 +196,12 @@ const LoginForm = () => {
             </svg>
           </div>
           <h2 className="text-3xl font-extrabold text-primary dark:text-primary mb-1">
-            Welcome back
+            {mode === "forgot" ? "Reset password" : "Welcome back"}
           </h2>
           <p className="text-sm text-foreground/70">
-            Sign in to your job search tracker
+            {mode === "forgot"
+              ? "Enter your email and we'll send you a reset link"
+              : "Sign in to your job search tracker"}
           </p>
         </div>
 
@@ -181,6 +224,25 @@ const LoginForm = () => {
           </div>
         )}
 
+        {info && (
+          <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-xl flex items-center gap-3">
+            <svg
+              className="w-5 h-5 text-primary shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span className="text-primary font-medium">{info}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-bold text-foreground/80 dark:text-foreground/70 mb-2 ml-1">
@@ -194,25 +256,53 @@ const LoginForm = () => {
               required
             />
           </div>
-          <div>
-            <label className="block text-sm font-bold text-foreground/80 dark:text-foreground/70 mb-2 ml-1">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              className="input-glass w-full px-4 py-3 rounded-xl"
-              placeholder="Enter password"
-              required
-            />
-          </div>
+          {mode === "signIn" && (
+            <div>
+              <label className="block text-sm font-bold text-foreground/80 dark:text-foreground/70 mb-2 ml-1">
+                Password
+              </label>
+              <input
+                type="password"
+                name="password"
+                className="input-glass w-full px-4 py-3 rounded-xl"
+                placeholder="Enter password"
+                required
+              />
+            </div>
+          )}
           <button
             type="submit"
             disabled={pending}
             className="btn-glass w-full py-3.5 bg-primary/80 dark:bg-primary/70 text-white rounded-xl font-bold text-base border-primary/40 mt-4 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {pending ? "Signing in…" : "Sign In"}
+            {pending
+              ? mode === "forgot"
+                ? "Sending…"
+                : "Signing in…"
+              : mode === "forgot"
+                ? "Send reset link"
+                : "Sign In"}
           </button>
+
+          <div className="text-center">
+            {mode === "signIn" ? (
+              <button
+                type="button"
+                onClick={() => switchMode("forgot")}
+                className="text-sm font-semibold text-primary hover:underline"
+              >
+                Forgot password?
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => switchMode("signIn")}
+                className="text-sm font-semibold text-primary hover:underline"
+              >
+                Back to sign in
+              </button>
+            )}
+          </div>
         </form>
       </div>
     </div>
