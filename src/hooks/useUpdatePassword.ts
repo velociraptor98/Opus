@@ -16,19 +16,24 @@ export function useUpdatePassword(onSuccess: () => void) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  // Check the fields without committing. Returns whether they're good to
+  // submit, so callers can gate a confirmation step on valid input.
+  const validate = () => {
     setError(null);
 
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
-      return;
+      return false;
     }
     if (password !== confirm) {
       setError("Passwords do not match.");
-      return;
+      return false;
     }
+    return true;
+  };
 
+  // Commit the new password. Assumes validate() already passed.
+  const submit = async () => {
     setPending(true);
     const supabase = createClient();
     const { error: updateError } = await supabase.auth.updateUser({ password });
@@ -49,6 +54,7 @@ export function useUpdatePassword(onSuccess: () => void) {
     setConfirm,
     error,
     pending,
-    handleSubmit,
+    validate,
+    submit,
   };
 }

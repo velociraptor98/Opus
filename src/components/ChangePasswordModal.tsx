@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useToast } from "@/context/ToastContext";
 import { useUpdatePassword } from "@/hooks/useUpdatePassword";
+import { ConfirmModal } from "./ConfirmModal";
 
 interface ChangePasswordModalProps {
   setIsOpen: (open: boolean) => void;
@@ -10,23 +12,32 @@ interface ChangePasswordModalProps {
 
 /**
  * Lets the signed-in user set a new password directly, without an email
- * reset link. Runs as the current user via supabase.auth.updateUser.
+ * reset link. Runs as the current user via supabase.auth.updateUser, gated
+ * behind an explicit confirmation step.
  */
 export const ChangePasswordModal = ({ setIsOpen }: ChangePasswordModalProps) => {
   const toast = useToast();
-  const { password, setPassword, confirm, setConfirm, error, pending, handleSubmit } =
+  const [confirming, setConfirming] = useState(false);
+  const { password, setPassword, confirm, setConfirm, error, pending, validate, submit } =
     useUpdatePassword(() => {
       setIsOpen(false);
       toast.show("Password updated", { variant: "success" });
     });
 
+  // Validate the fields first; only surface the confirmation once they're good.
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (validate()) setConfirming(true);
+  };
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
+      // While the confirmation is up, let it own the Escape key.
+      if (e.key === "Escape" && !confirming) setIsOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [setIsOpen]);
+  }, [setIsOpen, confirming]);
 
   const labelCls =
     "block text-xs font-bold text-foreground/70 uppercase tracking-widest mb-1";
@@ -86,6 +97,27 @@ export const ChangePasswordModal = ({ setIsOpen }: ChangePasswordModalProps) => 
             </div>
           )}
 
+          <div className="p-3 bg-secondary/10 border border-secondary/20 rounded-lg flex items-start gap-2">
+            <svg
+              className="w-5 h-5 text-secondary shrink-0 mt-0.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+              />
+            </svg>
+            <span className="text-secondary text-sm">
+              This replaces your account password right away — you&apos;ll need
+              the new one the next time you sign in.
+            </span>
+          </div>
+
           <div>
             <label className={labelCls}>New password</label>
             <input
@@ -130,6 +162,21 @@ export const ChangePasswordModal = ({ setIsOpen }: ChangePasswordModalProps) => 
           </div>
         </form>
       </div>
+
+      {confirming &&
+        createPortal(
+          <ConfirmModal
+            title="Update your password?"
+            message="This immediately replaces your current password. You'll use the new one to sign in from now on — make sure you'll remember it."
+            confirmLabel="Update password"
+            onConfirm={() => {
+              setConfirming(false);
+              submit();
+            }}
+            onCancel={() => setConfirming(false)}
+          />,
+          document.body,
+        )}
     </div>
   );
 };
