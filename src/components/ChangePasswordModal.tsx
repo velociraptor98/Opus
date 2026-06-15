@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useEffect } from "react";
 import { useToast } from "@/context/ToastContext";
+import { useUpdatePassword } from "@/hooks/useUpdatePassword";
 
 interface ChangePasswordModalProps {
   setIsOpen: (open: boolean) => void;
@@ -14,10 +14,11 @@ interface ChangePasswordModalProps {
  */
 export const ChangePasswordModal = ({ setIsOpen }: ChangePasswordModalProps) => {
   const toast = useToast();
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const { password, setPassword, confirm, setConfirm, error, pending, handleSubmit } =
+    useUpdatePassword(() => {
+      setIsOpen(false);
+      toast.show("Password updated", { variant: "success" });
+    });
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -26,33 +27,6 @@ export const ChangePasswordModal = ({ setIsOpen }: ChangePasswordModalProps) => 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [setIsOpen]);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
-    if (password !== confirm) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    setPending(true);
-    const supabase = createClient();
-    const { error: updateError } = await supabase.auth.updateUser({ password });
-
-    if (updateError) {
-      setError(updateError.message);
-      setPending(false);
-      return;
-    }
-
-    setIsOpen(false);
-    toast.show("Password updated", { variant: "success" });
-  };
 
   const labelCls =
     "block text-xs font-bold text-foreground/70 uppercase tracking-widest mb-1";
