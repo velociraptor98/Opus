@@ -164,9 +164,10 @@ export default function Navbar() {
               </Link>
               <button
                 onClick={() => setIsPasswordOpen(true)}
+                disabled
                 title="Change password"
                 aria-label="Change password"
-                className="btn-glass flex items-center justify-center h-9 w-9 shrink-0 text-secondary bg-secondary/10 border-secondary/25 rounded-lg"
+                className="btn-glass flex items-center justify-center h-9 w-9 shrink-0 text-secondary bg-secondary/10 border-secondary/25 rounded-lg opacity-50 cursor-not-allowed"
               >
                 <svg
                   className="w-5 h-5"
