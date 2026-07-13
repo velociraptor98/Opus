@@ -30,6 +30,9 @@ export const FilterPanel = ({
             : option === "Follow-up"
               ? FOLLOW_UP_COLOR
               : STATUS_COLORS[option as Status];
+        // "All" has no status colour of its own, so it tints from the theme's
+        // foreground — a hardcoded black here disappears in dark mode.
+        const tint = color ?? "var(--color-foreground)";
         return (
           <button
             key={option}
@@ -41,17 +44,13 @@ export const FilterPanel = ({
             style={
               isActive
                 ? {
-                    background: color
-                      ? `color-mix(in srgb, ${color} 14%, transparent)`
-                      : "rgba(0,0,0,0.08)",
-                    boxShadow: color
-                      ? `inset 0 0 0 1.5px color-mix(in srgb, ${color} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.5)`
-                      : "inset 0 0 0 1.5px rgba(0,0,0,0.15)",
-                    color: color ?? "inherit",
+                    background: `color-mix(in srgb, ${tint} 14%, transparent)`,
+                    boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, ${tint} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.5)`,
+                    color: tint,
                   }
                 : {
-                    background: "rgba(255,255,255,0.0)",
-                    color: "color-mix(in srgb, currentColor 55%, transparent)",
+                    background: "transparent",
+                    color: "color-mix(in srgb, currentColor 75%, transparent)",
                   }
             }
           >

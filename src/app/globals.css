@@ -8,11 +8,22 @@
   color-scheme: light;
   --background: #f3ead3; /* Everforest light "soft" bg — dimmer than the medium #fdf6e3 */
   --foreground: #4f585e; /* darkened from #5c6a72 for stronger contrast on the lighter bg */
-  --primary: #8da101;   /* Green */
-  --secondary: #3a94c5; /* Blue */
-  --accent: #35a77c;    /* Aqua */
-  --error: #f85552;     /* Red */
-  --warning: #dfa000;   /* Yellow */
+
+  /* Everforest's light hues are syntax colours: on this background they land at
+     1.9–2.8:1, but we render them as small bold UI text (status pills, buttons,
+     headings). These are deepened to clear 4.5:1 on --background while holding
+     the original hue. The vivid originals live on below for decorative fills. */
+  --primary: #5f6f00;   /* Green  — 4.66:1 */
+  --secondary: #2a6f96; /* Blue   — 4.60:1 */
+  --accent: #1d7254;    /* Aqua   — 4.88:1 */
+  --error: #ba3633;     /* Red    — 4.78:1 */
+  --warning: #8a6100;   /* Yellow — 4.62:1 */
+
+  /* Never used as text — only the backdrop mesh, which needs the saturation. */
+  --primary-vivid: #8da101;
+  --secondary-vivid: #3a94c5;
+  --accent-vivid: #35a77c;
+  --warning-vivid: #dfa000;
 }
 
 @theme inline {
@@ -31,11 +42,18 @@
   color-scheme: dark;
   --background: #2d353b;
   --foreground: #d3c6aa;
+  /* These already clear 4.5:1 on --background (4.55–6.84:1), so the dark theme
+     keeps Everforest's hues untouched and the mesh reuses them directly. */
   --primary: #a7c080;   /* Green */
   --secondary: #7fbbb3; /* Blue/Aqua */
   --accent: #d699b6;    /* Purple */
   --error: #e67e80;     /* Red */
   --warning: #dbbc7f;   /* Yellow */
+
+  --primary-vivid: #a7c080;
+  --secondary-vivid: #7fbbb3;
+  --accent-vivid: #d699b6;
+  --warning-vivid: #dbbc7f;
 }
 
 @keyframes shake {
@@ -72,18 +90,18 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(55% 50% at 12% -5%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 70%),
-    radial-gradient(50% 45% at 88% 8%, color-mix(in srgb, var(--secondary) 20%, transparent), transparent 70%),
-    radial-gradient(55% 55% at 80% 95%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 72%),
-    radial-gradient(45% 45% at 8% 88%, color-mix(in srgb, var(--warning) 14%, transparent), transparent 72%);
+    radial-gradient(55% 50% at 12% -5%, color-mix(in srgb, var(--primary-vivid) 22%, transparent), transparent 70%),
+    radial-gradient(50% 45% at 88% 8%, color-mix(in srgb, var(--secondary-vivid) 20%, transparent), transparent 70%),
+    radial-gradient(55% 55% at 80% 95%, color-mix(in srgb, var(--accent-vivid) 18%, transparent), transparent 72%),
+    radial-gradient(45% 45% at 8% 88%, color-mix(in srgb, var(--warning-vivid) 14%, transparent), transparent 72%);
 }
 
 .dark body::before {
   background:
-    radial-gradient(55% 50% at 12% -5%, color-mix(in srgb, var(--primary) 14%, transparent), transparent 70%),
-    radial-gradient(50% 45% at 88% 8%, color-mix(in srgb, var(--secondary) 13%, transparent), transparent 70%),
-    radial-gradient(55% 55% at 80% 95%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 72%),
-    radial-gradient(45% 45% at 8% 88%, color-mix(in srgb, var(--warning) 9%, transparent), transparent 72%);
+    radial-gradient(55% 50% at 12% -5%, color-mix(in srgb, var(--primary-vivid) 14%, transparent), transparent 70%),
+    radial-gradient(50% 45% at 88% 8%, color-mix(in srgb, var(--secondary-vivid) 13%, transparent), transparent 70%),
+    radial-gradient(55% 55% at 80% 95%, color-mix(in srgb, var(--accent-vivid) 12%, transparent), transparent 72%),
+    radial-gradient(45% 45% at 8% 88%, color-mix(in srgb, var(--warning-vivid) 9%, transparent), transparent 72%);
 }
 
 @keyframes fade-out {
@@ -234,29 +252,56 @@ body::before {
     0 4px 16px rgba(0, 0, 0, 0.22);
 }
 
-.btn-glass {
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.04),
-    0 4px 16px rgba(0, 0, 0, 0.06);
-  transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease;
-}
+/* In @layer components (not unlayered) so that the `bg-*` / `border-*` utilities
+   callers pair with this — `bg-primary/80` on the card's Save button, the
+   `bg-secondary/10` navbar buttons — win over the glass fill instead of being
+   silently overridden by it. Unlayered rules beat every Tailwind utility. */
+@layer components {
+  .btn-glass {
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.85),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+      0 2px 10px rgba(0, 0, 0, 0.06);
+    transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease;
+  }
 
-.btn-glass:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.38),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.04),
-    0 6px 22px rgba(0, 0, 0, 0.1);
-}
+  .btn-glass:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.68);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+      0 5px 18px rgba(0, 0, 0, 0.1);
+  }
 
-.btn-glass:active:not(:disabled) {
-  transform: scale(0.96);
-  background: rgba(255, 255, 255, 0.06);
+  .btn-glass:active:not(:disabled) {
+    transform: scale(0.96);
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  .dark .btn-glass {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.28),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+      0 4px 16px rgba(0, 0, 0, 0.06);
+  }
+
+  .dark .btn-glass:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.38),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+      0 6px 22px rgba(0, 0, 0, 0.1);
+  }
+
+  .dark .btn-glass:active:not(:disabled) {
+    background: rgba(255, 255, 255, 0.06);
+  }
 }
 
 .filter-strip-glass {
