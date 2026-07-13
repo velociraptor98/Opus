@@ -10,7 +10,7 @@ export const SearchBar = ({
   return (
     <div className="relative">
       <svg
-        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40"
+        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/55"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -40,7 +40,7 @@ export const SearchBar = ({
             setPage(0);
           }}
           aria-label="Clear search"
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full text-foreground/40 hover:text-foreground transition-colors active:scale-90"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full text-foreground/55 hover:text-foreground transition-colors active:scale-90"
         >
           <svg
             className="w-3.5 h-3.5"

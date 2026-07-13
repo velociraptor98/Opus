@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { JobApplication } from "@/constants/types";
 import { applicationsToCsv, csvToApplications } from "@/lib/csv";
 import { useToast } from "@/context/ToastContext";
+import { BreathDots } from "./Breath";
 
 /**
  * Sidebar buttons to export the full list as CSV and import applications
@@ -61,14 +62,22 @@ export const ImportExport = ({
       <button
         onClick={() => fileInputRef.current?.click()}
         disabled={importing}
-        className="btn-glass flex-1 px-3 py-2 text-xs font-semibold text-foreground/70 hover:text-foreground rounded-lg disabled:opacity-50"
+        aria-busy={importing}
+        className="btn-glass flex-1 px-3 py-2 text-xs font-semibold text-foreground/75 hover:text-foreground rounded-lg disabled:opacity-50 flex items-center justify-center min-h-[2.125rem]"
       >
-        {importing ? "Importing…" : "Import CSV"}
+        {importing ? (
+          <>
+            <BreathDots loading />
+            <span className="sr-only">Importing…</span>
+          </>
+        ) : (
+          "Import CSV"
+        )}
       </button>
       <button
         onClick={handleExport}
         disabled={applications.length === 0}
-        className="btn-glass flex-1 px-3 py-2 text-xs font-semibold text-foreground/70 hover:text-foreground rounded-lg disabled:opacity-50"
+        className="btn-glass flex-1 px-3 py-2 text-xs font-semibold text-foreground/75 hover:text-foreground rounded-lg disabled:opacity-50"
       >
         Export CSV
       </button>

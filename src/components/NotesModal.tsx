@@ -59,7 +59,7 @@ export const NotesModal = ({
   };
 
   const labelCls =
-    "block text-xs font-bold text-foreground/70 uppercase tracking-widest mb-1";
+    "block text-xs font-bold text-foreground/75 uppercase tracking-widest mb-1";
 
   return (
     <div
@@ -70,13 +70,13 @@ export const NotesModal = ({
         className="animate-modal modal-glass rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-4 border-b border-white/20 dark:border-white/10 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-primary dark:text-primary">
+        <div className="px-6 py-4 border-b border-white/20 flex justify-between items-center">
+          <h3 className="text-xl font-bold text-foreground">
             {application.company}
           </h3>
           <button
             onClick={() => setIsNotesOpen(false)}
-            className="text-secondary hover:text-primary transition-colors"
+            className="text-foreground/60 hover:text-breath transition-colors"
           >
             <svg
               className="w-6 h-6"
@@ -186,6 +186,29 @@ export const NotesModal = ({
               autoFocus
             />
           </div>
+          {/* The breath as a progress track: three steps, three dots. Each one
+              lights in clay as its step is completed — the gesture filling up
+              rather than fading out. */}
+          <div className="flex items-center gap-3">
+            <span className="breath-rule text-2xl shrink-0" aria-hidden="true">
+              <span className="breath-steps">
+                <i data-done={application.checklist.resumeSent} />
+                <i data-done={application.checklist.coverLetterSent} />
+                <i data-done={application.checklist.followUpSent} />
+              </span>
+            </span>
+            <span className="meta text-[10px] font-bold uppercase text-foreground/75">
+              {
+                [
+                  application.checklist.resumeSent,
+                  application.checklist.coverLetterSent,
+                  application.checklist.followUpSent,
+                ].filter(Boolean).length
+              }{" "}
+              of 3 done
+            </span>
+          </div>
+
           <div className="flex gap-6">
             <label className="flex items-center gap-2 cursor-pointer group">
               <input
@@ -194,7 +217,7 @@ export const NotesModal = ({
                 onChange={() => handleToggleChecklist("resumeSent")}
                 className="checkbox-glass"
               />
-              <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
+              <span className="group-hover:text-breath transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
                 Resume
               </span>
             </label>
@@ -205,7 +228,7 @@ export const NotesModal = ({
                 onChange={() => handleToggleChecklist("coverLetterSent")}
                 className="checkbox-glass"
               />
-              <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
+              <span className="group-hover:text-breath transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
                 Cover Letter
               </span>
             </label>
@@ -216,23 +239,23 @@ export const NotesModal = ({
                 onChange={() => handleToggleChecklist("followUpSent")}
                 className="checkbox-glass"
               />
-              <span className="group-hover:text-primary transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
+              <span className="group-hover:text-breath transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
                 Follow-up
               </span>
             </label>
           </div>
-          <div className="pt-4 border-t border-secondary/10 dark:border-zinc-800 flex gap-3">
+          <div className="pt-4 border-t border-foreground/10 flex gap-3">
             <button
               type="button"
               onClick={() => setIsNotesOpen(false)}
-              className="btn-glass flex-1 px-4 py-2 text-secondary rounded-lg"
+              className="btn-glass flex-1 px-4 py-2 text-foreground/75 rounded-lg"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSave}
-              className="btn-glass flex-1 px-4 py-2 bg-primary/80 dark:bg-secondary/70 text-white rounded-lg font-semibold border-primary/40 dark:border-secondary/40"
+              className="btn-glass flex-1 px-4 py-2 bg-breath text-paper rounded-lg font-semibold border-breath disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Save
             </button>

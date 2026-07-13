@@ -1,3 +1,5 @@
+import { BreathRule } from "./Breath";
+
 function SkeletonCard() {
   return (
     <div className="card-glass rounded-2xl p-4">
@@ -18,23 +20,25 @@ function SkeletonCard() {
 
 export function JobChecklistSkeleton() {
   return (
-    <div className="w-full flex flex-col md:flex-row gap-4 md:items-start">
-      {/* Left column: filter strip + add button placeholders */}
-      <div className="md:shrink-0 flex flex-col gap-2">
-        <div className="filter-strip-glass sticky top-[4.5rem] z-40 rounded-2xl p-1.5 md:p-2 flex flex-row md:flex-col gap-1 overflow-hidden">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="skeleton h-8 w-20 md:w-40 rounded-full md:rounded-xl shrink-0"
-            />
-          ))}
-        </div>
-        <div className="skeleton h-10 w-full rounded-full" />
+    // Mirrors JobChecklist's own layout — a glass-well sidebar, not a sticky
+    // strip — so the page doesn't jump when the real content lands.
+    <div className="w-full flex flex-col md:flex-row gap-4 md:items-stretch">
+      <div className="w-full md:w-auto md:shrink-0 flex flex-col gap-2 glass-well rounded-2xl p-4 self-stretch">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className="skeleton h-8 w-20 md:w-44 rounded-full md:rounded-xl shrink-0"
+          />
+        ))}
+        <div className="skeleton h-10 w-full rounded-full mt-1" />
       </div>
 
-      {/* Cards grid placeholders */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 flex flex-col gap-4 min-w-0">
         <div className="glass-well rounded-2xl p-4">
+          {/* The loading rhythm: the same exhale, looped. */}
+          <div className="flex justify-center py-3" aria-label="Loading" role="status">
+            <BreathRule loading className="text-xl" />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <SkeletonCard key={i} />

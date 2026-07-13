@@ -56,7 +56,8 @@ const TOOLTIP_STYLE = {
 const TOOLTIP_ITEM_STYLE = { color: "var(--foreground)" } as const;
 
 const AXIS_TICK = {
-  fill: "color-mix(in srgb, var(--color-foreground) 55%, transparent)",
+  // Axis labels are text, so they sit at the 4.5:1 floor, not the 3:1 one.
+  fill: "color-mix(in srgb, var(--color-foreground) 75%, transparent)",
   fontSize: 12,
 } as const;
 
@@ -257,15 +258,19 @@ interface StatCardData {
   label: string;
   value: string | number;
   sub?: string;
-  color: string;
-  bg: string;
-  accent: string;
+  /**
+   * Clay, and only clay — for the one metric that is a breath signal ("this is
+   * alive"). Everything else is ink: a metric is not a status, so spending a
+   * status hue on it made the colour mean nothing.
+   */
+  alive?: boolean;
   trend?: { delta: number; label: string };
 }
 
 /**
- * Headline metric tile — glass pill value, colour-keyed left accent strip and
- * staggered entrance, matching the job cards on the board.
+ * Headline metric tile — glass pill value and a staggered entrance. No colour
+ * except where colour carries meaning: the clay "needs you" metric, and the
+ * trend chip's direction.
  */
 function StatCard({ card, index }: { card: StatCardData; index: number }) {
   const sub = card.trend
@@ -273,26 +278,27 @@ function StatCard({ card, index }: { card: StatCardData; index: number }) {
     : card.sub;
   return (
     <div
-      className="card-glass animate-card rounded-2xl p-5 pl-6 relative overflow-hidden"
+      className="card-glass animate-card rounded-2xl p-5"
       style={{ animationDelay: `${index * 50}ms` }}
     >
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-y-0 left-0 w-1.5"
-        style={{ background: card.accent }}
-      />
       <div className="flex items-center gap-2 mb-3">
         <div
-          className={`btn-glass inline-flex items-center justify-center min-w-9 h-9 px-2 rounded-xl ${card.bg}`}
+          className={`btn-glass inline-flex items-center justify-center min-w-9 h-9 px-2 rounded-xl ${
+            card.alive ? "bg-breath/10" : ""
+          }`}
         >
-          <span className={`text-lg font-black whitespace-nowrap ${card.color}`}>
+          <span
+            className={`text-lg font-bold whitespace-nowrap ${
+              card.alive ? "text-breath" : "text-foreground"
+            }`}
+          >
             {card.value}
           </span>
         </div>
         {card.trend && <TrendChip delta={card.trend.delta} />}
       </div>
       <p className="text-sm font-semibold text-foreground/80">{card.label}</p>
-      {sub && <p className="text-xs text-foreground/60 mt-0.5">{sub}</p>}
+      {sub && <p className="text-xs text-foreground/75 mt-0.5">{sub}</p>}
     </div>
   );
 }
@@ -301,7 +307,7 @@ function StatCard({ card, index }: { card: StatCardData; index: number }) {
 function TrendChip({ delta }: { delta: number }) {
   const flat = delta === 0;
   const up = delta > 0;
-  const tone = flat ? "text-foreground/40" : up ? "text-primary" : "text-error";
+  const tone = flat ? "text-foreground/75" : up ? "text-primary" : "text-error";
   return (
     <span
       className={`inline-flex items-center gap-0.5 text-xs font-bold tabular-nums ${tone}`}
@@ -330,7 +336,7 @@ function TrendChip({ delta }: { delta: number }) {
 function ChartEmpty({ message }: { message: string }) {
   return (
     <div className="h-full w-full flex items-center justify-center text-center px-6">
-      <p className="text-sm italic text-foreground/45 max-w-xs">{message}</p>
+      <p className="text-sm italic text-foreground/75 max-w-xs">{message}</p>
     </div>
   );
 }
@@ -397,18 +403,12 @@ export default function StatsPage() {
       label: "Total Applications",
       value: stats.total,
       sub: "tracked",
-      color: "text-secondary",
-      bg: "bg-secondary/10",
-      accent: "var(--color-secondary)",
       trend: { delta: stats.thisWeek - stats.lastWeek, label: "vs last week" },
     },
     {
       label: "Interview Rate",
       value: `${stats.interviewRate}%`,
       sub: "of apps submitted",
-      color: "text-warning",
-      bg: "bg-warning/10",
-      accent: "var(--color-warning)",
     },
     {
       label: "Offer Rate",
@@ -417,17 +417,14 @@ export default function StatsPage() {
         stats.winRate !== null
           ? `${stats.winRate}% of decided`
           : "of apps submitted",
-      color: "text-primary",
-      bg: "bg-primary/10",
-      accent: "var(--color-primary)",
     },
     {
+      // The one card that asks something of you — a breath signal, so it keeps
+      // the clay and is now the only colour in the row.
       label: "Follow-ups Due",
       value: stats.followUpsDue,
       sub: "need a nudge",
-      color: "text-error",
-      bg: "bg-error/10",
-      accent: "var(--color-error)",
+      alive: true,
     },
   ];
 
@@ -436,33 +433,21 @@ export default function StatsPage() {
       label: "Applied this week",
       value: stats.thisWeek,
       sub: "in the last 7 days",
-      color: "text-secondary",
-      bg: "bg-secondary/10",
-      accent: "var(--color-secondary)",
     },
     {
       label: "Applied this month",
       value: stats.thisMonth,
       sub: "in the last 30 days",
-      color: "text-accent",
-      bg: "bg-accent/10",
-      accent: "var(--color-accent)",
     },
     {
       label: "Win rate (decided)",
       value: stats.winRate !== null ? `${stats.winRate}%` : "—",
       sub: stats.decided > 0 ? `${stats.decided} decided` : "no outcomes yet",
-      color: "text-primary",
-      bg: "bg-primary/10",
-      accent: "var(--color-primary)",
     },
     {
       label: "Busiest month",
       value: stats.busiestMonth ? MONTH_LABEL(stats.busiestMonth.month) : "—",
       sub: stats.busiestMonth ? `${stats.busiestMonth.count} apps` : "—",
-      color: "text-warning",
-      bg: "bg-warning/10",
-      accent: "var(--color-warning)",
     },
   ];
 
@@ -506,7 +491,7 @@ export default function StatsPage() {
 
         {!hasData ? (
           <section className="card-glass animate-card rounded-2xl p-8">
-            <div className="py-20 text-center text-gray-500">
+            <div className="py-20 text-center text-foreground/75">
               <p className="text-lg italic">
                 No data available to visualize. Add some applications first!
               </p>
@@ -518,10 +503,10 @@ export default function StatsPage() {
               <>
                 {/* Pipeline funnel — ever-reached stages, not a snapshot */}
                 <section className="card-glass animate-card rounded-2xl p-8">
-                  <h2 className="text-xl font-bold text-primary mb-1">
+                  <h2 className="text-xl font-semibold text-foreground mb-1">
                     Pipeline Funnel
                   </h2>
-                  <p className="text-xs text-foreground/60 mb-4">
+                  <p className="text-xs text-foreground/75 mb-4">
                     Every stage an application has ever reached
                   </p>
                   <div className="h-[300px] w-full">
@@ -588,7 +573,7 @@ export default function StatsPage() {
                             ? `${Math.round((step.to / step.from) * 100)}%`
                             : "—"}
                         </p>
-                        <p className="text-[10px] uppercase tracking-wide font-semibold text-foreground/55">
+                        <p className="text-[10px] uppercase tracking-wide font-semibold text-foreground/75">
                           {step.label}
                         </p>
                       </div>
@@ -599,10 +584,10 @@ export default function StatsPage() {
                 {/* Conversion by source */}
                 {stats.sourceConversion.some((s) => s.source !== "Untagged") && (
                   <section className="card-glass animate-card rounded-2xl p-8">
-                    <h2 className="text-xl font-bold text-primary mb-1">
+                    <h2 className="text-xl font-semibold text-foreground mb-1">
                       Source Conversion
                     </h2>
-                    <p className="text-xs text-foreground/60 mb-4">
+                    <p className="text-xs text-foreground/75 mb-4">
                       How far applications from each source get
                     </p>
                     <div
@@ -653,14 +638,14 @@ export default function StatsPage() {
                             dataKey="offered"
                             name="Offered"
                             stackId="pipeline"
-                            fill="var(--color-primary)"
+                            fill="var(--sage)"
                             animationDuration={900}
                           />
                           <Bar
                             dataKey="interviewed"
                             name="Interviewed"
                             stackId="pipeline"
-                            fill="var(--color-warning)"
+                            fill="var(--amber)"
                             animationDuration={900}
                           />
                           <Bar
@@ -682,7 +667,7 @@ export default function StatsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Status distribution */}
               <section className="card-glass animate-card rounded-2xl p-8">
-                <h2 className="text-xl font-bold text-primary mb-6">
+                <h2 className="text-xl font-semibold text-foreground mb-6">
                   Status Distribution
                 </h2>
                 <div className="h-[320px] w-full">
@@ -703,7 +688,7 @@ export default function StatsPage() {
                           <Cell
                             key={`cell-${entry.name}`}
                             fill={
-                              STATUS_COLORS[entry.name as Status] || "#8884d8"
+                              STATUS_COLORS[entry.name as Status] ?? "var(--taupe)"
                             }
                           />
                         ))}
@@ -756,7 +741,7 @@ export default function StatsPage() {
 
               {/* Applications over time */}
               <section className="card-glass animate-card rounded-2xl p-8">
-                <h2 className="text-xl font-bold text-primary mb-6">
+                <h2 className="text-xl font-semibold text-foreground mb-6">
                   Applications Over Time
                 </h2>
                 <div className="h-[320px] w-full">
@@ -772,12 +757,12 @@ export default function StatsPage() {
                         <linearGradient id="appsArea" x1="0" y1="0" x2="0" y2="1">
                           <stop
                             offset="0%"
-                            stopColor="var(--color-secondary)"
+                            stopColor="var(--clay)"
                             stopOpacity={0.5}
                           />
                           <stop
                             offset="100%"
-                            stopColor="var(--color-secondary)"
+                            stopColor="var(--clay)"
                             stopOpacity={0.05}
                           />
                         </linearGradient>
@@ -806,7 +791,7 @@ export default function StatsPage() {
                       <Area
                         type="monotone"
                         dataKey="count"
-                        stroke="var(--color-secondary)"
+                        stroke="var(--clay)"
                         strokeWidth={2}
                         fill="url(#appsArea)"
                         animationDuration={1000}
@@ -821,10 +806,10 @@ export default function StatsPage() {
             {/* Pipeline staleness — who's been left waiting */}
             {stats.staleness.length > 0 && (
               <section className="card-glass animate-card rounded-2xl p-8">
-                <h2 className="text-xl font-bold text-primary mb-1">
+                <h2 className="text-xl font-semibold text-foreground mb-1">
                   Pipeline Staleness
                 </h2>
-                <p className="text-xs text-foreground/60 mb-6">
+                <p className="text-xs text-foreground/75 mb-6">
                   Active applications by time since last movement — apps with a
                   scheduled next step aren&apos;t shown
                 </p>
@@ -836,7 +821,7 @@ export default function StatsPage() {
                         ? "text-error"
                         : row.daysQuiet >= FOLLOW_UP_DAYS
                           ? "text-warning"
-                          : "text-foreground/50";
+                          : "text-foreground/75";
                     const barColor =
                       row.daysQuiet >= FOLLOW_UP_DAYS * 2
                         ? "var(--color-error)"
@@ -849,7 +834,7 @@ export default function StatsPage() {
                           <p className="text-sm font-semibold text-foreground truncate">
                             {row.company}
                           </p>
-                          <p className="text-xs text-foreground/60 truncate">
+                          <p className="text-xs text-foreground/75 truncate">
                             {row.position}
                           </p>
                         </div>
@@ -889,7 +874,7 @@ export default function StatsPage() {
             {/* Top companies */}
             {stats.topCompanies.length > 0 && (
               <section className="card-glass animate-card rounded-2xl p-8">
-                <h2 className="text-xl font-bold text-primary mb-6">
+                <h2 className="text-xl font-semibold text-foreground mb-6">
                   Top Companies
                 </h2>
                 <div
@@ -930,7 +915,7 @@ export default function StatsPage() {
                       />
                       <Bar
                         dataKey="count"
-                        fill="var(--color-primary)"
+                        fill="var(--sage)"
                         radius={[0, 8, 8, 0]}
                         animationDuration={900}
                       />

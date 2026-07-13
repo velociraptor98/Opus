@@ -1,6 +1,7 @@
 import { SOURCE_OPTIONS, Status, STATUS_OPTIONS } from "@/constants/generic";
 import { JobApplication } from "@/constants/types";
 import { useEffect, useState } from "react";
+import { BreathDots } from "./Breath";
 
 const emptyForm = () => ({
   company: "",
@@ -67,13 +68,13 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
   return (
     <div className="animate-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="animate-modal modal-glass rounded-3xl w-full max-w-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-white/20 dark:border-white/10 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-primary dark:text-primary">
+        <div className="px-6 py-4 border-b border-white/20 flex justify-between items-center">
+          <h3 className="text-xl font-bold text-foreground">
             Add New Job Application
           </h3>
           <button
             onClick={onClose}
-            className="text-secondary hover:text-primary transition-colors"
+            className="text-foreground/60 hover:text-breath transition-colors"
           >
             <svg
               className="w-6 h-6"
@@ -110,7 +111,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-primary/80 dark:text-secondary mb-1">
+            <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
               Company
             </label>
             <input
@@ -125,7 +126,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-primary/80 dark:text-secondary mb-1">
+            <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
               Position
             </label>
             <input
@@ -141,7 +142,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-primary/80 dark:text-secondary mb-1">
+              <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
                 Status
               </label>
               <select
@@ -159,7 +160,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-primary/80 dark:text-secondary mb-1">
+              <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
                 Date Applied
               </label>
               <input
@@ -174,7 +175,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-primary/80 dark:text-secondary mb-1">
+              <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
                 Location
               </label>
               <input
@@ -188,7 +189,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-primary/80 dark:text-secondary mb-1">
+              <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
                 Source
               </label>
               <input
@@ -209,7 +210,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-primary/80 dark:text-secondary mb-1">
+            <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
               Link
             </label>
             <input
@@ -222,20 +223,28 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
               placeholder="https://..."
             />
           </div>
-          <div className="pt-4 border-t border-secondary/10 dark:border-zinc-800 flex gap-3">
+          <div className="pt-4 border-t border-foreground/10 flex gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="btn-glass flex-1 px-4 py-2 text-secondary rounded-lg"
+              className="btn-glass flex-1 px-4 py-2 text-foreground/75 rounded-lg"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="btn-glass flex-1 px-4 py-2 bg-primary/80 dark:bg-secondary/70 text-white rounded-lg font-semibold border-primary/40 dark:border-secondary/40 disabled:opacity-60 disabled:cursor-not-allowed"
+              aria-busy={submitting}
+              className="btn-glass flex-1 px-4 py-2 bg-breath text-paper rounded-lg font-semibold border-breath disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center min-h-[2.5rem]"
             >
-              {submitting ? "Adding…" : "Add Job"}
+              {submitting ? (
+                <>
+                  <BreathDots loading />
+                  <span className="sr-only">Adding…</span>
+                </>
+              ) : (
+                "Add Job"
+              )}
             </button>
           </div>
         </form>

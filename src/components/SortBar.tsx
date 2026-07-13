@@ -13,7 +13,7 @@ export const SortBar = ({
   return (
     <div className="relative">
       <svg
-        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40"
+        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/55"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -42,7 +42,7 @@ export const SortBar = ({
         ))}
       </select>
       <svg
-        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40"
+        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/55"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"

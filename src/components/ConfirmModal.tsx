@@ -56,14 +56,14 @@ export const ConfirmModal = ({
             </div>
             <div className="min-w-0">
               <h3 className="text-lg font-bold text-foreground">{title}</h3>
-              <p className="text-sm text-foreground/70 mt-1">{message}</p>
+              <p className="text-sm text-foreground/75 mt-1">{message}</p>
             </div>
           </div>
           <div className="flex gap-3 pt-6">
             <button
               type="button"
               onClick={onCancel}
-              className="btn-glass flex-1 px-4 py-2 text-secondary rounded-lg"
+              className="btn-glass flex-1 px-4 py-2 text-foreground/75 rounded-lg"
             >
               {cancelLabel}
             </button>
@@ -71,7 +71,7 @@ export const ConfirmModal = ({
               type="button"
               onClick={onConfirm}
               autoFocus
-              className="btn-glass flex-1 px-4 py-2 bg-error/80 text-white rounded-lg font-semibold border-error/40"
+              className="btn-glass flex-1 px-4 py-2 bg-error text-paper rounded-lg font-semibold border-error"
             >
               {confirmLabel}
             </button>

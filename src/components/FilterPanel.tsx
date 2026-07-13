@@ -2,9 +2,11 @@ import {
   FILTER_OPTIONS,
   FilterOption,
   FOLLOW_UP_COLOR,
+  FOLLOW_UP_INK,
   needsFollowUp,
   Status,
   STATUS_COLORS,
+  STATUS_INK,
 } from "@/constants/generic";
 import { JobApplication } from "@/constants/types";
 import React from "react";
@@ -24,15 +26,23 @@ export const FilterPanel = ({
     <div className="flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-visible scrollbar-none [&::-webkit-scrollbar]:hidden">
       {FILTER_OPTIONS.map((option) => {
         const isActive = statusFilter === option;
-        const color =
+        // The dot is a shape (brand tier); the label and ring are type, so they
+        // take the deepened text tier and clear 4.5:1 on both grounds.
+        const dot =
           option === "All"
             ? undefined
             : option === "Follow-up"
               ? FOLLOW_UP_COLOR
               : STATUS_COLORS[option as Status];
-        // "All" has no status colour of its own, so it tints from the theme's
-        // foreground — a hardcoded black here disappears in dark mode.
-        const tint = color ?? "var(--color-foreground)";
+        const ink =
+          option === "All"
+            ? undefined
+            : option === "Follow-up"
+              ? FOLLOW_UP_INK
+              : STATUS_INK[option as Status];
+        // "All" has no colour of its own, so it tints from the theme's
+        // foreground — a hardcoded black here disappears on espresso.
+        const tint = ink ?? "var(--color-foreground)";
         return (
           <button
             key={option}
@@ -57,13 +67,13 @@ export const FilterPanel = ({
             {option !== "All" && (
               <span
                 className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full shrink-0"
-                style={{ background: color }}
+                style={{ background: dot }}
               />
             )}
             <span className="md:flex-1 md:text-left">{option}</span>
             <span
-              className="text-xs font-medium opacity-75 tabular-nums"
-              style={isActive && color ? { color } : undefined}
+              className="meta text-xs font-medium opacity-75 tabular-nums"
+              style={isActive && ink ? { color: ink } : undefined}
             >
               {option === "All"
                 ? applications.length

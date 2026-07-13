@@ -71,7 +71,7 @@ const VARIANT_STYLES: Record<
     ),
   },
   info: {
-    accent: "text-secondary",
+    accent: "text-breath",
     icon: (
       <path
         strokeLinecap="round"
@@ -114,7 +114,7 @@ function ToastItem({
             toast.action?.onClick();
             onDismiss();
           }}
-          className="btn-glass shrink-0 px-3 py-1.5 text-xs font-bold text-secondary bg-secondary/10 border-secondary/25 rounded-lg"
+          className="btn-glass shrink-0 px-3 py-1.5 text-xs font-bold text-breath rounded-lg"
         >
           {toast.action.label}
         </button>
@@ -122,7 +122,7 @@ function ToastItem({
       <button
         onClick={onDismiss}
         aria-label="Dismiss"
-        className="shrink-0 text-foreground/40 hover:text-foreground/70 transition-colors"
+        className="shrink-0 text-foreground/60 hover:text-foreground/75 transition-colors"
       >
         <svg
           className="w-4 h-4"

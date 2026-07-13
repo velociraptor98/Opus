@@ -24,7 +24,7 @@ export const UpcomingStrip = ({
 
   return (
     <div className="glass-well rounded-2xl px-4 py-3">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/50 mb-2">
+      <p className="meta text-[10px] font-bold uppercase text-foreground/75 mb-2">
         Upcoming
       </p>
       <div className="flex flex-wrap gap-2">
@@ -36,8 +36,8 @@ export const UpcomingStrip = ({
               title={formatExactDate(a.nextActionDate)}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
                 isToday
-                  ? "bg-warning/15 text-warning"
-                  : "bg-secondary/10 text-secondary"
+                  ? "bg-breath/15 text-breath"
+                  : "bg-foreground/5 text-foreground/75"
               }`}
             >
               <svg
@@ -62,7 +62,7 @@ export const UpcomingStrip = ({
           );
         })}
         {upcoming.length > MAX_ITEMS && (
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold text-foreground/50">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold text-foreground/75">
             +{upcoming.length - MAX_ITEMS} more
           </span>
         )}

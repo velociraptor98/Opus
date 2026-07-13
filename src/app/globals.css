@@ -1,59 +1,83 @@
 @import "tailwindcss";
 
-/* Manual light/dark theming — both `dark:` utilities and the .dark {} blocks
-   below key off this class toggled on <html>, instead of the OS preference. */
-@custom-variant dark (&:where(.dark, .dark *));
+/* ── iki studios · design language v1 ──────────────────────────────────────
+   "The breath is the brand." Paper and ink carry almost everything; clay is
+   reserved for the breath itself, so the accent always means "this is alive."
 
+   Light only — the app renders on paper. Espresso is kept as a brand token
+   because the reversed ground still exists off-screen (the app icon), but
+   nothing in the UI switches to it.
+
+   Two tiers per hue, because the brand tones are mid-lightness (OKLCH L .605)
+   and land at 3.4–3.6:1 on paper. That clears the 3:1 bar for graphical
+   objects — dots, chart fills, the mark — but not the 4.5:1 that small bold
+   text needs. So the brand tier (--clay, --sage, --amber, --rust, --slate,
+   --taupe) is for shapes; the text tier (--breath, --primary, --secondary,
+   --accent, --error, --warning) is the same hues deepened, for type.
+   ───────────────────────────────────────────────────────────────────────── */
 :root {
   color-scheme: light;
-  --background: #f3ead3; /* Everforest light "soft" bg — dimmer than the medium #fdf6e3 */
-  --foreground: #4f585e; /* darkened from #5c6a72 for stronger contrast on the lighter bg */
 
-  /* Everforest's light hues are syntax colours: on this background they land at
-     1.9–2.8:1, but we render them as small bold UI text (status pills, buttons,
-     headings). These are deepened to clear 4.5:1 on --background while holding
-     the original hue. The vivid originals live on below for decorative fills. */
-  --primary: #5f6f00;   /* Green  — 4.66:1 */
-  --secondary: #2a6f96; /* Blue   — 4.60:1 */
-  --accent: #1d7254;    /* Aqua   — 4.88:1 */
-  --error: #ba3633;     /* Red    — 4.78:1 */
-  --warning: #8a6100;   /* Yellow — 4.62:1 */
+  /* Brand tokens — exactly as specified in the design language. */
+  --paper: #f6f2ea;    /* oklch(0.962 0.012 86)  primary surface */
+  --ink: #362d25;      /* oklch(0.305 0.020 64)  headings & wordmark */
+  --ink-soft: #64584e; /* oklch(0.470 0.022 64)  body & captions */
+  --clay: #a77455;     /* oklch(0.605 0.078 52)  the breath / accent */
+  --sage: #6a8c6e;     /* oklch(0.605 0.058 148) secondary accent */
+  --espresso: #2d221a; /* oklch(0.262 0.022 60)  reversed grounds */
 
-  /* Never used as text — only the backdrop mesh, which needs the saturation. */
-  --primary-vivid: #8da101;
-  --secondary-vivid: #3a94c5;
-  --accent-vivid: #35a77c;
-  --warning-vivid: #dfa000;
+  /* Earth siblings — derived in clay and sage's own OKLCH band (L .605) so the
+     six statuses stay tellable apart in the charts without leaving the family.
+     Clay is deliberately absent here: it is never spent on a routine status. */
+  --amber: #9a7c51;    /* oklch(0.605 0.070 75)  Interviewing */
+  --rust: #aa7069;     /* oklch(0.605 0.075 28)  Rejected */
+  --slate: #748399;    /* oklch(0.605 0.038 258) Applied */
+  --taupe: #8b7f76;    /* oklch(0.605 0.020 64)  Closed */
+
+  /* The ground is paper with a whisper of clay worked through it — enough to
+     feel warm and handmade, far too little to read as a colour of its own. */
+  --background: color-mix(in srgb, var(--clay) 4%, var(--paper));
+  --foreground: var(--ink);
+  --muted: var(--ink-soft);
+
+  /* Text tier — the same hues, deepened until they clear 4.5:1 on the *worst*
+     surface text actually lands on: the recessed .glass-well, over the mesh's
+     densest clay lobe, *under the deepest crease of the paper texture* (~#d6cdc3)
+     — not on bare paper. Bare paper was optimistic and left these at ~3.5:1 in
+     the sidebar; ignoring the crease left them at 4.1:1. The texture's 6% floor
+     and these values are a matched pair — retune one and you must retune both. */
+  --breath: #7c4c2e;   /* clay  — "this is alive": follow-up, next step, CTA */
+  --primary: #405f44;  /* sage  — Offered, positive */
+  --secondary: #4c596e;/* slate — Applied, passive info */
+  --accent: #61564d;   /* taupe — Closed, terminal */
+  --error: #7f4942;    /* rust  — Rejected, destructive */
+  --warning: #705329;  /* amber — Interviewing */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+
+  /* text tier */
+  --color-breath: var(--breath);
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
   --color-error: var(--error);
   --color-warning: var(--warning);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-.dark {
-  color-scheme: dark;
-  --background: #2d353b;
-  --foreground: #d3c6aa;
-  /* These already clear 4.5:1 on --background (4.55–6.84:1), so the dark theme
-     keeps Everforest's hues untouched and the mesh reuses them directly. */
-  --primary: #a7c080;   /* Green */
-  --secondary: #7fbbb3; /* Blue/Aqua */
-  --accent: #d699b6;    /* Purple */
-  --error: #e67e80;     /* Red */
-  --warning: #dbbc7f;   /* Yellow */
+  /* brand tier — marks, dots, chart fills, the mesh */
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-clay: var(--clay);
+  --color-sage: var(--sage);
+  --color-espresso: var(--espresso);
 
-  --primary-vivid: #a7c080;
-  --secondary-vivid: #7fbbb3;
-  --accent-vivid: #d699b6;
-  --warning-vivid: #dbbc7f;
+  /* Quicksand is the brand voice; Space Mono the system voice. */
+  --font-sans: var(--font-quicksand);
+  --font-mono: var(--font-space-mono);
 }
 
 @keyframes shake {
@@ -82,26 +106,51 @@ body {
 }
 
 /* Decorative palette mesh behind all glass surfaces. Fixed so it stays put
-   while content scrolls, giving the backdrop-filters something to refract. */
+   while content scrolls, giving the backdrop-filters something to refract.
+
+   Clay leads and recurs on both diagonals, so the warmth reads as a property of
+   the whole page rather than a stain in one corner. The lobes are deliberately
+   faint (≤10%): the earlier 22% clay lobe sank the .glass-well beneath it to
+   ~3.5:1 for accent text. Sage is held right back — at any strength it turned
+   the top-right cool and green, which fights "warm, muted, handmade". */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background:
-    radial-gradient(55% 50% at 12% -5%, color-mix(in srgb, var(--primary-vivid) 22%, transparent), transparent 70%),
-    radial-gradient(50% 45% at 88% 8%, color-mix(in srgb, var(--secondary-vivid) 20%, transparent), transparent 70%),
-    radial-gradient(55% 55% at 80% 95%, color-mix(in srgb, var(--accent-vivid) 18%, transparent), transparent 72%),
-    radial-gradient(45% 45% at 8% 88%, color-mix(in srgb, var(--warning-vivid) 14%, transparent), transparent 72%);
-}
 
-.dark body::before {
-  background:
-    radial-gradient(55% 50% at 12% -5%, color-mix(in srgb, var(--primary-vivid) 14%, transparent), transparent 70%),
-    radial-gradient(50% 45% at 88% 8%, color-mix(in srgb, var(--secondary-vivid) 13%, transparent), transparent 70%),
-    radial-gradient(55% 55% at 80% 95%, color-mix(in srgb, var(--accent-vivid) 12%, transparent), transparent 72%),
-    radial-gradient(45% 45% at 8% 88%, color-mix(in srgb, var(--warning-vivid) 9%, transparent), transparent 72%);
+  /* Crumpled paper — "warm, muted, handmade". Generated procedurally by an
+     inline SVG filter rather than shipped as an image, so it costs no request
+     and stays crisp at any DPR. Two lit noise fields multiplied together: a
+     low-frequency, high-relief one for the facets and creases of a crumple, and
+     a fine high-frequency one for the fibre tooth.
+
+     Note feDiffuseLighting takes its height map from the input's ALPHA channel,
+     so each feTurbulence is routed through an feColorMatrix that copies red into
+     alpha first. Lighting the turbulence directly yields a flat sheet (measured:
+     1/255 of variation) — which is exactly the trap this hit the first time.
+
+     It `multiply`s, because paper reads as shadow in the creases; `soft-light`
+     on a ground this light merely lightens and desaturates it, washing the clay
+     out. The feComponentTransfer remaps the texture's own [0.69, 0.94] range to
+     [0.94, 1.00], so the deepest crease darkens the ground by at most 6%. That
+     ceiling is not cosmetic: the worst text surface sits at 4.52:1 with *zero*
+     headroom, so any darkening at all has to be paid for out of the text tier,
+     which is why the accents above were deepened to match this exact floor.
+     Blended via `background-blend-mode` (within this one element) rather than
+     `mix-blend-mode`, which blends against the root canvas, where a propagated
+     body background makes the outcome unpredictable. */
+  background-color: var(--background);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1400' height='1000'%3E%3Cfilter id='p' filterUnits='userSpaceOnUse' x='0' y='0' width='1400' height='1000'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.008' numOctaves='3' seed='5' result='cn'/%3E%3CfeColorMatrix in='cn' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0' result='cbump'/%3E%3CfeDiffuseLighting in='cbump' lighting-color='%23ffffff' surfaceScale='9' diffuseConstant='1' result='crease'%3E%3CfeDistantLight azimuth='235' elevation='55'/%3E%3C/feDiffuseLighting%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.06' numOctaves='4' seed='17' result='fn'/%3E%3CfeColorMatrix in='fn' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0' result='fbump'/%3E%3CfeDiffuseLighting in='fbump' lighting-color='%23ffffff' surfaceScale='1.6' diffuseConstant='1' result='fibre'%3E%3CfeDistantLight azimuth='235' elevation='55'/%3E%3C/feDiffuseLighting%3E%3CfeBlend in='crease' in2='fibre' mode='multiply' result='paper'/%3E%3CfeColorMatrix in='paper' type='saturate' values='0' result='grey'/%3E%3CfeComponentTransfer in='grey'%3E%3CfeFuncR type='linear' slope='0.24' intercept='0.774'/%3E%3CfeFuncG type='linear' slope='0.24' intercept='0.774'/%3E%3CfeFuncB type='linear' slope='0.24' intercept='0.774'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='1400' height='1000' filter='url(%23p)'/%3E%3C/svg%3E"),
+    radial-gradient(60% 55% at 8% -8%, color-mix(in srgb, var(--clay) 10%, transparent), transparent 72%),
+    radial-gradient(55% 50% at 92% 6%, color-mix(in srgb, var(--sage) 6%, transparent), transparent 70%),
+    radial-gradient(65% 60% at 85% 100%, color-mix(in srgb, var(--clay) 8%, transparent), transparent 74%),
+    radial-gradient(50% 50% at 2% 92%, color-mix(in srgb, var(--amber) 7%, transparent), transparent 72%);
+  background-size: cover, auto, auto, auto, auto;
+  background-repeat: no-repeat, repeat, repeat, repeat, repeat;
+  background-blend-mode: multiply, normal, normal, normal, normal;
 }
 
 @keyframes fade-out {
@@ -174,60 +223,33 @@ body::before {
 .card-glass {
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  background: rgba(255, 255, 255, 0.42);
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.9);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    inset 1px 0 0 rgba(255, 255, 255, 0.4),
-    0 4px 20px rgba(0, 0, 0, 0.06),
-    0 1px 3px rgba(0, 0, 0, 0.04);
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 1px 0 0 rgba(255, 255, 255, 0.5),
+    0 4px 20px rgba(54, 45, 37, 0.10),
+    0 1px 3px rgba(54, 45, 37, 0.06);
   transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .card-glass:hover {
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.78);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 1px 0 0 rgba(255, 255, 255, 0.5),
-    0 8px 32px rgba(0, 0, 0, 0.09),
-    0 2px 6px rgba(0, 0, 0, 0.05);
-}
-
-.dark .card-glass {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 1px 0 0 rgba(255, 255, 255, 0.05),
-    0 4px 20px rgba(0, 0, 0, 0.25),
-    0 1px 3px rgba(0, 0, 0, 0.12);
-}
-
-.dark .card-glass:hover {
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 1px 0 0 rgba(255, 255, 255, 0.07),
-    0 8px 32px rgba(0, 0, 0, 0.35),
-    0 2px 6px rgba(0, 0, 0, 0.15);
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 1px 0 0 rgba(255, 255, 255, 0.6),
+    0 8px 32px rgba(54, 45, 37, 0.14),
+    0 2px 6px rgba(54, 45, 37, 0.08);
 }
 
 .navbar-glass {
   backdrop-filter: blur(32px) saturate(190%);
   -webkit-backdrop-filter: blur(32px) saturate(190%);
   background: rgba(255, 255, 255, 0.3);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.55);
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
     0 4px 24px rgba(0, 0, 0, 0.06);
-}
-
-.dark .navbar-glass {
-  background: rgba(45, 53, 59, 0.4);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 4px 24px rgba(0, 0, 0, 0.3);
 }
 
 .modal-glass {
@@ -240,16 +262,6 @@ body::before {
     inset 1px 0 0 rgba(255, 255, 255, 0.5),
     0 20px 60px rgba(0, 0, 0, 0.15),
     0 4px 16px rgba(0, 0, 0, 0.08);
-}
-
-.dark .modal-glass {
-  background: rgba(45, 53, 59, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 1px 0 0 rgba(255, 255, 255, 0.05),
-    0 20px 60px rgba(0, 0, 0, 0.45),
-    0 4px 16px rgba(0, 0, 0, 0.22);
 }
 
 /* In @layer components (not unlayered) so that the `bg-*` / `border-*` utilities
@@ -282,49 +294,6 @@ body::before {
     background: rgba(255, 255, 255, 0.4);
   }
 
-  .dark .btn-glass {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.28),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.04),
-      0 4px 16px rgba(0, 0, 0, 0.06);
-  }
-
-  .dark .btn-glass:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.15);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.38),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.04),
-      0 6px 22px rgba(0, 0, 0, 0.1);
-  }
-
-  .dark .btn-glass:active:not(:disabled) {
-    background: rgba(255, 255, 255, 0.06);
-  }
-}
-
-.filter-strip-glass {
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.60);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.80),
-    inset 1px 0 0 rgba(255, 255, 255, 0.35),
-    inset -1px 0 0 rgba(255, 255, 255, 0.20),
-    0 4px 20px rgba(0, 0, 0, 0.05),
-    0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.dark .filter-strip-glass {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    inset 1px 0 0 rgba(255, 255, 255, 0.06),
-    0 4px 20px rgba(0, 0, 0, 0.28),
-    0 1px 3px rgba(0, 0, 0, 0.14);
 }
 
 /* Glass form fields — translucent, blurred inputs/selects/textareas */
@@ -349,46 +318,21 @@ body::before {
 .input-glass:focus-visible {
   outline: none;
   background: rgba(255, 255, 255, 0.4);
-  border-color: color-mix(in srgb, var(--color-secondary) 55%, transparent);
+  border-color: color-mix(in srgb, var(--color-breath) 55%, transparent);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    0 0 0 3px color-mix(in srgb, var(--color-secondary) 22%, transparent);
-}
-
-.dark .input-glass {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.dark .input-glass:focus,
-.dark .input-glass:focus-visible {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: color-mix(in srgb, var(--color-secondary) 60%, transparent);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 0 0 3px color-mix(in srgb, var(--color-secondary) 25%, transparent);
+    0 0 0 3px color-mix(in srgb, var(--color-breath) 22%, transparent);
 }
 
 /* Faint glass tray — recessed well that holds the floating cards */
 .glass-well {
   backdrop-filter: blur(8px) saturate(140%);
   -webkit-backdrop-filter: blur(8px) saturate(140%);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ink) 7%, transparent);
   box-shadow:
-    inset 0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 2px 10px rgba(54, 45, 37, 0.07),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-.dark .glass-well {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow:
-    inset 0 2px 8px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* Glass checkbox — translucent tile with a soft checkmark */
@@ -437,14 +381,6 @@ body::before {
     0 0 0 3px color-mix(in srgb, var(--color-primary) 22%, transparent);
 }
 
-.dark .checkbox-glass {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
 /* Skeleton shimmer — loading placeholders */
 .skeleton {
   position: relative;
@@ -486,4 +422,137 @@ body::before {
 
 .animate-toast {
   animation: toast-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── the breath, beyond the logo ───────────────────────────────────────────
+   "The line-and-dots gesture isn't just the logo — it's the studio's
+   punctuation." Same shape, same clay, every time: a short exhale that
+   releases into a trail of fading dots.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Section divider / sign-off. Line length and dot spacing scale with font-size,
+   so the gesture is never set by hand — it breathes with whatever it sits in. */
+.breath-rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  color: var(--clay);
+}
+
+.breath-rule::before {
+  content: "";
+  width: 3.5em;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.breath-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+/* Three dots by default, each smaller and fainter — breath dispersing. */
+.breath-dots > i {
+  display: block;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.breath-dots > i:nth-child(1) { width: 0.44em; height: 0.44em; opacity: 0.9; }
+.breath-dots > i:nth-child(2) { width: 0.34em; height: 0.34em; opacity: 0.6; }
+.breath-dots > i:nth-child(3) { width: 0.26em; height: 0.26em; opacity: 0.35; }
+
+/* Loading rhythm — the same trail, exhaled on a loop rather than held still. */
+@keyframes breathe {
+  0%, 100% { opacity: 0.15; transform: scale(0.85); }
+  50%      { opacity: 1;    transform: scale(1); }
+}
+
+.breath-loading > i {
+  animation: breathe 1.6s ease-in-out infinite;
+}
+
+.breath-loading > i:nth-child(2) { animation-delay: 0.18s; }
+.breath-loading > i:nth-child(3) { animation-delay: 0.36s; }
+
+/* The system voice: Space Mono for labels, captions and metadata. */
+.meta {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+  letter-spacing: 0.12em;
+}
+
+/* ── the breath, applied ───────────────────────────────────────────────────
+   Clay always means "this is alive": the live point in a field, the selected
+   text, a step completed, work in flight. It is never a routine status.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Selection was rendering in the browser's system blue — the one place a cold
+   colour still leaked into a warm palette. Highlighting text is the reader
+   marking something live, so it takes the clay. */
+::selection {
+  background: color-mix(in srgb, var(--clay) 28%, transparent);
+  color: var(--ink);
+}
+
+html {
+  /* Native control chrome (notably the date picker's calendar) defaults to the
+     browser's blue. The checkboxes are already custom, so this is mostly for
+     the date field. */
+  accent-color: var(--clay);
+  /* The caret is literally the live point in the document. This one is a
+     flourish, not a fix — caret-color already defaulted to ink via currentColor. */
+  caret-color: var(--breath);
+
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ink) 28%, transparent) transparent;
+}
+
+/* WebKit needs its own scrollbar; without it the track stays system grey. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  background-color: color-mix(in srgb, var(--ink) 25%, transparent);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--clay) 55%, transparent);
+}
+
+/* The breath as a progress track. The checklist happens to have exactly three
+   steps and the mark has exactly three dots, so completing a step lights one:
+   the same taper as the logo, but full-strength clay once earned rather than
+   fading away. */
+.breath-steps {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.breath-steps > i {
+  display: block;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--foreground) 18%, transparent);
+  transition: background 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.breath-steps > i:nth-child(1) { width: 0.44em; height: 0.44em; }
+.breath-steps > i:nth-child(2) { width: 0.34em; height: 0.34em; }
+.breath-steps > i:nth-child(3) { width: 0.26em; height: 0.26em; }
+
+.breath-steps > i[data-done="true"] {
+  background: var(--clay);
+  transform: scale(1.2);
 }

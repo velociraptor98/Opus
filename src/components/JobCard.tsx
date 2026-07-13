@@ -48,7 +48,11 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
 
   if (isEditing) {
     return (
-      <div className="card-glass animate-row rounded-2xl p-4 space-y-3">
+      // Same h-full frame as the read view, so flipping into edit doesn't
+      // resize the card or reflow its neighbours. `gap-3` rather than
+      // `space-y-3`: the latter sets sibling margins with a selector that
+      // outranks `mt-auto`, which would strand the buttons mid-card.
+      <div className="card-glass animate-row rounded-2xl p-4 h-full flex flex-col gap-3">
         <input
           type="text"
           className="input-glass w-full px-3 py-2 rounded-lg text-sm"
@@ -90,16 +94,16 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
             }
           />
         </div>
-        <div className="flex gap-2 pt-1">
+        <div className="mt-auto flex gap-2 pt-1">
           <button
             onClick={handleSaveEdit}
-            className="btn-glass flex-1 py-2 bg-primary/80 dark:bg-secondary/70 text-white rounded-lg text-sm font-semibold border-primary/40 dark:border-secondary/40"
+            className="btn-glass flex-1 py-2 bg-breath text-paper rounded-lg text-sm font-semibold border-breath"
           >
             Save
           </button>
           <button
             onClick={() => setIsEditing(false)}
-            className="btn-glass flex-1 py-2 text-secondary rounded-lg text-sm"
+            className="btn-glass flex-1 py-2 text-foreground/75 rounded-lg text-sm"
           >
             Cancel
           </button>
@@ -110,12 +114,20 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
 
   return (
     <>
-      <div className="card-glass animate-row rounded-2xl p-4 hover:scale-[1.02]">
+      {/* Every card is the same height, whatever it holds. `h-full` fills the
+          grid cell (which already stretches to the tallest in the row), the
+          three text lines are each clamped to one line so a long company name
+          can't push the card taller, the meta row is a fixed height whether or
+          not it carries pills, and the action row is pinned to the bottom. */}
+      <div className="card-glass animate-row rounded-2xl p-4 hover:scale-[1.02] h-full flex flex-col">
         <div className="flex items-start gap-3 mb-1">
           <CompanyAvatar company={application.company} />
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="font-bold text-foreground text-base leading-tight">
+              <h3
+                className="font-bold text-foreground text-base leading-tight truncate"
+                title={application.company}
+              >
                 {application.company}
               </h3>
               <StatusPill
@@ -123,15 +135,26 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
                 onChange={handleQuickStatusChange}
               />
             </div>
-            <p className="text-sm text-foreground/80">{application.position}</p>
-            {detailLine && (
-              <p className="text-xs text-foreground/60">{detailLine}</p>
-            )}
+            <p
+              className="text-sm text-foreground/80 truncate"
+              title={application.position}
+            >
+              {application.position}
+            </p>
+            {/* Always rendered, so a card without location/salary is no shorter
+                than one with it. Hidden from the a11y tree when it's a spacer. */}
+            <p
+              className="text-xs text-foreground/75 truncate"
+              title={detailLine || undefined}
+              aria-hidden={!detailLine}
+            >
+              {detailLine || " "}
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <div className="flex items-center gap-2 mb-3 h-6 overflow-hidden">
           <p
-            className="text-xs text-foreground/60"
+            className="meta text-[11px] text-foreground/75 shrink-0"
             title={formatExactDate(application.dateApplied)}
           >
             {formatRelativeDate(application.dateApplied)}
@@ -139,7 +162,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
           {followUp && <FollowUpPill />}
           <NextActionPill application={application} />
         </div>
-        <div className="flex items-center gap-2 border-t border-foreground/5 pt-3">
+        <div className="mt-auto flex items-center gap-2 border-t border-foreground/5 pt-3">
           {application.link && <ExternalLink link={application.link} />}
           <NotesButton
             notes={application.notes}
@@ -176,13 +199,18 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
   );
 };
 
-/** Palette the company initial-tile is tinted from, keyed by name hash. */
+/**
+ * Palette the company initial-tile is tinted from, keyed by name hash. Drawn
+ * from the earth family (never clay — the tile is decoration, not a breath).
+ * `tile` is the brand tone for the wash and ring; `ink` is its deepened twin,
+ * because the initial itself is type and has to clear 4.5:1.
+ */
 const AVATAR_COLORS = [
-  "var(--color-primary)",
-  "var(--color-secondary)",
-  "var(--color-accent)",
-  "var(--color-warning)",
-  "var(--color-error)",
+  { tile: "var(--sage)", ink: "var(--primary)" },
+  { tile: "var(--slate)", ink: "var(--secondary)" },
+  { tile: "var(--amber)", ink: "var(--warning)" },
+  { tile: "var(--rust)", ink: "var(--error)" },
+  { tile: "var(--taupe)", ink: "var(--accent)" },
 ];
 
 /**
@@ -196,15 +224,15 @@ const CompanyAvatar = ({ company }: { company: string }) => {
   for (let i = 0; i < name.length; i++) {
     hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
   }
-  const color = AVATAR_COLORS[hash % AVATAR_COLORS.length];
+  const { tile, ink } = AVATAR_COLORS[hash % AVATAR_COLORS.length];
   return (
     <span
       aria-hidden
-      className="shrink-0 inline-grid place-content-center w-9 h-9 rounded-xl text-sm font-black"
+      className="shrink-0 inline-grid place-content-center w-9 h-9 rounded-xl text-sm font-bold"
       style={{
-        background: `color-mix(in srgb, ${color} 16%, transparent)`,
-        color,
-        boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${color} 30%, transparent)`,
+        background: `color-mix(in srgb, ${tile} 16%, transparent)`,
+        color: ink,
+        boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${tile} 30%, transparent)`,
       }}
     >
       {initial}
@@ -261,7 +289,10 @@ const StatusPill = ({
   );
 };
 
-/** Scheduled next step: upcoming in secondary, due today in warning, missed in error. */
+/**
+ * Scheduled next step, escalating: still ahead of you is quiet neutral, due
+ * today is clay — the breath, "this is alive" — and missed is rust.
+ */
 const NextActionPill = ({ application }: { application: JobApplication }) => {
   if (!application.nextActionDate) return null;
   const days = daysSince(application.nextActionDate);
@@ -271,18 +302,18 @@ const NextActionPill = ({ application }: { application: JobApplication }) => {
   const tone = overdue
     ? "bg-error/10 text-error"
     : days === 0
-      ? "bg-warning/15 text-warning"
-      : "bg-secondary/10 text-secondary";
+      ? "bg-breath/15 text-breath"
+      : "bg-foreground/5 text-foreground/75";
   const when = days === 0 ? "Today" : formatRelativeDate(application.nextActionDate);
   const label = application.nextActionNote || "Next step";
 
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${tone}`}
+      className={`meta inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase min-w-0 ${tone}`}
       title={formatExactDate(application.nextActionDate)}
     >
       <svg
-        className="w-2.5 h-2.5"
+        className="w-2.5 h-2.5 shrink-0"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -294,7 +325,10 @@ const NextActionPill = ({ application }: { application: JobApplication }) => {
           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
         />
       </svg>
-      {overdue ? `${label} · missed` : `${label} · ${when}`}
+      {/* The note is free text, so it truncates rather than wrapping the row. */}
+      <span className="truncate">
+        {overdue ? `${label} · missed` : `${label} · ${when}`}
+      </span>
     </span>
   );
 };
@@ -303,7 +337,7 @@ const DeleteButton = ({ onClick }: { onClick: () => void }) => {
   return (
     <button
       onClick={onClick}
-      className="focus-ring p-2 text-error hover:bg-error/10 rounded-lg transition-colors ml-auto"
+      className="focus-ring p-2 text-foreground/60 hover:text-error hover:bg-error/10 rounded-lg transition-colors ml-auto"
       title="Delete"
     >
       <svg
@@ -331,7 +365,7 @@ const EditButton = ({
   return (
     <button
       onClick={() => setIsEditing(true)}
-      className="focus-ring p-2 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
+      className="focus-ring p-2 text-foreground/60 hover:text-breath hover:bg-breath/10 rounded-lg transition-colors"
       title="Edit"
     >
       <svg
@@ -363,8 +397,8 @@ const NotesButton = ({
       onClick={openNotes}
       className={`focus-ring p-2 rounded-lg transition-colors ${
         notes
-          ? "text-primary bg-primary/10 hover:bg-primary/20"
-          : "text-secondary hover:bg-secondary/10"
+          ? "text-breath bg-breath/10 hover:bg-breath/20"
+          : "text-foreground/60 hover:text-breath hover:bg-breath/10"
       }`}
       title="Notes & checklist"
     >
@@ -391,7 +425,7 @@ const ExternalLink = ({ link }: { link: string }) => {
       href={link}
       target="_blank"
       rel="noopener noreferrer"
-      className="focus-ring p-2 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
+      className="focus-ring p-2 text-foreground/60 hover:text-breath hover:bg-breath/10 rounded-lg transition-colors"
       title="Open link"
     >
       <svg
@@ -411,10 +445,11 @@ const ExternalLink = ({ link }: { link: string }) => {
   );
 };
 
+/** A breath signal, not a status — so this is the one pill that wears the clay. */
 const FollowUpPill = () => {
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-warning/15 text-warning"
+      className="meta inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-breath/15 text-breath shrink-0"
       title="No movement in a while — time to follow up"
     >
       <svg

@@ -2,14 +2,14 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Opus – Job Search Tracker",
+    name: "Opus — Job Search Tracker",
     short_name: "Opus",
     description: "Track your job applications with ease.",
     start_url: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#fdf6e3",
-    theme_color: "#8da101",
+    background_color: "#f6f2ea",
+    theme_color: "#f6f2ea",
     icons: [
       {
         src: "/icons/icon-192.png",

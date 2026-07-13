@@ -56,6 +56,11 @@ export const SOURCE_OPTIONS = [
   "Other",
 ] as const;
 
+/**
+ * Status tones, mapped onto the iki earth family. Clay is deliberately not
+ * here: it is the breath — reserved for "this is alive" (follow-up, next step,
+ * loading) — so spending it on a routine status would blunt the accent.
+ */
 export const STATUS_CONFIG: Record<
   Status,
   { dot: string; bg: string; text: string }
@@ -76,7 +81,7 @@ export const STATUS_CONFIG: Record<
   Pending: {
     dot: "bg-foreground/40",
     bg: "bg-foreground/5",
-    text: "text-foreground/70",
+    text: "text-foreground/75",
   },
 };
 export const FILTER_OPTIONS: FilterOption[] = [
@@ -89,7 +94,9 @@ export const FILTER_OPTIONS: FilterOption[] = [
   "Closed",
   "Pending",
 ];
-export const FOLLOW_UP_COLOR = "var(--color-warning)";
+/** Follow-up is a breath signal, not a status — so it, alone, gets the clay. */
+export const FOLLOW_UP_COLOR = "var(--clay)";
+export const FOLLOW_UP_INK = "var(--breath)";
 
 export type SortOption =
   | "Recently added"
@@ -161,11 +168,30 @@ export function sortApplications(
   }
 }
 
+/**
+ * Brand tier — the hues exactly as the design language sets them (OKLCH L .605).
+ * Graphical objects only: chart fills and filter dots, which need 3:1, not the
+ * 4.5:1 small text demands. These hold across both grounds, so a status reads
+ * the same on paper and on espresso.
+ */
 export const STATUS_COLORS: Record<Status, string> = {
-  Applied: "var(--color-secondary)",
-  Interviewing: "var(--color-warning)",
-  Offered: "var(--color-primary)",
-  Rejected: "var(--color-error)",
-  Closed: "var(--color-accent)",
-  Pending: "color-mix(in srgb, var(--color-foreground) 60%, transparent)",
+  Applied: "var(--slate)",
+  Interviewing: "var(--amber)",
+  Offered: "var(--sage)",
+  Rejected: "var(--rust)",
+  Closed: "var(--taupe)",
+  Pending: "color-mix(in srgb, var(--foreground) 45%, transparent)",
+};
+
+/**
+ * Text tier — the same hues, deepened on paper and lifted on espresso so they
+ * clear 4.5:1. Use wherever a status colours *type* rather than a shape.
+ */
+export const STATUS_INK: Record<Status, string> = {
+  Applied: "var(--secondary)",
+  Interviewing: "var(--warning)",
+  Offered: "var(--primary)",
+  Rejected: "var(--error)",
+  Closed: "var(--accent)",
+  Pending: "var(--foreground)",
 };

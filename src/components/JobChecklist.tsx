@@ -28,6 +28,7 @@ import { FilterPanel } from "./FilterPanel";
 import { SortBar } from "./SortBar";
 import { ImportExport } from "./ImportExport";
 import { UpcomingStrip } from "./UpcomingStrip";
+import { BreathRule } from "./Breath";
 
 const PAGE_SIZE = 8;
 
@@ -265,7 +266,7 @@ const JobChecklist = () => {
               paginated.map((app, i) => (
                 <div
                   key={app.id}
-                  className="animate-card"
+                  className="animate-card h-full"
                   style={{ animationDelay: `${i * 45}ms` }}
                 >
                   <JobCard
@@ -285,6 +286,10 @@ const JobChecklist = () => {
           currentPage={currentPage}
           setPage={setPage}
         />
+        {/* Sign-off: the exhale that closes the page. */}
+        <div className="flex justify-center pt-1 pb-2 opacity-60">
+          <BreathRule className="text-xl" />
+        </div>
       </div>
       {createPortal(
         <NewJobModal

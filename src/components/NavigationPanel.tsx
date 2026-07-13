@@ -18,7 +18,7 @@ export const NavigationPanel = ({
           >
             ← Prev
           </button>
-          <span className="text-sm text-foreground/65 font-medium">
+          <span className="text-sm text-foreground/75 font-medium">
             {currentPage + 1} / {totalPages}
           </span>
           <button

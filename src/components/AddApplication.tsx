@@ -7,12 +7,11 @@ export const AddApplication = ({
     <button
       onClick={() => setIsModalOpen(true)}
       title="Add Application"
-      className="btn-glass w-full h-10 rounded-full flex items-center justify-center text-secondary transition-all duration-200 active:scale-95 hover:scale-[1.03]"
+      className="btn-glass w-full h-10 rounded-full flex items-center justify-center text-breath transition-all duration-200 active:scale-95 hover:scale-[1.03]"
       style={{
-        background:
-          "color-mix(in srgb, var(--color-secondary) 10%, transparent)",
+        background: "color-mix(in srgb, var(--clay) 12%, transparent)",
         boxShadow:
-          "inset 0 0 0 1.5px color-mix(in srgb, var(--color-secondary) 30%, transparent)",
+          "inset 0 0 0 1.5px color-mix(in srgb, var(--clay) 35%, transparent)",
       }}
     >
       <svg
