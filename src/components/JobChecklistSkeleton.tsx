@@ -22,8 +22,8 @@ export function JobChecklistSkeleton() {
   return (
     // Mirrors JobChecklist's own layout — a glass-well sidebar, not a sticky
     // strip — so the page doesn't jump when the real content lands.
-    <div className="w-full flex flex-col md:flex-row gap-4 md:items-stretch">
-      <div className="w-full md:w-auto md:shrink-0 flex flex-col gap-2 glass-well rounded-2xl p-4 self-stretch">
+    <div className="w-full flex flex-col md:flex-row gap-4 md:items-stretch md:h-full md:min-h-0">
+      <div className="w-full md:w-auto md:shrink-0 flex flex-col gap-2 glass-well rounded-2xl p-4 self-stretch md:min-h-0 md:overflow-y-auto">
         {Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
@@ -33,8 +33,8 @@ export function JobChecklistSkeleton() {
         <div className="skeleton h-10 w-full rounded-full mt-1" />
       </div>
 
-      <div className="flex-1 flex flex-col gap-4 min-w-0">
-        <div className="glass-well rounded-2xl p-4">
+      <div className="flex-1 flex flex-col gap-4 min-w-0 md:min-h-0">
+        <div className="glass-well rounded-2xl p-4 md:flex-1 md:min-h-0 md:overflow-y-auto">
           {/* The loading rhythm: the same exhale, looped. */}
           <div className="flex justify-center py-3" aria-label="Loading" role="status">
             <BreathRule loading className="text-xl" />

@@ -1,12 +1,17 @@
+import { ApplicationKind, KIND_LABELS } from "@/constants/kind";
+
 export const SearchBar = ({
   searchQuery,
   setSearchQuery,
   setPage,
+  kind,
 }: {
   searchQuery: string;
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
   setPage: React.Dispatch<React.SetStateAction<number>>;
+  kind: ApplicationKind;
 }) => {
+  const placeholder = KIND_LABELS[kind].searchPlaceholder;
   return (
     <div className="relative">
       <svg
@@ -29,8 +34,8 @@ export const SearchBar = ({
           setSearchQuery(e.target.value);
           setPage(0);
         }}
-        placeholder="Search company or role"
-        aria-label="Search applications by company or role"
+        placeholder={placeholder}
+        aria-label={placeholder}
         className="input-glass w-full h-10 pl-9 pr-8 rounded-full text-sm"
       />
       {searchQuery && (

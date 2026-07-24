@@ -3,6 +3,7 @@ import { Quicksand, Space_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/context/ToastContext";
+import { KindProvider } from "@/context/KindContext";
 import Navbar from "@/components/Navbar";
 
 // Two voices. Quicksand is the brand voice — rounded, warm, the wordmark and
@@ -50,10 +51,12 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <AuthProvider>
           <ToastProvider>
-            <Navbar />
-            <div className="pt-[4.5rem] flex-1">
-              {children}
-            </div>
+            <KindProvider>
+              <Navbar />
+              <div className="pt-[4.5rem] flex-1">
+                {children}
+              </div>
+            </KindProvider>
           </ToastProvider>
         </AuthProvider>
       </body>

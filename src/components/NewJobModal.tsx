@@ -1,9 +1,16 @@
-import { SOURCE_OPTIONS, Status, STATUS_OPTIONS } from "@/constants/generic";
+import { Status, STATUS_OPTIONS } from "@/constants/generic";
+import {
+  ApplicationKind,
+  KIND_LABELS,
+  sourceOptions,
+  STATUS_LABELS,
+} from "@/constants/kind";
 import { JobApplication } from "@/constants/types";
 import { useEffect, useState } from "react";
 import { BreathDots } from "./Breath";
 
-const emptyForm = () => ({
+const emptyForm = (kind: ApplicationKind) => ({
+  kind,
   company: "",
   position: "",
   status: "Pending" as Status,
@@ -29,12 +36,19 @@ interface NewJobModalProps {
   onAdd: (
     job: Omit<JobApplication, "id" | "lastActivityAt">,
   ) => Promise<{ error: string | null }>;
+  kind: ApplicationKind;
 }
 
-export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
-  const [formData, setFormData] = useState(emptyForm);
+export const NewJobModal = ({
+  isOpen,
+  onClose,
+  onAdd,
+  kind,
+}: NewJobModalProps) => {
+  const [formData, setFormData] = useState(() => emptyForm(kind));
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const labels = KIND_LABELS[kind];
 
   useEffect(() => {
     if (!isOpen) return;
@@ -60,7 +74,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
       return;
     }
 
-    setFormData(emptyForm());
+    setFormData(emptyForm(kind));
     setSubmitting(false);
     onClose();
   };
@@ -70,7 +84,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
       <div className="animate-modal modal-glass rounded-3xl w-full max-w-md overflow-hidden">
         <div className="px-6 py-4 border-b border-white/20 flex justify-between items-center">
           <h3 className="text-xl font-bold text-foreground">
-            Add New Job Application
+            {labels.addTitle}
           </h3>
           <button
             onClick={onClose}
@@ -112,7 +126,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
           )}
           <div>
             <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
-              Company
+              {labels.entity}
             </label>
             <input
               required
@@ -122,12 +136,12 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, company: e.target.value })
               }
-              placeholder="e.g. Google"
+              placeholder={labels.entityPlaceholder}
             />
           </div>
           <div>
             <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
-              Position
+              {labels.role}
             </label>
             <input
               required
@@ -137,7 +151,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, position: e.target.value })
               }
-              placeholder="e.g. Senior Frontend Engineer"
+              placeholder={labels.rolePlaceholder}
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -154,7 +168,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
               >
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s} value={s}>
-                    {s}
+                    {STATUS_LABELS[kind][s]}
                   </option>
                 ))}
               </select>
@@ -176,7 +190,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
-                Location
+                {labels.location}
               </label>
               <input
                 type="text"
@@ -185,12 +199,12 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
                 onChange={(e) =>
                   setFormData({ ...formData, location: e.target.value })
                 }
-                placeholder="e.g. Remote"
+                placeholder={labels.locationPlaceholder}
               />
             </div>
             <div>
               <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
-                Source
+                {labels.source}
               </label>
               <input
                 type="text"
@@ -200,10 +214,10 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
                 onChange={(e) =>
                   setFormData({ ...formData, source: e.target.value })
                 }
-                placeholder="e.g. LinkedIn"
+                placeholder={labels.sourcePlaceholder}
               />
               <datalist id="new-job-source-options">
-                {SOURCE_OPTIONS.map((s) => (
+                {sourceOptions(kind).map((s) => (
                   <option key={s} value={s} />
                 ))}
               </datalist>
@@ -243,7 +257,7 @@ export const NewJobModal = ({ isOpen, onClose, onAdd }: NewJobModalProps) => {
                   <span className="sr-only">Adding…</span>
                 </>
               ) : (
-                "Add Job"
+                labels.addButton
               )}
             </button>
           </div>

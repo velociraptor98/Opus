@@ -1,10 +1,13 @@
+import { ApplicationKind, KIND_LABELS } from "@/constants/kind";
 import { BreathRule } from "./Breath";
 export const EmptyContainer = ({
   query,
   statusFilter,
+  kind,
 }: {
   query: string;
   statusFilter: string;
+  kind: ApplicationKind;
 }) => {
   return (
     <div className="content-center">
@@ -14,7 +17,7 @@ export const EmptyContainer = ({
         <p className="text-sm">
           {query || statusFilter !== "All"
             ? "Nothing matches that."
-            : "No applications yet."}
+            : KIND_LABELS[kind].emptyLabel}
         </p>
       </div>
     </div>

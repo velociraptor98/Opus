@@ -1,21 +1,26 @@
 import { useRef, useState } from "react";
+import { ApplicationKind, KIND_LABELS } from "@/constants/kind";
 import { JobApplication } from "@/constants/types";
 import { applicationsToCsv, csvToApplications } from "@/lib/csv";
 import { useToast } from "@/context/ToastContext";
 import { BreathDots } from "./Breath";
 
 /**
- * Sidebar buttons to export the full list as CSV and import applications
- * from a CSV (ours, or any spreadsheet with company/position columns).
+ * Sidebar buttons to export the visible list as CSV and import applications
+ * from a CSV (ours, or any spreadsheet with company/position columns). Both
+ * sides are scoped to the active kind: you export what you're looking at, and
+ * an imported row without a `kind` column joins it.
  */
 export const ImportExport = ({
   applications,
   onImport,
+  kind,
 }: {
   applications: JobApplication[];
   onImport: (
     jobs: Omit<JobApplication, "id" | "lastActivityAt">[],
   ) => Promise<{ added: number; error: string | null }>;
+  kind: ApplicationKind;
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
@@ -27,7 +32,7 @@ export const ImportExport = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `opus-applications-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `opus-${KIND_LABELS[kind].exportStem}-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -36,7 +41,11 @@ export const ImportExport = ({
     setImporting(true);
     try {
       const text = await file.text();
-      const { applications: parsed, skippedRows, error } = csvToApplications(text);
+      const {
+        applications: parsed,
+        skippedRows,
+        error,
+      } = csvToApplications(text, kind);
       if (error) {
         toast.show(error, { variant: "error" });
         return;

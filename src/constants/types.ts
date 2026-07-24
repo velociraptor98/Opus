@@ -1,7 +1,15 @@
 import { Status } from "./generic";
+import type { ApplicationKind } from "./kind";
 
+/**
+ * One tracked application. Jobs and university applications share this shape —
+ * `kind` only changes the words on screen (see constants/kind.ts), so
+ * `company`/`position` are the institution and programme for a university.
+ */
 export interface JobApplication {
   id: string;
+  /** Job or university application; set at creation, never edited. */
+  kind: ApplicationKind;
   company: string;
   position: string;
   status: Status;

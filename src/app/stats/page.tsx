@@ -31,10 +31,13 @@ import {
   STATUS_CONFIG,
   needsFollowUp,
 } from "@/constants/generic";
+import { KIND_LABELS, statusLabel } from "@/constants/kind";
 import { daysSince } from "@/lib/date";
 import { JobApplication } from "@/constants/types";
 import { mapRowToApplication } from "@/lib/applications";
 import { reachedStages } from "@/lib/pipeline";
+import { useKind } from "@/context/KindContext";
+import { KindToggle } from "@/components/KindToggle";
 
 /** Historical statuses per application id, from application_events. */
 type StatusHistory = Record<string, Status[]>;
@@ -347,6 +350,8 @@ export default function StatsPage() {
   const [apps, setApps] = useState<JobApplication[]>([]);
   const [history, setHistory] = useState<StatusHistory>({});
   const [loading, setLoading] = useState(true);
+  const { kind, setKind } = useKind();
+  const labels = KIND_LABELS[kind];
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -387,15 +392,24 @@ export default function StatsPage() {
     })();
   }, [isAuthenticated, router]);
 
-  const stats = useMemo(() => derive(apps, history), [apps, history]);
+  // Every number on the page describes one kind at a time; the fetch stays
+  // unscoped so the toggle's counts stay honest.
+  const scoped = useMemo(
+    () => apps.filter((a) => a.kind === kind),
+    [apps, kind],
+  );
+  const stats = useMemo(() => derive(scoped, history), [scoped, history]);
 
+  // `status` keeps the stored value for the colour lookup; `name` is what the
+  // legend and tooltip show, in the active kind's vocabulary.
   const pieData = useMemo(
     () =>
-      Object.entries(stats.statusCounts).map(([name, value]) => ({
-        name,
+      Object.entries(stats.statusCounts).map(([status, value]) => ({
+        status: status as Status,
+        name: statusLabel(kind, status as Status),
         value,
       })),
-    [stats.statusCounts],
+    [stats.statusCounts, kind],
   );
 
   const statCards: StatCardData[] = [
@@ -482,6 +496,17 @@ export default function StatsPage() {
   return (
     <div className="min-h-[calc(100vh-6rem)] p-4 md:p-8 transition-colors">
       <main className="max-w-4xl mx-auto space-y-6">
+        {/* Which track these numbers describe. Counts come from the full
+            fetch, so the inactive segment still shows what's waiting there. */}
+        <div className="flex justify-end">
+          <KindToggle
+            kind={kind}
+            setKind={setKind}
+            applications={apps}
+            size="sm"
+          />
+        </div>
+
         {/* Headline KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {statCards.map((card, i) => (
@@ -520,17 +545,17 @@ export default function StatsPage() {
                           dataKey="value"
                           data={[
                             {
-                              name: "Submitted",
+                              name: labels.funnel[0],
                               value: stats.funnel.submitted,
                               fill: "var(--color-secondary)",
                             },
                             {
-                              name: "Interviewed",
+                              name: labels.funnel[1],
                               value: stats.funnel.interviewed,
                               fill: "var(--color-warning)",
                             },
                             {
-                              name: "Offered",
+                              name: labels.funnel[2],
                               value: stats.funnel.offered,
                               fill: "var(--color-primary)",
                             },
@@ -552,12 +577,12 @@ export default function StatsPage() {
                   <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-foreground/5 text-center">
                     {[
                       {
-                        label: "Submitted → Interview",
+                        label: `${labels.funnel[0]} → ${labels.funnel[1]}`,
                         from: stats.funnel.submitted,
                         to: stats.funnel.interviewed,
                       },
                       {
-                        label: "Interview → Offer",
+                        label: `${labels.funnel[1]} → ${labels.funnel[2]}`,
                         from: stats.funnel.interviewed,
                         to: stats.funnel.offered,
                       },
@@ -585,10 +610,10 @@ export default function StatsPage() {
                 {stats.sourceConversion.some((s) => s.source !== "Untagged") && (
                   <section className="card-glass animate-card rounded-2xl p-8">
                     <h2 className="text-xl font-semibold text-foreground mb-1">
-                      Source Conversion
+                      {labels.conversionTitle}
                     </h2>
                     <p className="text-xs text-foreground/75 mb-4">
-                      How far applications from each source get
+                      {labels.conversionSub}
                     </p>
                     <div
                       className="w-full"
@@ -636,14 +661,14 @@ export default function StatsPage() {
                           />
                           <Bar
                             dataKey="offered"
-                            name="Offered"
+                            name={labels.funnel[2]}
                             stackId="pipeline"
                             fill="var(--sage)"
                             animationDuration={900}
                           />
                           <Bar
                             dataKey="interviewed"
-                            name="Interviewed"
+                            name={labels.funnel[1]}
                             stackId="pipeline"
                             fill="var(--amber)"
                             animationDuration={900}
@@ -686,10 +711,8 @@ export default function StatsPage() {
                       >
                         {pieData.map((entry) => (
                           <Cell
-                            key={`cell-${entry.name}`}
-                            fill={
-                              STATUS_COLORS[entry.name as Status] ?? "var(--taupe)"
-                            }
+                            key={`cell-${entry.status}`}
+                            fill={STATUS_COLORS[entry.status] ?? "var(--taupe)"}
                           />
                         ))}
                         <Label
@@ -844,7 +867,7 @@ export default function StatsPage() {
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`}
                           />
-                          {row.status}
+                          {statusLabel(kind, row.status)}
                         </span>
                         <div className="flex-1 h-1.5 rounded-full bg-foreground/5 overflow-hidden">
                           <div
@@ -875,7 +898,7 @@ export default function StatsPage() {
             {stats.topCompanies.length > 0 && (
               <section className="card-glass animate-card rounded-2xl p-8">
                 <h2 className="text-xl font-semibold text-foreground mb-6">
-                  Top Companies
+                  {labels.topEntities}
                 </h2>
                 <div
                   className="w-full"

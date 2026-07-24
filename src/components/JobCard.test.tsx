@@ -19,6 +19,7 @@ afterEach(() => {
 function makeApp(overrides: Partial<JobApplication> = {}): JobApplication {
   return {
     id: "job-1",
+    kind: "job",
     company: "Acme",
     position: "Engineer",
     status: "Applied",
@@ -162,5 +163,45 @@ describe("JobCard", () => {
     // scope to the dialog to hit the confirm action.
     await user.click(within(dialog).getByRole("button", { name: "Delete" }));
     expect(onDelete).toHaveBeenCalledWith("job-1");
+  });
+
+  describe("university applications", () => {
+    it("shows the admissions label for a stored status", () => {
+      renderCard({ kind: "university", status: "Offered" });
+      // The pill and the dropdown's selected option both read "Accepted",
+      // while the value underneath stays the stored "Offered".
+      const select = screen.getByRole("combobox", { name: "Change status" });
+      expect(select).toHaveValue("Offered");
+      expect(
+        within(select).getByRole("option", { name: "Accepted" }),
+      ).toHaveValue("Offered");
+      expect(screen.getAllByText("Accepted").length).toBeGreaterThan(0);
+      expect(screen.queryByText("Offered")).not.toBeInTheDocument();
+    });
+
+    it("still stores the underlying status when moved from the pill", async () => {
+      vi.useRealTimers();
+      const user = userEvent.setup();
+      const { onUpdate } = renderCard({ kind: "university", status: "Applied" });
+
+      // The option reads "Accepted"; its value is the stored "Offered".
+      await user.selectOptions(
+        screen.getByRole("combobox", { name: "Change status" }),
+        "Offered",
+      );
+
+      expect(onUpdate).toHaveBeenCalledWith("job-1", { status: "Offered" });
+    });
+
+    it("labels edit-mode fields for admissions", async () => {
+      vi.useRealTimers();
+      const user = userEvent.setup();
+      renderCard({ kind: "university" });
+
+      await user.click(screen.getByTitle("Edit"));
+
+      expect(screen.getByPlaceholderText("Institution")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("Programme")).toBeInTheDocument();
+    });
   });
 });
