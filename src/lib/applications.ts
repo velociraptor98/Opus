@@ -1,9 +1,34 @@
+import type { Status } from "@/constants/generic";
 import { toKind } from "@/constants/kind";
 import { JobApplication } from "@/constants/types";
 
-/** Raw `applications` row as returned by Supabase. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ApplicationRow = Record<string, any>;
+/**
+ * Raw `applications` row as returned by Supabase. Hand-written rather than
+ * generated, so treat every field as optional: a column added in a migration
+ * that hasn't been applied yet simply arrives undefined, and the mapper below
+ * is what supplies the defaults.
+ */
+export interface ApplicationRow {
+  id: string;
+  kind?: string | null;
+  company: string;
+  position: string;
+  status: Status;
+  date_applied: string;
+  created_at?: string | null;
+  updated_at?: string | null;
+  notes?: string | null;
+  link?: string | null;
+  location?: string | null;
+  salary?: string | null;
+  source?: string | null;
+  contact?: string | null;
+  next_action_date?: string | null;
+  next_action_note?: string | null;
+  resume_sent?: boolean | null;
+  cover_letter_sent?: boolean | null;
+  follow_up_sent?: boolean | null;
+}
 
 /** Maps a Supabase `applications` row to the client model. */
 export function mapRowToApplication(row: ApplicationRow): JobApplication {

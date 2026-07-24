@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "@/context/ToastContext";
 import { useUpdatePassword } from "@/hooks/useUpdatePassword";
 import { ConfirmModal } from "./ConfirmModal";
 import { BreathDots } from "./Breath";
+import { Modal } from "./Modal";
 
 interface ChangePasswordModalProps {
   setIsOpen: (open: boolean) => void;
@@ -15,9 +16,14 @@ interface ChangePasswordModalProps {
  * Lets the signed-in user set a new password directly, without an email
  * reset link. Runs as the current user via supabase.auth.updateUser, gated
  * behind an explicit confirmation step.
+ *
+ * NOT CURRENTLY REACHABLE. Its only entry point is the Navbar button, which
+ * was disabled in 6e5c369 for a reason the history doesn't record. Kept
+ * deliberately — see the note in Navbar.tsx before reviving or removing it.
  */
 export const ChangePasswordModal = ({ setIsOpen }: ChangePasswordModalProps) => {
   const toast = useToast();
+  const titleId = useId();
   const [confirming, setConfirming] = useState(false);
   const { password, setPassword, confirm, setConfirm, error, pending, validate, submit } =
     useUpdatePassword(() => {
@@ -31,29 +37,20 @@ export const ChangePasswordModal = ({ setIsOpen }: ChangePasswordModalProps) => 
     if (validate()) setConfirming(true);
   };
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      // While the confirmation is up, let it own the Escape key.
-      if (e.key === "Escape" && !confirming) setIsOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [setIsOpen, confirming]);
-
+  // Escape precedence between this and its confirmation step is handled by
+  // Modal's stack — only the topmost dialog responds.
   const labelCls =
     "block text-xs font-bold text-foreground/75 uppercase tracking-widest mb-1";
 
   return (
-    <div
-      className="animate-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-      onClick={() => setIsOpen(false)}
+    <Modal
+      onClose={() => setIsOpen(false)}
+      labelledBy={titleId}
+      closeOnBackdrop={false}
     >
-      <div
-        className="animate-modal modal-glass rounded-3xl w-full max-w-md"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div>
         <div className="px-6 py-4 border-b border-white/20 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-foreground">
+          <h3 id={titleId} className="text-xl font-bold text-foreground">
             Change password
           </h3>
           <button
@@ -186,6 +183,6 @@ export const ChangePasswordModal = ({ setIsOpen }: ChangePasswordModalProps) => 
           />,
           document.body,
         )}
-    </div>
+    </Modal>
   );
 };

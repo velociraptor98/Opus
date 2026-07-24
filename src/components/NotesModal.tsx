@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useId, useState } from "react";
 import { BaseJobProps, JobApplication } from "@/constants/types";
 import { KIND_LABELS, sourceOptions } from "@/constants/kind";
 import { useToast } from "@/context/ToastContext";
+import { Modal } from "./Modal";
 
 interface NotesModalProps extends Omit<BaseJobProps, "onDelete"> {
   setIsNotesOpen: (open: boolean) => void;
@@ -34,13 +35,7 @@ export const NotesModal = ({
   const setField = (field: keyof typeof draft) => (value: string) =>
     setDraft((d) => ({ ...d, [field]: value }));
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsNotesOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [setIsNotesOpen]);
+  const titleId = useId();
 
   const handleToggleChecklist = (field: keyof JobApplication["checklist"]) => {
     onUpdate(application.id, {
@@ -63,16 +58,17 @@ export const NotesModal = ({
     "block text-xs font-bold text-foreground/75 uppercase tracking-widest mb-1";
 
   return (
-    <div
-      className="animate-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-      onClick={() => setIsNotesOpen(false)}
+    // Unsaved draft edits live here too, so a backdrop click mustn't discard
+    // them — same reasoning as the add form.
+    <Modal
+      onClose={() => setIsNotesOpen(false)}
+      labelledBy={titleId}
+      closeOnBackdrop={false}
+      panelClassName="max-w-md max-h-[90vh] overflow-y-auto"
     >
-      <div
-        className="animate-modal modal-glass rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div>
         <div className="px-6 py-4 border-b border-white/20 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-foreground">
+          <h3 id={titleId} className="text-xl font-bold text-foreground">
             {application.company}
           </h3>
           <button
@@ -263,6 +259,6 @@ export const NotesModal = ({
           </div>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };

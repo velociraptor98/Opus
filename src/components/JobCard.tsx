@@ -15,12 +15,40 @@ import { BaseJobProps, JobApplication } from "@/constants/types";
 import { useToast } from "@/context/ToastContext";
 import { daysSince, formatExactDate, formatRelativeDate } from "@/lib/date";
 
+/**
+ * The only fields the inline edit form owns. Saving writes exactly these — an
+ * edit must not carry a copy of the rest of the application with it, or it
+ * would overwrite whatever the status pill and the notes modal changed in the
+ * meantime.
+ */
+type EditableFields = Pick<
+  JobApplication,
+  "company" | "position" | "status" | "dateApplied"
+>;
+
+const editableFrom = (app: JobApplication): EditableFields => ({
+  company: app.company,
+  position: app.position,
+  status: app.status,
+  dateApplied: app.dateApplied,
+});
+
 export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState(application);
+  const [editData, setEditData] = useState<EditableFields>(() =>
+    editableFrom(application),
+  );
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const toast = useToast();
+
+  // Seed the draft when edit mode opens, not at mount: the card outlives many
+  // updates (its key is the application id), so a mount-time snapshot goes
+  // stale the moment anything changes it from elsewhere.
+  const startEditing = () => {
+    setEditData(editableFrom(application));
+    setIsEditing(true);
+  };
 
   const handleSaveEdit = async () => {
     const ok = await onUpdate(application.id, editData);
@@ -173,7 +201,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
             notes={application.notes}
             openNotes={() => setIsNotesOpen(true)}
           />
-          <EditButton setIsEditing={setIsEditing} />
+          <EditButton onClick={startEditing} />
           <DeleteButton onClick={() => setIsDeleteOpen(true)} />
         </div>
       </div>
@@ -365,14 +393,10 @@ const DeleteButton = ({ onClick }: { onClick: () => void }) => {
   );
 };
 
-const EditButton = ({
-  setIsEditing,
-}: {
-  setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
-}) => {
+const EditButton = ({ onClick }: { onClick: () => void }) => {
   return (
     <button
-      onClick={() => setIsEditing(true)}
+      onClick={onClick}
       className="focus-ring p-2 text-foreground/60 hover:text-breath hover:bg-breath/10 rounded-lg transition-colors"
       title="Edit"
     >

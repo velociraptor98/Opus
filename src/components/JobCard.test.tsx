@@ -165,6 +165,77 @@ describe("JobCard", () => {
     expect(onDelete).toHaveBeenCalledWith("job-1");
   });
 
+  // The card is keyed on the application id, so one instance survives every
+  // update to it. An edit draft captured at mount would therefore be stale by
+  // the time it's saved, quietly reverting whatever changed in between.
+  describe("edit drafts stay current", () => {
+    it("doesn't revert a status set from the pill when saving an edit", async () => {
+      vi.useRealTimers();
+      const user = userEvent.setup();
+      const onUpdate = vi.fn().mockResolvedValue(true);
+      const { rerender } = render(
+        <ToastProvider>
+          <JobCard
+            application={makeApp({ status: "Applied" })}
+            onUpdate={onUpdate}
+            onDelete={vi.fn()}
+          />
+        </ToastProvider>,
+      );
+
+      await user.selectOptions(
+        screen.getByRole("combobox", { name: "Change status" }),
+        "Interviewing",
+      );
+
+      // The parent re-renders with the new status, as JobChecklist does.
+      rerender(
+        <ToastProvider>
+          <JobCard
+            application={makeApp({ status: "Interviewing" })}
+            onUpdate={onUpdate}
+            onDelete={vi.fn()}
+          />
+        </ToastProvider>,
+      );
+
+      await user.click(screen.getByTitle("Edit"));
+      const companyInput = screen.getByPlaceholderText("Company");
+      await user.clear(companyInput);
+      await user.type(companyInput, "Initech");
+      await user.click(screen.getByRole("button", { name: "Save" }));
+
+      const saved = onUpdate.mock.calls.at(-1)![1] as Partial<JobApplication>;
+      expect(saved.company).toBe("Initech");
+      expect(saved.status).toBe("Interviewing");
+    });
+
+    it("writes only the fields the edit form owns", async () => {
+      vi.useRealTimers();
+      const user = userEvent.setup();
+      const { onUpdate } = renderCard({
+        notes: "Spoke to the recruiter",
+        checklist: {
+          resumeSent: true,
+          coverLetterSent: false,
+          followUpSent: false,
+        },
+      });
+
+      await user.click(screen.getByTitle("Edit"));
+      await user.click(screen.getByRole("button", { name: "Save" }));
+
+      // Notes and checklist belong to the notes modal; an edit must not carry
+      // its own copy of them into the write.
+      expect(Object.keys(onUpdate.mock.calls.at(-1)![1]).sort()).toEqual([
+        "company",
+        "dateApplied",
+        "position",
+        "status",
+      ]);
+    });
+  });
+
   describe("university applications", () => {
     it("shows the admissions label for a stored status", () => {
       renderCard({ kind: "university", status: "Offered" });

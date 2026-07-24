@@ -9,6 +9,10 @@ import { createClient } from "@/lib/supabase/client";
  * recovery page and the in-app change-password modal don't each reimplement
  * it. On success the caller decides what happens next (close modal, redirect…)
  * via `onSuccess`.
+ *
+ * NOT CURRENTLY REACHABLE, and the "recovery page" above never shipped — the
+ * only caller is ChangePasswordModal, itself behind a disabled button. See
+ * the note in Navbar.tsx.
  */
 export function useUpdatePassword(onSuccess: () => void) {
   const [password, setPassword] = useState("");

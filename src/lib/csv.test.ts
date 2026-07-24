@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { applicationsToCsv, csvToApplications, parseCsv } from "./csv";
+import {
+  applicationsToCsv,
+  csvToApplications,
+  MAX_IMPORT_ROWS,
+  parseCsv,
+} from "./csv";
 import type { JobApplication } from "@/constants/types";
 
 function makeApp(overrides: Partial<JobApplication> = {}): JobApplication {
@@ -143,6 +148,24 @@ describe("csvToApplications", () => {
   it("errors on an empty file", () => {
     const { error } = csvToApplications("");
     expect(error).toMatch(/empty/i);
+  });
+
+  it("rejects a file past the row limit with an actionable message", () => {
+    const rows = ["company,position"];
+    for (let i = 0; i <= MAX_IMPORT_ROWS; i++) rows.push(`Acme ${i},Engineer`);
+
+    const { applications, error } = csvToApplications(rows.join("\n"));
+    expect(applications).toEqual([]);
+    expect(error).toMatch(new RegExp(`limit is ${MAX_IMPORT_ROWS}`));
+  });
+
+  it("accepts a file exactly at the row limit", () => {
+    const rows = ["company,position"];
+    for (let i = 0; i < MAX_IMPORT_ROWS; i++) rows.push(`Acme ${i},Engineer`);
+
+    const { applications, error } = csvToApplications(rows.join("\n"));
+    expect(error).toBeNull();
+    expect(applications).toHaveLength(MAX_IMPORT_ROWS);
   });
 
   it("files rows under the given kind when the file doesn't say", () => {

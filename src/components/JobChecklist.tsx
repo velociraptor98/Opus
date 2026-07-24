@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { JobCard } from "./JobCard";
 import { createClient } from "@/lib/supabase/client";
 import { createPortal } from "react-dom";
@@ -20,6 +20,7 @@ import {
 } from "@/lib/applications";
 import { useToast } from "@/context/ToastContext";
 import { useKind } from "@/context/KindContext";
+import { useApplications } from "@/hooks/useApplications";
 import { JobChecklistSkeleton } from "./JobChecklistSkeleton";
 import { EmptyContainer } from "./EmptyContainer";
 import { NavigationPanel } from "./NavigationPanel";
@@ -34,9 +35,28 @@ import { KindToggle } from "./KindToggle";
 
 const PAGE_SIZE = 8;
 
+/** Rows per insert when importing, so one huge CSV isn't one huge request. */
+const IMPORT_BATCH_SIZE = 200;
+
+/** Fields a free-text search looks at, in the order they matter. */
+const SEARCH_FIELDS = [
+  "company",
+  "position",
+  "location",
+  "source",
+  "contact",
+  "notes",
+  "nextActionNote",
+] as const satisfies readonly (keyof JobApplication)[];
+
+const matchesSearch = (app: JobApplication, query: string) =>
+  SEARCH_FIELDS.some((field) =>
+    String(app[field] ?? "")
+      .toLowerCase()
+      .includes(query),
+  );
+
 const JobChecklist = () => {
-  const [applications, setApplications] = useState<JobApplication[]>([]);
-  const [isMounted, setIsMounted] = useState(false);
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<FilterOption>("All");
   const [sort, setSort] = useState<SortOption>("Recently added");
@@ -44,34 +64,7 @@ const JobChecklist = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const toast = useToast();
   const { kind, setKind } = useKind();
-
-  const fetchJobs = useCallback(async (): Promise<JobApplication[]> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from("applications")
-      .select()
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      toast.show(error.message || "Couldn't load applications", {
-        variant: "error",
-      });
-      return [];
-    }
-    if (!data) {
-      return [];
-    }
-
-    return data.map(mapRowToApplication);
-  }, [toast]);
-
-  useEffect(() => {
-    (async () => {
-      const jobs = await fetchJobs();
-      setApplications(jobs);
-      setIsMounted(true);
-    })();
-  }, [fetchJobs]);
+  const { applications, setApplications, loading } = useApplications();
 
   // Best-effort history trail: a failed insert (e.g. migration not yet run)
   // must never block the actual update.
@@ -182,34 +175,52 @@ const JobChecklist = () => {
     jobs: Omit<JobApplication, "id" | "lastActivityAt">[],
   ): Promise<{ added: number; error: string | null }> => {
     const supabase = createClient();
-    const { data, error } = await supabase
-      .from("applications")
-      .insert(jobs.map(toInsertRow))
-      .select();
 
-    if (error || !data) {
-      return { added: 0, error: error?.message ?? "Import failed" };
+    // Sent in batches: one insert of a few thousand rows is a single request
+    // large enough to be rejected outright, and the failure arrives as an
+    // opaque error with nothing imported. Batches also mean a failure part
+    // way through keeps the rows that already landed.
+    const imported: JobApplication[] = [];
+    for (let i = 0; i < jobs.length; i += IMPORT_BATCH_SIZE) {
+      const batch = jobs.slice(i, i + IMPORT_BATCH_SIZE);
+      const { data, error } = await supabase
+        .from("applications")
+        .insert(batch.map(toInsertRow))
+        .select();
+
+      if (error || !data) {
+        return {
+          added: imported.length,
+          error: error?.message ?? "Import failed",
+        };
+      }
+      imported.push(...data.map(mapRowToApplication));
     }
 
-    const imported = data.map(mapRowToApplication);
+    if (imported.length === 0) {
+      return { added: 0, error: "Import failed" };
+    }
     // A CSV carrying its own `kind` column can land entirely outside the
     // active toggle; follow it rather than reporting a successful import
     // into a list that doesn't change.
     if (!imported.some((job) => job.kind === kind)) {
       setKind(imported[0].kind);
     }
-    // Seed the history trail in one call rather than per-row inserts.
-    const { error: eventsError } = await supabase
-      .from("application_events")
-      .insert(
-        imported.map((job) => ({
-          application_id: job.id,
-          from_status: null,
-          to_status: job.status,
-        })),
-      );
-    if (eventsError) {
-      console.warn("Couldn't record status history:", eventsError.message);
+    // Seed the history trail in batches too, for the same reason.
+    for (let i = 0; i < imported.length; i += IMPORT_BATCH_SIZE) {
+      const { error: eventsError } = await supabase
+        .from("application_events")
+        .insert(
+          imported.slice(i, i + IMPORT_BATCH_SIZE).map((job) => ({
+            application_id: job.id,
+            from_status: null,
+            to_status: job.status,
+          })),
+        );
+      if (eventsError) {
+        console.warn("Couldn't record status history:", eventsError.message);
+        break;
+      }
     }
 
     setApplications((apps) => [...imported, ...apps]);
@@ -220,7 +231,7 @@ const JobChecklist = () => {
     return { added: imported.length, error: null };
   };
 
-  if (!isMounted) return <JobChecklistSkeleton />;
+  if (loading) return <JobChecklistSkeleton />;
 
   const query = searchQuery.trim().toLowerCase();
   // Everything below the toggle — cards, filter counts, upcoming, export —
@@ -233,10 +244,10 @@ const JobChecklist = () => {
         : statusFilter === "Follow-up"
           ? needsFollowUp(a.status, a.lastActivityAt, a.nextActionDate)
           : a.status === statusFilter;
-    const matchesQuery =
-      query === "" ||
-      a.company.toLowerCase().includes(query) ||
-      a.position.toLowerCase().includes(query);
+    // Search the whole card, not just its headline: "remote", a recruiter's
+    // name, or something you only wrote in the notes are all things people
+    // reach for when hunting an application they can't name exactly.
+    const matchesQuery = query === "" || matchesSearch(a, query);
     return matchesStatus && matchesQuery;
   });
 

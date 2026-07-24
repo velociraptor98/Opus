@@ -10,6 +10,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { BreathRule } from "@/components/Breath";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -44,7 +45,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.refresh();
   };
 
-  if (!isMounted) return null;
+  // The session check gates the whole app, so this is the very first thing a
+  // visitor sees. A blank document reads as a broken page; the breath, looped,
+  // says the same "wait" the rest of the app does.
+  if (!isMounted) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        role="status"
+        aria-label="Loading"
+      >
+        <BreathRule loading className="text-2xl opacity-60" />
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, logout }}>

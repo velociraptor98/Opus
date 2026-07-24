@@ -135,6 +135,13 @@ export function parseCsv(text: string): string[][] {
   return rows.filter((r) => r.some((f) => f.trim() !== ""));
 }
 
+/**
+ * Most rows a single import will accept. Well past any realistic job search,
+ * and low enough that a wrong file (a database dump, a log) is rejected with
+ * a sentence the user can act on rather than a timeout.
+ */
+export const MAX_IMPORT_ROWS = 5000;
+
 export interface CsvImportResult {
   applications: Omit<JobApplication, "id" | "lastActivityAt">[];
   /** Rows skipped because company/position were missing (1-based, header = 1). */
@@ -171,6 +178,13 @@ export function csvToApplications(
   const rows = parseCsv(text);
   if (rows.length === 0) {
     return { applications: [], skippedRows: [], error: "The file is empty" };
+  }
+  if (rows.length - 1 > MAX_IMPORT_ROWS) {
+    return {
+      applications: [],
+      skippedRows: [],
+      error: `That file has ${rows.length - 1} rows; the limit is ${MAX_IMPORT_ROWS}. Split it and import in parts.`,
+    };
   }
 
   const headers = rows[0].map((h) => h.trim().toLowerCase().replace(/\s+/g, "_"));

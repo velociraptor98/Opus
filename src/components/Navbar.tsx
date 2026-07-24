@@ -48,6 +48,14 @@ export default function Navbar() {
                   "Stats"
                 )}
               </Link>
+              {/* Password change is switched off at this button (6e5c369),
+                  which is the only way into ChangePasswordModal — so that
+                  modal and useUpdatePassword are currently unreachable. The
+                  reason isn't recorded in the history; the code is kept rather
+                  than deleted so the flow can be turned back on by dropping
+                  `disabled`. Note the hook's doc mentions a password-recovery
+                  page that was never built, so a full reset-by-email journey
+                  still needs a route of its own. */}
               <button
                 onClick={() => setIsPasswordOpen(true)}
                 disabled

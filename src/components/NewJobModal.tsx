@@ -6,8 +6,9 @@ import {
   STATUS_LABELS,
 } from "@/constants/kind";
 import { JobApplication } from "@/constants/types";
-import { useEffect, useState } from "react";
+import { useId, useState } from "react";
 import { BreathDots } from "./Breath";
+import { Modal } from "./Modal";
 
 const emptyForm = (kind: ApplicationKind) => ({
   kind,
@@ -49,15 +50,7 @@ export const NewJobModal = ({
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const labels = KIND_LABELS[kind];
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [isOpen, onClose]);
+  const titleId = useId();
 
   if (!isOpen) return null;
 
@@ -80,10 +73,11 @@ export const NewJobModal = ({
   };
 
   return (
-    <div className="animate-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="animate-modal modal-glass rounded-3xl w-full max-w-md overflow-hidden">
+    // A half-filled form shouldn't vanish on a stray click outside it.
+    <Modal onClose={onClose} labelledBy={titleId} closeOnBackdrop={false}>
+      <div>
         <div className="px-6 py-4 border-b border-white/20 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-foreground">
+          <h3 id={titleId} className="text-xl font-bold text-foreground">
             {labels.addTitle}
           </h3>
           <button
@@ -263,6 +257,6 @@ export const NewJobModal = ({
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 };

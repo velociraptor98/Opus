@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import {
   PieChart,
   Pie,
@@ -22,25 +22,17 @@ import {
 } from "recharts";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import {
-  ACTIVE_STATUSES,
   FOLLOW_UP_DAYS,
   Status,
   STATUS_COLORS,
   STATUS_CONFIG,
-  needsFollowUp,
 } from "@/constants/generic";
 import { KIND_LABELS, statusLabel } from "@/constants/kind";
-import { daysSince } from "@/lib/date";
-import { JobApplication } from "@/constants/types";
-import { mapRowToApplication } from "@/lib/applications";
-import { reachedStages } from "@/lib/pipeline";
+import { derive } from "@/lib/stats";
 import { useKind } from "@/context/KindContext";
+import { useApplications } from "@/hooks/useApplications";
 import { KindToggle } from "@/components/KindToggle";
-
-/** Historical statuses per application id, from application_events. */
-type StatusHistory = Record<string, Status[]>;
 
 const MUTED_BAR = "color-mix(in srgb, var(--color-foreground) 28%, transparent)";
 
@@ -73,189 +65,6 @@ const MONTH_LABEL = (key: string) => {
     year: "2-digit",
   });
 };
-
-interface Derived {
-  total: number;
-  statusCounts: Record<string, number>;
-  submitted: number;
-  interviewRate: number;
-  offerRate: number;
-  followUpsDue: number;
-  winRate: number | null;
-  decided: number;
-  thisWeek: number;
-  lastWeek: number;
-  thisMonth: number;
-  byMonth: { month: string; count: number }[];
-  busiestMonth: { month: string; count: number } | null;
-  topCompanies: { company: string; count: number }[];
-  /** Ever-reached stage counts (history-aware, not a snapshot). */
-  funnel: { submitted: number; interviewed: number; offered: number };
-  sourceConversion: {
-    source: string;
-    offered: number;
-    interviewed: number;
-    noInterview: number;
-  }[];
-  /** Active apps with no scheduled next step, most neglected first. */
-  staleness: {
-    id: string;
-    company: string;
-    position: string;
-    status: Status;
-    daysQuiet: number;
-  }[];
-}
-
-function derive(apps: JobApplication[], history: StatusHistory): Derived {
-  const total = apps.length;
-
-  const statusCounts = apps.reduce<Record<string, number>>((acc, a) => {
-    acc[a.status] = (acc[a.status] || 0) + 1;
-    return acc;
-  }, {});
-
-  const offered = statusCounts["Offered"] || 0;
-  const rejected = statusCounts["Rejected"] || 0;
-
-  // Ever-reached stage counts: current status plus recorded history, so an
-  // app that interviewed and was later rejected still counts as interviewed.
-  // These are the fair numbers for the funnel and conversion rates.
-  const stages = apps.map((a) => reachedStages(a.status, history[a.id]));
-  const funnel = {
-    submitted: stages.filter((s) => s.submitted).length,
-    interviewed: stages.filter((s) => s.interviewed).length,
-    offered: stages.filter((s) => s.offered).length,
-  };
-  const submitted = funnel.submitted;
-
-  const decided = offered + rejected;
-
-  // Conversion by source, among submitted apps only. Buckets are exclusive:
-  // an app counts once, at the furthest stage it reached.
-  const conversionBySource: Record<
-    string,
-    { offered: number; interviewed: number; noInterview: number }
-  > = {};
-  apps.forEach((a, i) => {
-    if (!stages[i].submitted) return;
-    const key = a.source?.trim() || "Untagged";
-    const bucket = (conversionBySource[key] ??= {
-      offered: 0,
-      interviewed: 0,
-      noInterview: 0,
-    });
-    if (stages[i].offered) bucket.offered += 1;
-    else if (stages[i].interviewed) bucket.interviewed += 1;
-    else bucket.noInterview += 1;
-  });
-  const sourceConversion = Object.entries(conversionBySource)
-    .map(([source, counts]) => ({ source, ...counts }))
-    .sort(
-      (a, b) =>
-        b.offered + b.interviewed + b.noInterview -
-        (a.offered + a.interviewed + a.noInterview),
-    )
-    .slice(0, 8);
-
-  const followUpsDue = apps.filter((a) =>
-    needsFollowUp(a.status, a.lastActivityAt, a.nextActionDate),
-  ).length;
-
-  let thisWeek = 0;
-  let lastWeek = 0;
-  let thisMonth = 0;
-  const monthCounts: Record<string, number> = {};
-
-  for (const a of apps) {
-    const d = daysSince(a.dateApplied);
-    if (d !== null && d >= 0) {
-      if (d < 7) thisWeek += 1;
-      else if (d < 14) lastWeek += 1;
-      if (d < 30) thisMonth += 1;
-    }
-    const parts = a.dateApplied?.split("-");
-    if (parts && parts.length >= 2 && !parts.slice(0, 2).some((p) => !p)) {
-      const key = `${parts[0]}-${parts[1].padStart(2, "0")}`;
-      monthCounts[key] = (monthCounts[key] || 0) + 1;
-    }
-  }
-
-  // Build a continuous monthly series (zero-filled) for the last 12 months
-  // with data, so the trend reads honestly rather than skipping quiet months.
-  const sortedKeys = Object.keys(monthCounts).sort();
-  let byMonth: { month: string; count: number }[] = [];
-  if (sortedKeys.length > 0) {
-    const [startY, startM] = sortedKeys[0].split("-").map(Number);
-    const cursor = new Date(startY, startM - 1, 1);
-    const now = new Date();
-    const end = new Date(now.getFullYear(), now.getMonth(), 1);
-    while (cursor <= end) {
-      const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}`;
-      byMonth.push({ month: key, count: monthCounts[key] || 0 });
-      cursor.setMonth(cursor.getMonth() + 1);
-    }
-    byMonth = byMonth.slice(-12);
-  }
-
-  const busiestMonth =
-    sortedKeys.length > 0
-      ? Object.entries(monthCounts)
-          .map(([month, count]) => ({ month, count }))
-          .sort((a, b) => b.count - a.count)[0]
-      : null;
-
-  const companyCounts = apps.reduce<Record<string, number>>((acc, a) => {
-    const name = a.company?.trim();
-    if (name) acc[name] = (acc[name] || 0) + 1;
-    return acc;
-  }, {});
-  const topCompanies = Object.entries(companyCounts)
-    .map(([company, count]) => ({ company, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 6);
-
-  // The neglect list: in-play applications, stalest first. Apps with an
-  // upcoming next step are excluded — a booked interview isn't neglect.
-  const staleness = apps
-    .filter((a) => {
-      if (!ACTIVE_STATUSES.includes(a.status)) return false;
-      if (!a.nextActionDate) return true;
-      const untilAction = daysSince(a.nextActionDate);
-      return untilAction === null || untilAction > 0;
-    })
-    .map((a) => ({
-      id: a.id,
-      company: a.company,
-      position: a.position,
-      status: a.status,
-      daysQuiet: daysSince(a.lastActivityAt) ?? 0,
-    }))
-    .sort((a, b) => b.daysQuiet - a.daysQuiet)
-    .slice(0, 8);
-
-  return {
-    total,
-    statusCounts,
-    submitted,
-    interviewRate:
-      submitted > 0 ? Math.round((funnel.interviewed / submitted) * 100) : 0,
-    offerRate:
-      submitted > 0 ? Math.round((funnel.offered / submitted) * 100) : 0,
-    followUpsDue,
-    winRate: decided > 0 ? Math.round((offered / decided) * 100) : null,
-    decided,
-    thisWeek,
-    lastWeek,
-    thisMonth,
-    byMonth,
-    busiestMonth,
-    topCompanies,
-    funnel,
-    sourceConversion,
-    staleness,
-  };
-}
 
 interface StatCardData {
   label: string;
@@ -347,49 +156,18 @@ function ChartEmpty({ message }: { message: string }) {
 export default function StatsPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const [apps, setApps] = useState<JobApplication[]>([]);
-  const [history, setHistory] = useState<StatusHistory>({});
-  const [loading, setLoading] = useState(true);
   const { kind, setKind } = useKind();
   const labels = KIND_LABELS[kind];
+  const {
+    applications: apps,
+    history,
+    loading,
+    error,
+    reload,
+  } = useApplications({ withHistory: true, enabled: isAuthenticated });
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace("/");
-      return;
-    }
-    (async () => {
-      try {
-        const supabase = createClient();
-        const [appsRes, eventsRes] = await Promise.all([
-          supabase
-            .from("applications")
-            .select()
-            .order("created_at", { ascending: false }),
-          supabase
-            .from("application_events")
-            .select("application_id, from_status, to_status"),
-        ]);
-
-        if (appsRes.error || !appsRes.data) return;
-        setApps(appsRes.data.map(mapRowToApplication));
-
-        // History is an enhancement — without it (e.g. migration not run yet)
-        // the funnel still works from current statuses alone.
-        if (!eventsRes.error && eventsRes.data) {
-          const byApp: StatusHistory = {};
-          for (const e of eventsRes.data) {
-            const statuses = (byApp[e.application_id] ??= []);
-            // A transition proves both endpoints were visited.
-            if (e.from_status) statuses.push(e.from_status as Status);
-            statuses.push(e.to_status as Status);
-          }
-          setHistory(byApp);
-        }
-      } finally {
-        setLoading(false);
-      }
-    })();
+    if (!isAuthenticated) router.replace("/");
   }, [isAuthenticated, router]);
 
   // Every number on the page describes one kind at a time; the fetch stays
@@ -488,6 +266,47 @@ export default function StatsPage() {
               </section>
             ))}
           </div>
+        </main>
+      </div>
+    );
+  }
+
+  // A failed load must never render as "you have no applications" — every
+  // number below would be a zero the user has no reason to distrust.
+  if (error) {
+    return (
+      <div className="min-h-[calc(100vh-6rem)] p-4 md:p-8 transition-colors">
+        <main className="max-w-4xl mx-auto">
+          <section className="card-glass animate-card rounded-2xl p-8">
+            <div className="py-16 text-center flex flex-col items-center gap-4">
+              <svg
+                className="w-8 h-8 text-error"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <div>
+                <p className="text-lg font-semibold text-foreground mb-1">
+                  Couldn&apos;t load your stats
+                </p>
+                <p className="text-sm text-foreground/75">{error}</p>
+              </div>
+              <button
+                onClick={() => reload()}
+                className="btn-glass px-4 py-2 rounded-lg text-sm font-semibold bg-breath text-paper border-breath"
+              >
+                Try again
+              </button>
+            </div>
+          </section>
         </main>
       </div>
     );
