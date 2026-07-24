@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { BaseJobProps, JobApplication } from "@/constants/types";
-import { SOURCE_OPTIONS } from "@/constants/generic";
+import { KIND_LABELS, sourceOptions } from "@/constants/kind";
 import { useToast } from "@/context/ToastContext";
 
 interface NotesModalProps extends Omit<BaseJobProps, "onDelete"> {
@@ -19,6 +19,7 @@ export const NotesModal = ({
   setIsNotesOpen,
 }: NotesModalProps) => {
   const toast = useToast();
+  const labels = KIND_LABELS[application.kind];
   const [draft, setDraft] = useState({
     notes: application.notes,
     link: application.link,
@@ -106,57 +107,57 @@ export const NotesModal = ({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelCls}>Location</label>
+              <label className={labelCls}>{labels.location}</label>
               <input
                 type="text"
                 value={draft.location}
                 onChange={(e) => setField("location")(e.target.value)}
-                placeholder="e.g. Remote"
+                placeholder={labels.locationPlaceholder}
                 className="input-glass w-full px-3 py-2 rounded-lg"
               />
             </div>
             <div>
-              <label className={labelCls}>Salary</label>
+              <label className={labelCls}>{labels.salary}</label>
               <input
                 type="text"
                 value={draft.salary}
                 onChange={(e) => setField("salary")(e.target.value)}
-                placeholder="e.g. $140k–$170k"
+                placeholder={labels.salaryPlaceholder}
                 className="input-glass w-full px-3 py-2 rounded-lg"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelCls}>Source</label>
+              <label className={labelCls}>{labels.source}</label>
               <input
                 type="text"
                 list="source-options"
                 value={draft.source}
                 onChange={(e) => setField("source")(e.target.value)}
-                placeholder="e.g. LinkedIn"
+                placeholder={labels.sourcePlaceholder}
                 className="input-glass w-full px-3 py-2 rounded-lg"
               />
               <datalist id="source-options">
-                {SOURCE_OPTIONS.map((s) => (
+                {sourceOptions(application.kind).map((s) => (
                   <option key={s} value={s} />
                 ))}
               </datalist>
             </div>
             <div>
-              <label className={labelCls}>Contact</label>
+              <label className={labelCls}>{labels.contact}</label>
               <input
                 type="text"
                 value={draft.contact}
                 onChange={(e) => setField("contact")(e.target.value)}
-                placeholder="Recruiter name / email"
+                placeholder={labels.contactPlaceholder}
                 className="input-glass w-full px-3 py-2 rounded-lg"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelCls}>Next step date</label>
+              <label className={labelCls}>{labels.nextAction} date</label>
               <input
                 type="date"
                 value={draft.nextActionDate}
@@ -165,12 +166,12 @@ export const NotesModal = ({
               />
             </div>
             <div>
-              <label className={labelCls}>Next step</label>
+              <label className={labelCls}>{labels.nextAction}</label>
               <input
                 type="text"
                 value={draft.nextActionNote}
                 onChange={(e) => setField("nextActionNote")(e.target.value)}
-                placeholder="e.g. Phone screen"
+                placeholder={labels.nextActionPlaceholder}
                 className="input-glass w-full px-3 py-2 rounded-lg"
               />
             </div>
@@ -218,7 +219,7 @@ export const NotesModal = ({
                 className="checkbox-glass"
               />
               <span className="group-hover:text-breath transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
-                Resume
+                {labels.checklist[0]}
               </span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer group">
@@ -229,7 +230,7 @@ export const NotesModal = ({
                 className="checkbox-glass"
               />
               <span className="group-hover:text-breath transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
-                Cover Letter
+                {labels.checklist[1]}
               </span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer group">
@@ -240,7 +241,7 @@ export const NotesModal = ({
                 className="checkbox-glass"
               />
               <span className="group-hover:text-breath transition-colors text-xs uppercase tracking-wider font-semibold opacity-70">
-                Follow-up
+                {labels.checklist[2]}
               </span>
             </label>
           </div>

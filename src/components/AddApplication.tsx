@@ -1,12 +1,17 @@
+import { ApplicationKind, KIND_LABELS } from "@/constants/kind";
+
 export const AddApplication = ({
   setIsModalOpen,
+  kind,
 }: {
   setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  kind: ApplicationKind;
 }) => {
   return (
     <button
       onClick={() => setIsModalOpen(true)}
-      title="Add Application"
+      title={KIND_LABELS[kind].addAction}
+      aria-label={KIND_LABELS[kind].addAction}
       className="btn-glass w-full h-10 rounded-full flex items-center justify-center text-breath transition-all duration-200 active:scale-95 hover:scale-[1.03]"
       style={{
         background: "color-mix(in srgb, var(--clay) 12%, transparent)",

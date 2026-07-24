@@ -5,6 +5,7 @@ import type { JobApplication } from "@/constants/types";
 function makeApp(overrides: Partial<JobApplication> = {}): JobApplication {
   return {
     id: "1",
+    kind: "job",
     company: "Acme",
     position: "Engineer",
     status: "Applied",
@@ -142,5 +143,66 @@ describe("csvToApplications", () => {
   it("errors on an empty file", () => {
     const { error } = csvToApplications("");
     expect(error).toMatch(/empty/i);
+  });
+
+  it("files rows under the given kind when the file doesn't say", () => {
+    const { applications } = csvToApplications(
+      "company,position\nImperial,MSc Computing",
+      "university",
+    );
+    expect(applications[0].kind).toBe("university");
+  });
+
+  it("honours a per-row kind column over the default", () => {
+    const { applications } = csvToApplications(
+      ["kind,company,position", "university,Imperial,MSc Computing", "job,Acme,Engineer"].join(
+        "\n",
+      ),
+      "job",
+    );
+    expect(applications.map((a) => a.kind)).toEqual(["university", "job"]);
+  });
+
+  it("falls back to the given kind for an unrecognised kind cell", () => {
+    const { applications } = csvToApplications(
+      "kind,company,position\nbootcamp,Acme,Engineer",
+      "university",
+    );
+    expect(applications[0].kind).toBe("university");
+  });
+
+  it("reads university status labels back as their stored status", () => {
+    const { applications } = csvToApplications(
+      [
+        "company,position,status",
+        "Imperial,MSc Computing,Accepted",
+        "LSE,MSc Data,Submitted",
+        "UCL,MSc AI,Withdrawn",
+      ].join("\n"),
+      "university",
+    );
+    expect(applications.map((a) => a.status)).toEqual([
+      "Offered",
+      "Applied",
+      "Closed",
+    ]);
+  });
+
+  it("round-trips a university application through export and import", () => {
+    const app = makeApp({
+      kind: "university",
+      company: "Imperial College London",
+      position: "MSc Computing",
+      status: "Offered",
+    });
+
+    const { applications } = csvToApplications(applicationsToCsv([app]), "job");
+
+    expect(applications[0]).toMatchObject({
+      kind: "university",
+      company: "Imperial College London",
+      position: "MSc Computing",
+      status: "Offered",
+    });
   });
 });

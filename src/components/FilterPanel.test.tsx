@@ -18,6 +18,7 @@ afterEach(() => {
 function makeApp(overrides: Partial<JobApplication> = {}): JobApplication {
   return {
     id: Math.random().toString(),
+    kind: "job",
     company: "Acme",
     position: "Engineer",
     status: "Applied",
@@ -59,6 +60,7 @@ describe("FilterPanel", () => {
         setStatusFilter={vi.fn()}
         setPage={vi.fn()}
         applications={apps}
+        kind="job"
       />,
     );
     expect(countFor("All")).toBe("4");
@@ -71,6 +73,7 @@ describe("FilterPanel", () => {
         setStatusFilter={vi.fn()}
         setPage={vi.fn()}
         applications={apps}
+        kind="job"
       />,
     );
     expect(countFor("Applied")).toBe("2");
@@ -86,6 +89,7 @@ describe("FilterPanel", () => {
         setStatusFilter={vi.fn()}
         setPage={vi.fn()}
         applications={apps}
+        kind="job"
       />,
     );
     // Only the one stale Applied app — the stale Offered one is terminal.
@@ -102,6 +106,7 @@ describe("FilterPanel", () => {
         setStatusFilter={setStatusFilter}
         setPage={setPage}
         applications={apps}
+        kind="job"
       />,
     );
 

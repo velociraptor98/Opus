@@ -19,6 +19,7 @@ import {
   toUpdateRow,
 } from "@/lib/applications";
 import { useToast } from "@/context/ToastContext";
+import { useKind } from "@/context/KindContext";
 import { JobChecklistSkeleton } from "./JobChecklistSkeleton";
 import { EmptyContainer } from "./EmptyContainer";
 import { NavigationPanel } from "./NavigationPanel";
@@ -29,6 +30,7 @@ import { SortBar } from "./SortBar";
 import { ImportExport } from "./ImportExport";
 import { UpcomingStrip } from "./UpcomingStrip";
 import { BreathRule } from "./Breath";
+import { KindToggle } from "./KindToggle";
 
 const PAGE_SIZE = 8;
 
@@ -41,6 +43,7 @@ const JobChecklist = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const toast = useToast();
+  const { kind, setKind } = useKind();
 
   const fetchJobs = useCallback(async (): Promise<JobApplication[]> => {
     const supabase = createClient();
@@ -189,6 +192,12 @@ const JobChecklist = () => {
     }
 
     const imported = data.map(mapRowToApplication);
+    // A CSV carrying its own `kind` column can land entirely outside the
+    // active toggle; follow it rather than reporting a successful import
+    // into a list that doesn't change.
+    if (!imported.some((job) => job.kind === kind)) {
+      setKind(imported[0].kind);
+    }
     // Seed the history trail in one call rather than per-row inserts.
     const { error: eventsError } = await supabase
       .from("application_events")
@@ -214,7 +223,10 @@ const JobChecklist = () => {
   if (!isMounted) return <JobChecklistSkeleton />;
 
   const query = searchQuery.trim().toLowerCase();
-  const filtered = applications.filter((a) => {
+  // Everything below the toggle — cards, filter counts, upcoming, export —
+  // speaks about one kind at a time.
+  const inKind = applications.filter((a) => a.kind === kind);
+  const filtered = inKind.filter((a) => {
     const matchesStatus =
       statusFilter === "All"
         ? true
@@ -238,26 +250,45 @@ const JobChecklist = () => {
   );
 
   return (
-    <div className="w-full flex flex-col md:flex-row gap-4 md:items-stretch">
-      <div className="w-full md:w-auto md:shrink-0 flex flex-col gap-2 glass-well rounded-2xl p-4 self-stretch md:self-stretch">
+    <div className="w-full flex flex-col md:flex-row gap-4 md:items-stretch md:h-full md:min-h-0">
+      {/* `min-h-0` on every flex link in the chain: without it a flex item
+          floors at its content size and the overflow lands on the page
+          instead of the well that's meant to scroll. */}
+      <div className="w-full md:w-auto md:shrink-0 flex flex-col gap-2 glass-well rounded-2xl p-4 self-stretch md:self-stretch md:min-h-0 md:overflow-y-auto">
+        <KindToggle
+          kind={kind}
+          setKind={(next) => {
+            setKind(next);
+            setPage(0);
+          }}
+          applications={applications}
+        />
         <FilterPanel
           setPage={setPage}
           setStatusFilter={setStatusFilter}
           statusFilter={statusFilter}
-          applications={applications}
+          applications={inKind}
+          kind={kind}
         />
         <SearchBar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           setPage={setPage}
+          kind={kind}
         />
         <SortBar sort={sort} setSort={setSort} setPage={setPage} />
-        <AddApplication setIsModalOpen={setIsModalOpen} />
-        <ImportExport applications={applications} onImport={importApplications} />
+        <AddApplication setIsModalOpen={setIsModalOpen} kind={kind} />
+        <ImportExport
+          applications={inKind}
+          onImport={importApplications}
+          kind={kind}
+        />
       </div>
-      <div className="flex-1 flex flex-col gap-4 min-w-0">
-        <UpcomingStrip applications={applications} />
-        <div className="glass-well rounded-2xl p-4">
+      <div className="flex-1 flex flex-col gap-4 min-w-0 md:min-h-0">
+        <UpcomingStrip applications={inKind} />
+        {/* The one panel that gives: the strip, pager and sign-off keep their
+            natural size, and the card well absorbs whatever height is left. */}
+        <div className="glass-well rounded-2xl p-4 md:flex-1 md:min-h-0 md:overflow-y-auto">
           <div
             key={`${statusFilter}-${sort}-${query}-${currentPage}`}
             className={`grid grid-cols-1 gap-3 ${paginated.length > 0 ? "md:grid-cols-2" : "md:grid-cols-1"}`}
@@ -277,7 +308,11 @@ const JobChecklist = () => {
                 </div>
               ))
             ) : (
-              <EmptyContainer query={query} statusFilter={statusFilter} />
+              <EmptyContainer
+                query={query}
+                statusFilter={statusFilter}
+                kind={kind}
+              />
             )}
           </div>
         </div>
@@ -293,9 +328,13 @@ const JobChecklist = () => {
       </div>
       {createPortal(
         <NewJobModal
+          // Remounts on a toggle flip, so a half-typed draft can't be filed
+          // under the kind you just switched away from.
+          key={kind}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onAdd={addNewJob}
+          kind={kind}
         />,
         document.body,
       )}

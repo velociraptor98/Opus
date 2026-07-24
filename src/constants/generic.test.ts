@@ -17,6 +17,7 @@ afterEach(() => {
 function makeApp(overrides: Partial<JobApplication> = {}): JobApplication {
   return {
     id: "1",
+    kind: "job",
     company: "Acme",
     position: "Engineer",
     status: "Applied",

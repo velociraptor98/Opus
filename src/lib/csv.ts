@@ -1,8 +1,16 @@
 import { Status } from "@/constants/generic";
+import {
+  ApplicationKind,
+  DEFAULT_KIND,
+  KIND_OPTIONS,
+  STATUS_LABELS,
+  toKind,
+} from "@/constants/kind";
 import { JobApplication } from "@/constants/types";
 
 /** Column order for exports; import matches on these headers (case-insensitive). */
 export const CSV_HEADERS = [
+  "kind",
   "company",
   "position",
   "status",
@@ -29,6 +37,27 @@ const VALID_STATUSES: Status[] = [
   "Closed",
 ];
 
+const KIND_VALUES: string[] = [...KIND_OPTIONS];
+
+/**
+ * Resolves a status cell to a stored status, accepting either the stored value
+ * or any kind's display label — so a university export saying "Accepted"
+ * imports back as `Offered`.
+ */
+function parseStatus(raw: string): Status {
+  const value = raw.trim().toLowerCase();
+  if (!value) return "Pending";
+  const stored = VALID_STATUSES.find((s) => s.toLowerCase() === value);
+  if (stored) return stored;
+  for (const labels of Object.values(STATUS_LABELS)) {
+    const match = VALID_STATUSES.find(
+      (s) => labels[s].toLowerCase() === value,
+    );
+    if (match) return match;
+  }
+  return "Pending";
+}
+
 function escapeField(value: string): string {
   if (/[",\n\r]/.test(value)) {
     return `"${value.replace(/"/g, '""')}"`;
@@ -41,6 +70,7 @@ export function applicationsToCsv(apps: JobApplication[]): string {
   const lines = [CSV_HEADERS.join(",")];
   for (const app of apps) {
     const fields = [
+      app.kind,
       app.company,
       app.position,
       app.status,
@@ -131,9 +161,13 @@ function normalizeDate(value: string): string {
 
 /**
  * Parses a CSV export (ours, or any spreadsheet with at least company and
- * position columns) into ready-to-insert applications.
+ * position columns) into ready-to-insert applications. Rows carry the
+ * `defaultKind` unless the file names a `kind` per row.
  */
-export function csvToApplications(text: string): CsvImportResult {
+export function csvToApplications(
+  text: string,
+  defaultKind: ApplicationKind = DEFAULT_KIND,
+): CsvImportResult {
   const rows = parseCsv(text);
   if (rows.length === 0) {
     return { applications: [], skippedRows: [], error: "The file is empty" };
@@ -172,15 +206,16 @@ export function csvToApplications(text: string): CsvImportResult {
       return;
     }
 
-    const rawStatus = get(row, "status");
-    const status =
-      VALID_STATUSES.find((s) => s.toLowerCase() === rawStatus.toLowerCase()) ??
-      "Pending";
+    // An unrecognised kind cell falls back to the active kind rather than
+    // silently filing the row as a job.
+    const rawKind = get(row, "kind").toLowerCase();
+    const kind = KIND_VALUES.includes(rawKind) ? toKind(rawKind) : defaultKind;
 
     applications.push({
+      kind,
       company,
       position,
-      status,
+      status: parseStatus(get(row, "status")),
       dateApplied: normalizeDate(get(row, "date_applied") || get(row, "date")),
       location: get(row, "location"),
       salary: get(row, "salary"),

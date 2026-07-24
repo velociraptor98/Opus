@@ -1,3 +1,4 @@
+import { toKind } from "@/constants/kind";
 import { JobApplication } from "@/constants/types";
 
 /** Raw `applications` row as returned by Supabase. */
@@ -8,6 +9,9 @@ export type ApplicationRow = Record<string, any>;
 export function mapRowToApplication(row: ApplicationRow): JobApplication {
   return {
     id: row.id,
+    // Falls back to "job" so the app still reads rows written before the
+    // kind migration was applied.
+    kind: toKind(row.kind),
     company: row.company,
     position: row.position,
     status: row.status,
@@ -34,6 +38,7 @@ export function toInsertRow(
   job: Omit<JobApplication, "id" | "lastActivityAt">,
 ): Record<string, unknown> {
   return {
+    kind: job.kind,
     company: job.company,
     position: job.position,
     status: job.status,
@@ -56,6 +61,8 @@ export function toInsertRow(
 export function toUpdateRow(
   updates: Partial<JobApplication>,
 ): Record<string, unknown> {
+  // `kind` is intentionally absent: it's fixed at creation, and letting an
+  // edit move an application between kinds would relabel its whole history.
   const row: Record<string, unknown> = {};
   if (updates.company !== undefined) row.company = updates.company;
   if (updates.position !== undefined) row.position = updates.position;

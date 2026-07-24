@@ -8,6 +8,7 @@ import {
   STATUS_OPTIONS,
   needsFollowUp,
 } from "@/constants/generic";
+import { ApplicationKind, KIND_LABELS, statusLabel } from "@/constants/kind";
 import { NotesModal } from "./NotesModal";
 import { ConfirmModal } from "./ConfirmModal";
 import { BaseJobProps, JobApplication } from "@/constants/types";
@@ -29,12 +30,15 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
     toast.show("Changes saved", { variant: "success" });
   };
 
+  const kind = application.kind;
+  const labels = KIND_LABELS[kind];
+
   const handleQuickStatusChange = async (status: Status) => {
     if (status === application.status) return;
     const ok = await onUpdate(application.id, { status });
     // The specific failure reason is surfaced by onUpdate itself.
     if (!ok) return;
-    toast.show(`Moved to ${status}`, { variant: "success" });
+    toast.show(`Moved to ${statusLabel(kind, status)}`, { variant: "success" });
   };
 
   const followUp = needsFollowUp(
@@ -60,7 +64,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
           onChange={(e) =>
             setEditData({ ...editData, company: e.target.value })
           }
-          placeholder="Company"
+          placeholder={labels.entity}
         />
         <input
           type="text"
@@ -69,7 +73,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
           onChange={(e) =>
             setEditData({ ...editData, position: e.target.value })
           }
-          placeholder="Position"
+          placeholder={labels.role}
         />
         <div className="grid grid-cols-2 gap-3">
           <select
@@ -81,7 +85,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
           >
             {STATUS_OPTIONS.map((s) => (
               <option key={s} value={s}>
-                {s}
+                {statusLabel(kind, s)}
               </option>
             ))}
           </select>
@@ -132,6 +136,7 @@ export const JobCard = ({ application, onUpdate, onDelete }: BaseJobProps) => {
               </h3>
               <StatusPill
                 status={application.status}
+                kind={kind}
                 onChange={handleQuickStatusChange}
               />
             </div>
@@ -246,9 +251,11 @@ const CompanyAvatar = ({ company }: { company: string }) => {
  */
 const StatusPill = ({
   status,
+  kind,
   onChange,
 }: {
   status: Status;
+  kind: ApplicationKind;
   onChange: (status: Status) => void;
 }) => {
   const cfg = STATUS_CONFIG[status];
@@ -258,7 +265,7 @@ const StatusPill = ({
       title="Change status"
     >
       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {status}
+      {statusLabel(kind, status)}
       <svg
         className="w-2.5 h-2.5 opacity-60"
         fill="none"
@@ -281,7 +288,7 @@ const StatusPill = ({
       >
         {STATUS_OPTIONS.map((s) => (
           <option key={s} value={s}>
-            {s}
+            {statusLabel(kind, s)}
           </option>
         ))}
       </select>
@@ -305,7 +312,8 @@ const NextActionPill = ({ application }: { application: JobApplication }) => {
       ? "bg-breath/15 text-breath"
       : "bg-foreground/5 text-foreground/75";
   const when = days === 0 ? "Today" : formatRelativeDate(application.nextActionDate);
-  const label = application.nextActionNote || "Next step";
+  const label =
+    application.nextActionNote || KIND_LABELS[application.kind].nextAction;
 
   return (
     <span
