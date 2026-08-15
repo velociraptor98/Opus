@@ -1,11 +1,12 @@
 import { JobApplication } from "@/constants/types";
 import { daysSince, formatExactDate, formatRelativeDate } from "@/lib/date";
 
-const MAX_ITEMS = 4;
+const MAX_ITEMS = 5;
 
 /**
- * Compact strip of scheduled next steps (today or later), soonest first.
- * Renders nothing when the calendar is clear.
+ * Scheduled next steps (today or later), soonest first — a band, not a card,
+ * so it stacks into the same ruled rhythm as the strip above it. Renders
+ * nothing when the calendar is clear, which is the common case.
  */
 export const UpcomingStrip = ({
   applications,
@@ -23,50 +24,28 @@ export const UpcomingStrip = ({
   if (upcoming.length === 0) return null;
 
   return (
-    <div className="glass-well rounded-2xl px-4 py-3">
-      <p className="meta text-[10px] font-bold uppercase text-foreground/75 mb-2">
-        Upcoming
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {upcoming.slice(0, MAX_ITEMS).map((a) => {
-          const isToday = daysSince(a.nextActionDate) === 0;
-          return (
-            <span
-              key={a.id}
-              title={formatExactDate(a.nextActionDate)}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                isToday
-                  ? "bg-breath/15 text-breath"
-                  : "bg-foreground/5 text-foreground/75"
-              }`}
-            >
-              <svg
-                className="w-3 h-3 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              {a.company}
-              {a.nextActionNote ? ` — ${a.nextActionNote}` : ""}
-              <span className="opacity-70 font-medium">
-                · {isToday ? "Today" : formatRelativeDate(a.nextActionDate)}
-              </span>
-            </span>
-          );
-        })}
-        {upcoming.length > MAX_ITEMS && (
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold text-foreground/75">
-            +{upcoming.length - MAX_ITEMS} more
+    <div className="flex items-center gap-3 flex-wrap px-4 md:px-8 py-2.5 border-b border-line">
+      <span className="eyebrow text-muted shrink-0">Upcoming</span>
+      {upcoming.slice(0, MAX_ITEMS).map((a) => {
+        const isToday = daysSince(a.nextActionDate) === 0;
+        return (
+          <span
+            key={a.id}
+            title={formatExactDate(a.nextActionDate)}
+            className={`tag ${isToday ? "tag-accent" : "tag-neutral"} eyebrow`}
+            style={{ letterSpacing: "0.08em" }}
+          >
+            {a.company}
+            {a.nextActionNote ? ` · ${a.nextActionNote}` : ""} ·{" "}
+            {isToday ? "Today" : formatRelativeDate(a.nextActionDate)}
           </span>
-        )}
-      </div>
+        );
+      })}
+      {upcoming.length > MAX_ITEMS && (
+        <span className="eyebrow text-muted">
+          +{upcoming.length - MAX_ITEMS} more
+        </span>
+      )}
     </div>
   );
 };

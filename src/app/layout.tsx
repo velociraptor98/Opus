@@ -1,33 +1,25 @@
 import type { Metadata, Viewport } from "next";
-import { Quicksand, Space_Mono } from "next/font/google";
+import { Archivo } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { KindProvider } from "@/context/KindContext";
-import Navbar from "@/components/Navbar";
 
-// Two voices. Quicksand is the brand voice — rounded, warm, the wordmark and
-// headings. Space Mono is the system voice — labels, captions, metadata.
-const quicksand = Quicksand({
-  variable: "--font-quicksand",
+// One voice, two weights. Archivo is loaded as a variable font, so 400 (body)
+// and 800 (every heading, number and wordmark) ship in a single file — the
+// design leans on that weight jump for all of its hierarchy.
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
-
-const spaceMono = Space_Mono({
-  variable: "--font-space-mono",
-  subsets: ["latin"],
-  weight: ["400", "700"],
 });
 
 export const viewport: Viewport = {
-  // The app renders on paper only.
-  themeColor: "#f6f2ea",
+  themeColor: "#f3f2f2",
 };
 
 export const metadata: Metadata = {
-  title: "Opus — job search tracker",
-  description: "Track your job applications, calmly.",
+  title: "Opus — application tracker",
+  description: "Every application, one page.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -44,19 +36,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${quicksand.variable} ${spaceMono.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${archivo.variable} h-full antialiased`}>
+      {/* The header is no longer fixed — it's the first band of the app shell,
+          and each screen owns its own header (the sign-in split has none), so
+          it's rendered per-screen rather than here. */}
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <AuthProvider>
           <ToastProvider>
-            <KindProvider>
-              <Navbar />
-              <div className="pt-[4.5rem] flex-1">
-                {children}
-              </div>
-            </KindProvider>
+            <KindProvider>{children}</KindProvider>
           </ToastProvider>
         </AuthProvider>
       </body>

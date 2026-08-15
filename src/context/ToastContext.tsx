@@ -44,43 +44,15 @@ export const useToast = (): ToastContextValue => {
   return ctx;
 };
 
-const VARIANT_STYLES: Record<
-  ToastVariant,
-  { accent: string; icon: React.ReactNode }
-> = {
-  success: {
-    accent: "text-primary",
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2.5"
-        d="M5 13l4 4L19 7"
-      />
-    ),
-  },
-  error: {
-    accent: "text-error",
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2.5"
-        d="M6 18L18 6M6 6l12 12"
-      />
-    ),
-  },
-  info: {
-    accent: "text-breath",
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2.5"
-        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    ),
-  },
+/**
+ * Toasts carry one rule of colour on their leading edge and nothing else — a
+ * coral bar for anything that failed or needs you, ink for the rest. No icons:
+ * in this system a filled block already means "look here".
+ */
+const VARIANT_RULE: Record<ToastVariant, string> = {
+  success: "var(--color-text)",
+  error: "var(--color-accent)",
+  info: "var(--color-neutral-500)",
 };
 
 function ToastItem({
@@ -90,22 +62,17 @@ function ToastItem({
   toast: Toast;
   onDismiss: () => void;
 }) {
-  const { accent, icon } = VARIANT_STYLES[toast.variant];
   return (
     <div
       role="status"
-      className="card-glass animate-toast pointer-events-auto flex items-center gap-3 rounded-2xl px-4 py-3 min-w-[260px] max-w-[calc(100vw-2rem)]"
+      className="animate-toast pointer-events-auto flex items-center gap-3 pl-4 pr-3 py-3 min-w-[280px] max-w-[calc(100vw-2rem)]"
+      style={{
+        background: "var(--color-bg)",
+        borderLeft: `4px solid ${VARIANT_RULE[toast.variant]}`,
+        boxShadow: "var(--shadow-lg)",
+      }}
     >
-      <svg
-        className={`w-5 h-5 shrink-0 ${accent}`}
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        {icon}
-      </svg>
-      <span className="flex-1 text-sm font-semibold text-foreground/90">
+      <span className="flex-1" style={{ fontSize: 13 }}>
         {toast.message}
       </span>
       {toast.action && (
@@ -114,7 +81,8 @@ function ToastItem({
             toast.action?.onClick();
             onDismiss();
           }}
-          className="btn-glass shrink-0 px-3 py-1.5 text-xs font-bold text-breath rounded-lg"
+          className="op-lnk eyebrow shrink-0"
+          style={{ color: "var(--color-accent-700)" }}
         >
           {toast.action.label}
         </button>
@@ -122,22 +90,10 @@ function ToastItem({
       <button
         onClick={onDismiss}
         aria-label="Dismiss"
-        className="shrink-0 text-foreground/60 hover:text-foreground/75 transition-colors"
+        className="op-lnk text-muted shrink-0"
+        style={{ fontSize: 16, lineHeight: 1 }}
       >
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
+        ×
       </button>
     </div>
   );

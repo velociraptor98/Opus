@@ -56,47 +56,26 @@ export const SOURCE_OPTIONS = [
   "Other",
 ] as const;
 
-/**
- * Status tones, mapped onto the iki earth family. Clay is deliberately not
- * here: it is the breath — reserved for "this is alive" (follow-up, next step,
- * loading) — so spending it on a routine status would blunt the accent.
- */
-export const STATUS_CONFIG: Record<
-  Status,
-  { dot: string; bg: string; text: string }
-> = {
-  Applied: {
-    dot: "bg-secondary",
-    bg: "bg-secondary/10",
-    text: "text-secondary",
-  },
-  Interviewing: {
-    dot: "bg-warning",
-    bg: "bg-warning/10",
-    text: "text-warning",
-  },
-  Offered: { dot: "bg-primary", bg: "bg-primary/10", text: "text-primary" },
-  Rejected: { dot: "bg-error", bg: "bg-error/10", text: "text-error" },
-  Closed: { dot: "bg-accent", bg: "bg-accent/10", text: "text-accent" },
-  Pending: {
-    dot: "bg-foreground/40",
-    bg: "bg-foreground/5",
-    text: "text-foreground/75",
-  },
-};
 export const FILTER_OPTIONS: FilterOption[] = [
   "All",
-  "Follow-up",
+  "Pending",
   "Applied",
+  "Follow-up",
   "Interviewing",
   "Offered",
   "Rejected",
   "Closed",
-  "Pending",
 ];
-/** Follow-up is a breath signal, not a status — so it, alone, gets the clay. */
-export const FOLLOW_UP_COLOR = "var(--clay)";
-export const FOLLOW_UP_INK = "var(--breath)";
+
+/**
+ * Filters describing an application that wants something from you. These are
+ * the only columns that earn a coral dot; everything else is a plain count.
+ */
+export const ATTENTION_FILTERS: FilterOption[] = [
+  "Follow-up",
+  "Interviewing",
+  "Offered",
+];
 
 export type SortOption =
   | "Recently added"
@@ -169,29 +148,32 @@ export function sortApplications(
 }
 
 /**
- * Brand tier — the hues exactly as the design language sets them (OKLCH L .605).
- * Graphical objects only: chart fills and filter dots, which need 3:1, not the
- * 4.5:1 small text demands. These hold across both grounds, so a status reads
- * the same on paper and on espresso.
+ * Shape tier — fills for charts, dots and bars, where 3:1 is the bar to clear.
+ *
+ * The system has one accent, so a status is placed on a single axis of
+ * aliveness rather than given a hue of its own: the two live statuses take the
+ * coral, the rest are ink and grey. Distinguishable in a pie without ever
+ * implying that Closed and Rejected are different *kinds* of thing.
  */
 export const STATUS_COLORS: Record<Status, string> = {
-  Applied: "var(--slate)",
-  Interviewing: "var(--amber)",
-  Offered: "var(--sage)",
-  Rejected: "var(--rust)",
-  Closed: "var(--taupe)",
-  Pending: "color-mix(in srgb, var(--foreground) 45%, transparent)",
+  Offered: "var(--color-accent-700)",
+  Interviewing: "var(--color-accent)",
+  Applied: "var(--color-text)",
+  Pending: "var(--color-neutral-500)",
+  Rejected: "var(--color-neutral-700)",
+  Closed: "var(--color-neutral-300)",
 };
 
 /**
- * Text tier — the same hues, deepened on paper and lifted on espresso so they
- * clear 4.5:1. Use wherever a status colours *type* rather than a shape.
+ * Text tier — the same statuses wherever they colour *type*, deepened until
+ * they clear 4.5:1 on the page ground. Use this and never STATUS_COLORS for
+ * anything with words in it.
  */
 export const STATUS_INK: Record<Status, string> = {
-  Applied: "var(--secondary)",
-  Interviewing: "var(--warning)",
-  Offered: "var(--primary)",
-  Rejected: "var(--error)",
-  Closed: "var(--accent)",
-  Pending: "var(--foreground)",
+  Offered: "var(--color-accent-800)",
+  Interviewing: "var(--color-accent-700)",
+  Applied: "var(--color-text)",
+  Pending: "var(--color-neutral-700)",
+  Rejected: "var(--color-neutral-700)",
+  Closed: "var(--color-neutral-700)",
 };

@@ -1,17 +1,23 @@
 import {
+  ATTENTION_FILTERS,
   FILTER_OPTIONS,
   FilterOption,
-  FOLLOW_UP_COLOR,
-  FOLLOW_UP_INK,
   needsFollowUp,
   Status,
-  STATUS_COLORS,
-  STATUS_INK,
 } from "@/constants/generic";
 import { ApplicationKind, STATUS_LABELS } from "@/constants/kind";
 import { JobApplication } from "@/constants/types";
 import React from "react";
 
+/**
+ * The status strip: eight counts across the top of the list, one per filter,
+ * each its own cell in a ruled band. It replaces the old sidebar list — the
+ * counts are the most-read numbers on the page, so they get the full width
+ * and the largest type rather than a column of pills off to the side.
+ *
+ * A cell with nothing in it greys back but stays put: the gaps in a pipeline
+ * are information, and a strip that reflows as counts change is unreadable.
+ */
 export const FilterPanel = ({
   statusFilter,
   setStatusFilter,
@@ -26,27 +32,21 @@ export const FilterPanel = ({
   applications: JobApplication[];
   kind: ApplicationKind;
 }) => {
+  const countFor = (option: FilterOption) => {
+    if (option === "All") return applications.length;
+    if (option === "Follow-up") {
+      return applications.filter((a) =>
+        needsFollowUp(a.status, a.lastActivityAt, a.nextActionDate),
+      ).length;
+    }
+    return applications.filter((a) => a.status === option).length;
+  };
+
   return (
-    <div className="flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-visible scrollbar-none [&::-webkit-scrollbar]:hidden">
+    <div className="grid grid-cols-4 md:grid-cols-8 border-t-2 border-b border-line">
       {FILTER_OPTIONS.map((option) => {
         const isActive = statusFilter === option;
-        // The dot is a shape (brand tier); the label and ring are type, so they
-        // take the deepened text tier and clear 4.5:1 on both grounds.
-        const dot =
-          option === "All"
-            ? undefined
-            : option === "Follow-up"
-              ? FOLLOW_UP_COLOR
-              : STATUS_COLORS[option as Status];
-        const ink =
-          option === "All"
-            ? undefined
-            : option === "Follow-up"
-              ? FOLLOW_UP_INK
-              : STATUS_INK[option as Status];
-        // "All" has no colour of its own, so it tints from the theme's
-        // foreground — a hardcoded black here disappears on espresso.
-        const tint = ink ?? "var(--color-foreground)";
+        const count = countFor(option);
         // "All" and "Follow-up" read the same either way; only the six stored
         // statuses take the kind's vocabulary.
         const label =
@@ -60,39 +60,40 @@ export const FilterPanel = ({
               setStatusFilter(option);
               setPage(0);
             }}
-            className="shrink-0 md:shrink flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 md:py-2 rounded-full md:rounded-xl text-xs md:text-sm font-semibold transition-all duration-200 active:scale-95 md:w-full"
-            style={
-              isActive
-                ? {
-                    background: `color-mix(in srgb, ${tint} 14%, transparent)`,
-                    boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, ${tint} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.5)`,
-                    color: tint,
-                  }
-                : {
-                    background: "transparent",
-                    color: "color-mix(in srgb, currentColor 75%, transparent)",
-                  }
-            }
+            aria-pressed={isActive}
+            className="op-row text-left px-4 pt-3 pb-3.5 border-l border-line first:border-l-0 md:first:border-l-0"
+            style={{
+              boxShadow: isActive
+                ? "inset 0 3px 0 0 var(--color-accent)"
+                : undefined,
+              background: isActive ? "var(--color-neutral-200)" : "transparent",
+              // An empty, unselected column recedes rather than disappearing.
+              color:
+                isActive || count > 0
+                  ? "var(--color-text)"
+                  : "color-mix(in srgb, var(--color-text) 45%, transparent)",
+            }}
           >
-            {option !== "All" && (
+            <span className="flex items-baseline gap-2">
               <span
-                className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full shrink-0"
-                style={{ background: dot }}
+                className="tnum"
+                style={{ fontWeight: 800, fontSize: 26, lineHeight: 1, letterSpacing: "-0.02em" }}
+              >
+                {count}
+              </span>
+              {/* The one coral dot in the band: this column wants something. */}
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  background:
+                    ATTENTION_FILTERS.includes(option) && count > 0
+                      ? "var(--color-accent)"
+                      : "transparent",
+                }}
               />
-            )}
-            <span className="md:flex-1 md:text-left">{label}</span>
-            <span
-              className="meta text-xs font-medium opacity-75 tabular-nums"
-              style={isActive && ink ? { color: ink } : undefined}
-            >
-              {option === "All"
-                ? applications.length
-                : option === "Follow-up"
-                  ? applications.filter((a) =>
-                      needsFollowUp(a.status, a.lastActivityAt, a.nextActionDate),
-                    ).length
-                  : applications.filter((a) => a.status === option).length}
             </span>
+            <span className="eyebrow block mt-2 truncate">{label}</span>
           </button>
         );
       })}

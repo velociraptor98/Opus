@@ -1,5 +1,10 @@
 import { ApplicationKind, KIND_LABELS } from "@/constants/kind";
 
+/**
+ * The search cell of the filter band. Borderless by design — the band's own
+ * rules already draw the cell, so a bordered input inside one would double
+ * every edge.
+ */
 export const SearchBar = ({
   searchQuery,
   setSearchQuery,
@@ -13,20 +18,8 @@ export const SearchBar = ({
 }) => {
   const placeholder = KIND_LABELS[kind].searchPlaceholder;
   return (
-    <div className="relative">
-      <svg
-        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/55"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"
-        />
-      </svg>
+    <label className="flex flex-1 items-center gap-2.5 px-4 md:px-8 min-h-[46px]">
+      <span className="eyebrow text-muted shrink-0">Search</span>
       <input
         type="text"
         value={searchQuery}
@@ -36,32 +29,8 @@ export const SearchBar = ({
         }}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="input-glass w-full h-10 pl-9 pr-8 rounded-full text-sm"
+        className="input-bare flex-1"
       />
-      {searchQuery && (
-        <button
-          onClick={() => {
-            setSearchQuery("");
-            setPage(0);
-          }}
-          aria-label="Clear search"
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full text-foreground/55 hover:text-foreground transition-colors active:scale-90"
-        >
-          <svg
-            className="w-3.5 h-3.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2.5"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      )}
-    </div>
+    </label>
   );
 };

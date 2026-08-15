@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { JobCard } from "./JobCard";
-import { createClient } from "@/lib/supabase/client";
 import { createPortal } from "react-dom";
+import { JobRow, JobRowCompact } from "./JobRow";
+import { DetailModal } from "./DetailModal";
 import { NewJobModal } from "./NewJobModal";
+import { createClient } from "@/lib/supabase/client";
 import { JobApplication } from "@/constants/types";
 import {
   FilterOption,
@@ -13,6 +14,7 @@ import {
   sortApplications,
   Status,
 } from "@/constants/generic";
+import { KIND_LABELS } from "@/constants/kind";
 import {
   mapRowToApplication,
   toInsertRow,
@@ -30,10 +32,11 @@ import { FilterPanel } from "./FilterPanel";
 import { SortBar } from "./SortBar";
 import { ImportExport } from "./ImportExport";
 import { UpcomingStrip } from "./UpcomingStrip";
-import { BreathRule } from "./Breath";
 import { KindToggle } from "./KindToggle";
 
-const PAGE_SIZE = 8;
+// A table row is a third the height of the old card, so a screenful is
+// roughly three times as many.
+const PAGE_SIZE = 25;
 
 /** Rows per insert when importing, so one huge CSV isn't one huge request. */
 const IMPORT_BATCH_SIZE = 200;
@@ -62,6 +65,7 @@ const JobChecklist = () => {
   const [sort, setSort] = useState<SortOption>("Recently added");
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
   const toast = useToast();
   const { kind, setKind } = useKind();
   const { applications, setApplications, loading } = useApplications();
@@ -162,7 +166,7 @@ const JobChecklist = () => {
     const newJob = mapRowToApplication(data);
     logStatusEvent(newJob.id, null, newJob.status);
     setApplications((apps) => [newJob, ...apps]);
-    // Clear any active filter/search/sort so the new card surfaces at the top.
+    // Clear any active filter/search/sort so the new row surfaces at the top.
     setStatusFilter("All");
     setSearchQuery("");
     setSort("Recently added");
@@ -233,8 +237,9 @@ const JobChecklist = () => {
 
   if (loading) return <JobChecklistSkeleton />;
 
+  const labels = KIND_LABELS[kind];
   const query = searchQuery.trim().toLowerCase();
-  // Everything below the toggle — cards, filter counts, upcoming, export —
+  // Everything below the toggle — rows, strip counts, upcoming, export —
   // speaks about one kind at a time.
   const inKind = applications.filter((a) => a.kind === kind);
   const filtered = inKind.filter((a) => {
@@ -244,9 +249,9 @@ const JobChecklist = () => {
         : statusFilter === "Follow-up"
           ? needsFollowUp(a.status, a.lastActivityAt, a.nextActionDate)
           : a.status === statusFilter;
-    // Search the whole card, not just its headline: "remote", a recruiter's
-    // name, or something you only wrote in the notes are all things people
-    // reach for when hunting an application they can't name exactly.
+    // Search the whole application, not just its headline: "remote", a
+    // recruiter's name, or something you only wrote in the notes are all
+    // things people reach for when hunting a row they can't name exactly.
     const matchesQuery = query === "" || matchesSearch(a, query);
     return matchesStatus && matchesQuery;
   });
@@ -260,12 +265,31 @@ const JobChecklist = () => {
     currentPage * PAGE_SIZE + PAGE_SIZE,
   );
 
+  const followUpsDue = inKind.filter((a) =>
+    needsFollowUp(a.status, a.lastActivityAt, a.nextActionDate),
+  ).length;
+
+  const openApplication = applications.find((a) => a.id === openId) ?? null;
+  const hasFilters = query !== "" || statusFilter !== "All";
+  const subtitle =
+    inKind.length === 0
+      ? "Nothing tracked yet · first run"
+      : `${sorted.length} shown · ${statusFilter.toLowerCase()} · ${followUpsDue} follow-up${
+          followUpsDue === 1 ? "" : "s"
+        } due`;
+
   return (
-    <div className="w-full flex flex-col md:flex-row gap-4 md:items-stretch md:h-full md:min-h-0">
-      {/* `min-h-0` on every flex link in the chain: without it a flex item
-          floors at its content size and the overflow lands on the page
-          instead of the well that's meant to scroll. */}
-      <div className="w-full md:w-auto md:shrink-0 flex flex-col gap-2 glass-well rounded-2xl p-4 self-stretch md:self-stretch md:min-h-0 md:overflow-y-auto">
+    <div className="flex flex-col flex-1 min-w-0">
+      {/* Title bar */}
+      <div className="flex flex-wrap items-end gap-4 md:gap-6 px-4 md:px-8 pt-5 pb-3.5">
+        <div className="mr-auto min-w-0">
+          <h2 style={{ margin: "0 0 2px", fontSize: 30 }}>
+            {inKind.length === 0 ? "Applications" : labels.tab}
+          </h2>
+          <div className="eyebrow text-muted" style={{ fontSize: 12, letterSpacing: "0.1em" }}>
+            {subtitle}
+          </div>
+        </div>
         <KindToggle
           kind={kind}
           setKind={(next) => {
@@ -274,13 +298,19 @@ const JobChecklist = () => {
           }}
           applications={applications}
         />
-        <FilterPanel
-          setPage={setPage}
-          setStatusFilter={setStatusFilter}
-          statusFilter={statusFilter}
-          applications={inKind}
-          kind={kind}
-        />
+        <AddApplication setIsModalOpen={setIsModalOpen} kind={kind} />
+      </div>
+
+      <FilterPanel
+        setPage={setPage}
+        setStatusFilter={setStatusFilter}
+        statusFilter={statusFilter}
+        applications={inKind}
+        kind={kind}
+      />
+
+      {/* Filter band — one row of cells, each separated by a single rule. */}
+      <div className="flex flex-wrap items-stretch border-b-2 border-line">
         <SearchBar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -288,55 +318,91 @@ const JobChecklist = () => {
           kind={kind}
         />
         <SortBar sort={sort} setSort={setSort} setPage={setPage} />
-        <AddApplication setIsModalOpen={setIsModalOpen} kind={kind} />
+        {hasFilters && (
+          <div className="flex items-center gap-2.5 px-4 border-l border-line min-h-[46px]">
+            <span className="eyebrow text-muted shrink-0">Filtered</span>
+            <span className="tag tag-neutral eyebrow" style={{ letterSpacing: "0.08em" }}>
+              {statusFilter === "All" ? "All statuses" : statusFilter}
+              {query ? ` · “${searchQuery.trim()}”` : ""}
+            </span>
+            <button
+              onClick={() => {
+                setStatusFilter("All");
+                setSearchQuery("");
+                setPage(0);
+              }}
+              className="op-lnk eyebrow"
+              style={{ color: "var(--color-accent-700)" }}
+            >
+              Clear
+            </button>
+          </div>
+        )}
         <ImportExport
           applications={inKind}
           onImport={importApplications}
           kind={kind}
         />
       </div>
-      <div className="flex-1 flex flex-col gap-4 min-w-0 md:min-h-0">
-        <UpcomingStrip applications={inKind} />
-        {/* The one panel that gives: the strip, pager and sign-off keep their
-            natural size, and the card well absorbs whatever height is left. */}
-        <div className="glass-well rounded-2xl p-4 md:flex-1 md:min-h-0 md:overflow-y-auto">
-          <div
-            key={`${statusFilter}-${sort}-${query}-${currentPage}`}
-            className={`grid grid-cols-1 gap-3 ${paginated.length > 0 ? "md:grid-cols-2" : "md:grid-cols-1"}`}
-          >
-            {paginated.length > 0 ? (
-              paginated.map((app, i) => (
-                <div
-                  key={app.id}
-                  className="animate-card h-full"
-                  style={{ animationDelay: `${i * 45}ms` }}
-                >
-                  <JobCard
-                    application={app}
-                    onUpdate={updateApplication}
-                    onDelete={deleteApplication}
-                  />
-                </div>
-              ))
-            ) : (
-              <EmptyContainer
-                query={query}
-                statusFilter={statusFilter}
-                kind={kind}
+
+      <UpcomingStrip applications={inKind} />
+
+      {paginated.length > 0 ? (
+        <>
+          {/* Below md the eight columns can't fit without a 1080px scroller,
+              so the same rows stack instead. */}
+          <div className="md:hidden">
+            {paginated.map((app) => (
+              <JobRowCompact
+                key={app.id}
+                application={app}
+                onOpen={() => setOpenId(app.id)}
               />
-            )}
+            ))}
           </div>
-        </div>
-        <NavigationPanel
-          totalPages={totalPages}
-          currentPage={currentPage}
-          setPage={setPage}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="table" style={{ minWidth: 1080 }}>
+              <thead>
+                <tr>
+                  <th className="pl-4 md:pl-8" style={{ width: "22%" }}>
+                    {labels.entity}
+                  </th>
+                  <th style={{ width: "26%" }}>{labels.role}</th>
+                  <th style={{ width: 120 }}>Status</th>
+                  <th style={{ width: 130 }}>Pipeline</th>
+                  <th style={{ width: 110 }}>{labels.location}</th>
+                  <th style={{ width: 100 }}>{labels.source}</th>
+                  <th style={{ width: 110 }}>{labels.dateColumn}</th>
+                  <th className="pr-4 md:pr-8">{labels.nextAction}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.map((app) => (
+                  <JobRow
+                    key={app.id}
+                    application={app}
+                    onOpen={() => setOpenId(app.id)}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : (
+        <EmptyContainer
+          query={query}
+          statusFilter={statusFilter}
+          kind={kind}
+          onAdd={() => setIsModalOpen(true)}
         />
-        {/* Sign-off: the exhale that closes the page. */}
-        <div className="flex justify-center pt-1 pb-2 opacity-60">
-          <BreathRule className="text-xl" />
-        </div>
-      </div>
+      )}
+
+      <NavigationPanel
+        totalPages={totalPages}
+        currentPage={currentPage}
+        setPage={setPage}
+      />
+
       {createPortal(
         <NewJobModal
           // Remounts on a toggle flip, so a half-typed draft can't be filed
@@ -349,6 +415,20 @@ const JobChecklist = () => {
         />,
         document.body,
       )}
+
+      {openApplication &&
+        createPortal(
+          <DetailModal
+            // Keyed on the row, so opening a different one starts a fresh draft
+            // rather than reusing the last application's.
+            key={openApplication.id}
+            application={openApplication}
+            onUpdate={updateApplication}
+            onDelete={deleteApplication}
+            onClose={() => setOpenId(null)}
+          />,
+          document.body,
+        )}
     </div>
   );
 };

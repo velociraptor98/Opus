@@ -3,13 +3,15 @@ import { ApplicationKind, KIND_LABELS } from "@/constants/kind";
 import { JobApplication } from "@/constants/types";
 import { applicationsToCsv, csvToApplications } from "@/lib/csv";
 import { useToast } from "@/context/ToastContext";
-import { BreathDots } from "./Breath";
+import { LoadingBars } from "./Mark";
 
 /**
- * Sidebar buttons to export the visible list as CSV and import applications
- * from a CSV (ours, or any spreadsheet with company/position columns). Both
- * sides are scoped to the active kind: you export what you're looking at, and
- * an imported row without a `kind` column joins it.
+ * The CSV cell of the filter band: two text links rather than buttons, because
+ * they sit inside a row of controls that are all set in the same 10px caps and
+ * a pair of filled buttons here would out-shout the one primary action.
+ *
+ * Both sides are scoped to the active kind: you export what you're looking at,
+ * and an imported row without a `kind` column joins it.
  */
 export const ImportExport = ({
   applications,
@@ -67,16 +69,16 @@ export const ImportExport = ({
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex items-stretch border-l border-line">
       <button
         onClick={() => fileInputRef.current?.click()}
         disabled={importing}
         aria-busy={importing}
-        className="btn-glass flex-1 px-3 py-2 text-xs font-semibold text-foreground/75 hover:text-foreground rounded-lg disabled:opacity-50 flex items-center justify-center min-h-[2.125rem]"
+        className="op-lnk eyebrow px-4 flex items-center gap-2 min-h-[46px]"
       >
         {importing ? (
           <>
-            <BreathDots loading />
+            <LoadingBars width={7} height={3} />
             <span className="sr-only">Importing…</span>
           </>
         ) : (
@@ -86,7 +88,7 @@ export const ImportExport = ({
       <button
         onClick={handleExport}
         disabled={applications.length === 0}
-        className="btn-glass flex-1 px-3 py-2 text-xs font-semibold text-foreground/75 hover:text-foreground rounded-lg disabled:opacity-50"
+        className="op-lnk eyebrow px-4 md:pr-8 border-l border-line min-h-[46px]"
       >
         Export CSV
       </button>

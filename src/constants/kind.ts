@@ -29,8 +29,16 @@ interface KindLabels {
   source: string;
   contact: string;
   nextAction: string;
+  /** Column head over `dateApplied` in the list table. */
+  dateColumn: string;
   /** The three checklist steps, in `resume / coverLetter / followUp` order. */
   checklist: [string, string, string];
+  /**
+   * The five segments of the pipeline bar, in order. Purely display: the fill
+   * is derived from `status` (see lib/pipeline.ts), so these are labels for a
+   * shape that already exists, not a second source of truth.
+   */
+  pipeline: [string, string, string, string, string];
   addTitle: string;
   addButton: string;
   /** Tooltip on the sidebar's add button. */
@@ -65,7 +73,9 @@ export const KIND_LABELS: Record<ApplicationKind, KindLabels> = {
     source: "Source",
     contact: "Contact",
     nextAction: "Next step",
+    dateColumn: "Applied",
     checklist: ["Resume", "Cover Letter", "Follow-up"],
+    pipeline: ["Saved", "Applied", "Screen", "Interview", "Decision"],
     addTitle: "Add New Job Application",
     addButton: "Add Job",
     addAction: "Add application",
@@ -93,8 +103,10 @@ export const KIND_LABELS: Record<ApplicationKind, KindLabels> = {
     source: "Portal",
     contact: "Admissions contact",
     nextAction: "Deadline",
+    dateColumn: "Submitted",
     // Same three stored booleans, named for what admissions actually asks for.
     checklist: ["Transcript", "Statement", "Follow-up"],
+    pipeline: ["Saved", "Submitted", "Review", "Interview", "Decision"],
     addTitle: "Add New University Application",
     addButton: "Add Application",
     addAction: "Add university application",

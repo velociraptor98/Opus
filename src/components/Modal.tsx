@@ -29,7 +29,7 @@ interface ModalProps {
   onClose: () => void;
   /** `alertdialog` for a destructive confirmation, `dialog` otherwise. */
   role?: "dialog" | "alertdialog";
-  /** Width cap on the panel, e.g. "max-w-md". */
+  /** Width/height classes for the panel, e.g. "w-[min(620px,100%)]". */
   panelClassName?: string;
   /** Clicking the backdrop closes by default; opt out for long forms. */
   closeOnBackdrop?: boolean;
@@ -49,7 +49,7 @@ export const Modal = ({
   label,
   onClose,
   role = "dialog",
-  panelClassName = "max-w-md",
+  panelClassName = "",
   closeOnBackdrop = true,
   children,
 }: ModalProps) => {
@@ -127,7 +127,7 @@ export const Modal = ({
 
   return (
     <div
-      className="animate-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      className="dialog-backdrop animate-backdrop"
       onClick={closeOnBackdrop ? onClose : undefined}
     >
       <div
@@ -138,7 +138,7 @@ export const Modal = ({
         aria-label={labelledBy ? undefined : label}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className={`animate-modal modal-glass rounded-3xl w-full overflow-hidden focus:outline-none ${panelClassName}`}
+        className={`dialog animate-modal ${panelClassName}`}
       >
         {children}
       </div>

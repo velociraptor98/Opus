@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useToast } from "@/context/ToastContext";
 import { useUpdatePassword } from "@/hooks/useUpdatePassword";
 import { ConfirmModal } from "./ConfirmModal";
-import { BreathDots } from "./Breath";
+import { LoadingBars } from "./Mark";
 import { Modal } from "./Modal";
 
 interface ChangePasswordModalProps {
@@ -39,135 +39,112 @@ export const ChangePasswordModal = ({ setIsOpen }: ChangePasswordModalProps) => 
 
   // Escape precedence between this and its confirmation step is handled by
   // Modal's stack — only the topmost dialog responds.
-  const labelCls =
-    "block text-xs font-bold text-foreground/75 uppercase tracking-widest mb-1";
-
   return (
     <Modal
       onClose={() => setIsOpen(false)}
       labelledBy={titleId}
       closeOnBackdrop={false}
+      panelClassName="w-[min(440px,100%)]"
     >
-      <div>
-        <div className="px-6 py-4 border-b border-white/20 flex justify-between items-center">
-          <h3 id={titleId} className="text-xl font-bold text-foreground">
+      <form onSubmit={handleSubmit}>
+        <div className="dialog-head">
+          <h3 id={titleId} style={{ margin: 0, fontSize: 22 }}>
             Change password
           </h3>
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="text-foreground/60 hover:text-breath transition-colors"
-            aria-label="Close"
+            className="btn btn-secondary ml-auto"
+            style={{ fontSize: 11, letterSpacing: "0.1em" }}
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            CLOSE
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <div className="flex flex-col gap-4 px-6 py-5">
           {error && (
-            <div className="p-3 bg-error/10 border border-error/20 rounded-lg flex items-center gap-2 animate-shake">
-              <svg
-                className="w-5 h-5 text-error shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span className="text-error font-medium text-sm">{error}</span>
+            <div
+              className="animate-shake px-3 py-2.5"
+              style={{
+                background: "var(--color-accent-100)",
+                borderLeft: "3px solid var(--color-accent)",
+                color: "var(--color-accent-800)",
+                fontSize: 13,
+              }}
+              role="alert"
+            >
+              {error}
             </div>
           )}
 
-          <div className="p-3 bg-secondary/10 border border-secondary/20 rounded-lg flex items-start gap-2">
-            <svg
-              className="w-5 h-5 text-breath shrink-0 mt-0.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
-              />
-            </svg>
-            <span className="text-foreground/75 text-sm">
-              This replaces your account password right away — you&apos;ll need
-              the new one the next time you sign in.
-            </span>
-          </div>
+          <p
+            className="m-0 px-3 py-2.5 text-muted"
+            style={{
+              background: "var(--color-neutral-200)",
+              borderLeft: "3px solid var(--color-text)",
+              fontSize: 13,
+            }}
+          >
+            This replaces your account password right away — you&apos;ll need the
+            new one the next time you sign in.
+          </p>
 
-          <div>
-            <label className={labelCls}>New password</label>
+          <div className="field">
+            <label htmlFor={`${titleId}-new`}>New password</label>
             <input
+              id={`${titleId}-new`}
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter new password"
+              placeholder="At least 8 characters"
               autoComplete="new-password"
-              className="input-glass w-full px-3 py-2 rounded-lg"
+              className="input"
               autoFocus
               required
             />
           </div>
-          <div>
-            <label className={labelCls}>Confirm password</label>
+          <div className="field">
+            <label htmlFor={`${titleId}-confirm`}>Confirm password</label>
             <input
+              id={`${titleId}-confirm`}
               type="password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="Re-enter new password"
               autoComplete="new-password"
-              className="input-glass w-full px-3 py-2 rounded-lg"
+              className="input"
               required
             />
           </div>
+        </div>
 
-          <div className="pt-4 border-t border-foreground/10 flex gap-3">
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="btn-glass flex-1 px-4 py-2 text-foreground/75 rounded-lg"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={pending}
-              aria-busy={pending}
-              className="btn-glass flex-1 px-4 py-2 bg-breath text-paper rounded-lg font-semibold border-breath disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center min-h-[2.5rem]"
-            >
-              {pending ? (
-                <>
-                  <BreathDots loading />
-                  <span className="sr-only">Updating…</span>
-                </>
-              ) : (
-                "Update password"
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div className="dialog-foot dialog-foot-ruled">
+          <button
+            type="submit"
+            disabled={pending}
+            aria-busy={pending}
+            className="btn btn-primary"
+            style={{ letterSpacing: "0.08em" }}
+          >
+            {pending ? (
+              <>
+                <LoadingBars />
+                <span className="sr-only">Updating…</span>
+              </>
+            ) : (
+              "UPDATE PASSWORD"
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className="btn btn-secondary"
+            style={{ letterSpacing: "0.08em" }}
+          >
+            CANCEL
+          </button>
+        </div>
+      </form>
 
       {confirming &&
         createPortal(

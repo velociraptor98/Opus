@@ -10,10 +10,12 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { BreathRule } from "@/components/Breath";
+import { LoadingBars } from "@/components/Mark";
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  /** Signed-in address, shown in the header; null while signed out. */
+  email: string | null;
   logout: () => Promise<void>;
 }
 
@@ -23,11 +25,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
+      setEmail(session?.user.email ?? null);
       setIsMounted(true);
     });
 
@@ -35,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
+      setEmail(session?.user.email ?? null);
     });
 
     return () => subscription.unsubscribe();
@@ -46,8 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // The session check gates the whole app, so this is the very first thing a
-  // visitor sees. A blank document reads as a broken page; the breath, looped,
-  // says the same "wait" the rest of the app does.
+  // visitor sees. A blank document reads as a broken page; the pipeline bars,
+  // cycling, say the same "wait" the rest of the app does.
   if (!isMounted) {
     return (
       <div
@@ -55,13 +60,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role="status"
         aria-label="Loading"
       >
-        <BreathRule loading className="text-2xl opacity-60" />
+        <LoadingBars width={16} height={6} />
       </div>
     );
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, email, logout }}>
       {children}
     </AuthContext.Provider>
   );

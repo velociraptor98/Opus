@@ -4,12 +4,12 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Opus — Job Search Tracker",
     short_name: "Opus",
-    description: "Track your job applications with ease.",
+    description: "Every application, one page.",
     start_url: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#f6f2ea",
-    theme_color: "#f6f2ea",
+    background_color: "#f3f2f2",
+    theme_color: "#f3f2f2",
     icons: [
       {
         src: "/icons/icon-192.png",
