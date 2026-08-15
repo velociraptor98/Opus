@@ -3,11 +3,11 @@ import {
   ApplicationKind,
   KIND_LABELS,
   sourceOptions,
-  STATUS_LABELS,
+  statusLabel,
 } from "@/constants/kind";
 import { JobApplication } from "@/constants/types";
 import { useId, useState } from "react";
-import { BreathDots } from "./Breath";
+import { LoadingBars } from "./Mark";
 import { Modal } from "./Modal";
 
 const emptyForm = (kind: ApplicationKind) => ({
@@ -40,6 +40,11 @@ interface NewJobModalProps {
   kind: ApplicationKind;
 }
 
+/**
+ * The intake form: only what you know when you file something. Everything else
+ * — contact, salary, checklist, notes — is added later from the detail dialog,
+ * so this stays a seven-field form you can fill without stopping to think.
+ */
 export const NewJobModal = ({
   isOpen,
   onClose,
@@ -72,60 +77,60 @@ export const NewJobModal = ({
     onClose();
   };
 
+  // ⌘↵ from anywhere in the form, since the fields are a grid and the submit
+  // button is two rows below wherever you happen to be typing.
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      e.currentTarget.requestSubmit();
+    }
+  };
+
   return (
     // A half-filled form shouldn't vanish on a stray click outside it.
-    <Modal onClose={onClose} labelledBy={titleId} closeOnBackdrop={false}>
-      <div>
-        <div className="px-6 py-4 border-b border-white/20 flex justify-between items-center">
-          <h3 id={titleId} className="text-xl font-bold text-foreground">
+    <Modal
+      onClose={onClose}
+      labelledBy={titleId}
+      closeOnBackdrop={false}
+      panelClassName="w-[min(620px,100%)] max-h-[88vh] overflow-auto"
+    >
+      <form onSubmit={handleSubmit} onKeyDown={handleKeyDown}>
+        <div className="dialog-head">
+          <h3 id={titleId} style={{ margin: 0, fontSize: 22 }}>
             {labels.addTitle}
           </h3>
           <button
+            type="button"
             onClick={onClose}
-            className="text-foreground/60 hover:text-breath transition-colors"
+            className="btn btn-secondary ml-auto"
+            style={{ fontSize: 11, letterSpacing: "0.1em" }}
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M6 18L18 6M6 6l12 12"
-              ></path>
-            </svg>
+            CLOSE
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-6 py-5">
           {error && (
-            <div className="p-4 bg-error/10 border border-error/20 rounded-xl flex items-center gap-3 animate-shake">
-              <svg
-                className="w-5 h-5 text-error flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span className="text-error font-medium text-sm">{error}</span>
+            <div
+              className="animate-shake sm:col-span-2 px-3 py-2.5"
+              style={{
+                background: "var(--color-accent-100)",
+                borderLeft: "3px solid var(--color-accent)",
+                color: "var(--color-accent-800)",
+                fontSize: 13,
+              }}
+              role="alert"
+            >
+              {error}
             </div>
           )}
-          <div>
-            <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
-              {labels.entity}
-            </label>
+
+          <div className="field sm:col-span-2">
+            <label htmlFor={`${titleId}-company`}>{labels.entity}</label>
             <input
+              id={`${titleId}-company`}
               required
-              type="text"
-              className="input-glass w-full px-3 py-2 rounded-lg"
+              className="input"
               value={formData.company}
               onChange={(e) =>
                 setFormData({ ...formData, company: e.target.value })
@@ -133,14 +138,12 @@ export const NewJobModal = ({
               placeholder={labels.entityPlaceholder}
             />
           </div>
-          <div>
-            <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
-              {labels.role}
-            </label>
+          <div className="field sm:col-span-2">
+            <label htmlFor={`${titleId}-role`}>{labels.role}</label>
             <input
+              id={`${titleId}-role`}
               required
-              type="text"
-              className="input-glass w-full px-3 py-2 rounded-lg"
+              className="input"
               value={formData.position}
               onChange={(e) =>
                 setFormData({ ...formData, position: e.target.value })
@@ -148,115 +151,108 @@ export const NewJobModal = ({
               placeholder={labels.rolePlaceholder}
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
-                Status
-              </label>
-              <select
-                className="input-glass w-full px-3 py-2 rounded-lg"
-                value={formData.status}
-                onChange={(e) =>
-                  setFormData({ ...formData, status: e.target.value as Status })
-                }
-              >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {STATUS_LABELS[kind][s]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
-                Date Applied
-              </label>
-              <input
-                type="date"
-                className="input-glass w-full px-3 py-2 rounded-lg"
-                value={formData.dateApplied}
-                onChange={(e) =>
-                  setFormData({ ...formData, dateApplied: e.target.value })
-                }
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
-                {labels.location}
-              </label>
-              <input
-                type="text"
-                className="input-glass w-full px-3 py-2 rounded-lg"
-                value={formData.location}
-                onChange={(e) =>
-                  setFormData({ ...formData, location: e.target.value })
-                }
-                placeholder={labels.locationPlaceholder}
-              />
-            </div>
-            <div>
-              <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
-                {labels.source}
-              </label>
-              <input
-                type="text"
-                list="new-job-source-options"
-                className="input-glass w-full px-3 py-2 rounded-lg"
-                value={formData.source}
-                onChange={(e) =>
-                  setFormData({ ...formData, source: e.target.value })
-                }
-                placeholder={labels.sourcePlaceholder}
-              />
-              <datalist id="new-job-source-options">
-                {sourceOptions(kind).map((s) => (
-                  <option key={s} value={s} />
-                ))}
-              </datalist>
-            </div>
-          </div>
-          <div>
-            <label className="meta block text-[10px] font-bold uppercase text-foreground/75 mb-1.5">
-              Link
-            </label>
-            <input
-              type="url"
-              className="input-glass w-full px-3 py-2 rounded-lg"
-              value={formData.link}
+          <div className="field">
+            <label htmlFor={`${titleId}-status`}>Status</label>
+            <select
+              id={`${titleId}-status`}
+              className="input"
+              value={formData.status}
               onChange={(e) =>
-                setFormData({ ...formData, link: e.target.value })
+                setFormData({ ...formData, status: e.target.value as Status })
               }
-              placeholder="https://..."
+            >
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {statusLabel(kind, s)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor={`${titleId}-applied`}>{labels.dateColumn}</label>
+            <input
+              id={`${titleId}-applied`}
+              type="date"
+              className="input"
+              value={formData.dateApplied}
+              onChange={(e) =>
+                setFormData({ ...formData, dateApplied: e.target.value })
+              }
             />
           </div>
-          <div className="pt-4 border-t border-foreground/10 flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn-glass flex-1 px-4 py-2 text-foreground/75 rounded-lg"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              aria-busy={submitting}
-              className="btn-glass flex-1 px-4 py-2 bg-breath text-paper rounded-lg font-semibold border-breath disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center min-h-[2.5rem]"
-            >
-              {submitting ? (
-                <>
-                  <BreathDots loading />
-                  <span className="sr-only">Adding…</span>
-                </>
-              ) : (
-                labels.addButton
-              )}
-            </button>
+          <div className="field">
+            <label htmlFor={`${titleId}-location`}>{labels.location}</label>
+            <input
+              id={`${titleId}-location`}
+              className="input"
+              value={formData.location}
+              onChange={(e) =>
+                setFormData({ ...formData, location: e.target.value })
+              }
+              placeholder={labels.locationPlaceholder}
+            />
           </div>
-        </form>
-      </div>
+          <div className="field">
+            <label htmlFor={`${titleId}-source`}>{labels.source}</label>
+            <input
+              id={`${titleId}-source`}
+              className="input"
+              list={`${titleId}-source-options`}
+              value={formData.source}
+              onChange={(e) =>
+                setFormData({ ...formData, source: e.target.value })
+              }
+              placeholder={labels.sourcePlaceholder}
+            />
+            <datalist id={`${titleId}-source-options`}>
+              {sourceOptions(kind).map((s) => (
+                <option key={s} value={s} />
+              ))}
+            </datalist>
+          </div>
+          <div className="field sm:col-span-2">
+            <label htmlFor={`${titleId}-link`}>Link</label>
+            <input
+              id={`${titleId}-link`}
+              type="url"
+              className="input"
+              value={formData.link}
+              onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+              placeholder="https://"
+            />
+          </div>
+        </div>
+
+        <div className="dialog-foot dialog-foot-ruled">
+          <button
+            type="submit"
+            disabled={submitting}
+            aria-busy={submitting}
+            className="btn btn-primary"
+            style={{ letterSpacing: "0.08em" }}
+          >
+            {submitting ? (
+              <>
+                <LoadingBars />
+                <span className="sr-only">Adding…</span>
+              </>
+            ) : (
+              "SAVE APPLICATION"
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn btn-secondary"
+            style={{ letterSpacing: "0.08em" }}
+          >
+            CANCEL
+          </button>
+          <span className="text-muted ml-auto eyebrow hidden sm:inline">
+            ⌘↵ to save
+          </span>
+        </div>
+      </form>
     </Modal>
   );
 };

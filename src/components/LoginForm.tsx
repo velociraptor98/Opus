@@ -3,28 +3,35 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { BreathDots } from "./Breath";
+import { LoadingBars, Wordmark } from "./Mark";
 
 type Mode = "signin" | "signup";
 
 const copy = {
   signin: {
-    heading: "Welcome back",
-    sub: "Sign in to your job search tracker",
-    submit: "Sign In",
+    heading: "Sign in",
+    sub: "Your ledger, waiting where you left it.",
+    submit: "ENTER OPUS",
     busy: "Signing in…",
     switchPrompt: "New here?",
     switchAction: "Create an account",
   },
   signup: {
-    heading: "Create your account",
-    sub: "Start tracking your job search",
-    submit: "Create Account",
+    heading: "Create account",
+    sub: "One page for every application you send.",
+    submit: "CREATE ACCOUNT",
     busy: "Creating account…",
     switchPrompt: "Already have an account?",
     switchAction: "Sign in",
   },
 } as const;
+
+/** The claims on the coral panel — the promise the tracker is making. */
+const PITCH = [
+  { value: "128", label: "Tracked" },
+  { value: "31%", label: "Interview rate" },
+  { value: "0", label: "Missed steps" },
+];
 
 const LoginForm = () => {
   const router = useRouter();
@@ -109,144 +116,164 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center">
-      <div className="modal-glass p-8 rounded-3xl w-full max-w-md">
-        {/* No wordmark here — the navbar carries it directly above this card,
-            and repeating it just pushes the form down the page. */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-semibold text-foreground mb-1">
-            {text.heading}
-          </h2>
-          <p className="text-sm text-foreground/75">{text.sub}</p>
+    <div className="grid lg:grid-cols-2 min-h-screen">
+      {/* The pitch. Deliberately the deeper accent-600 rather than the bright
+          coral: this panel is a *ground* carrying 16px body copy, and the
+          bright accent leaves that copy at 4.2:1 against white. */}
+      <div
+        className="flex flex-col justify-between gap-10 px-8 py-10 md:px-12 md:py-14"
+        style={{
+          background: "var(--color-accent-ground)",
+          color: "var(--color-on-accent)",
+        }}
+      >
+        <div className="flex items-center gap-4">
+          <Wordmark size="lg" reversed />
+          <span className="eyebrow ml-auto" style={{ fontSize: 11, letterSpacing: "0.14em" }}>
+            Application tracker
+          </span>
         </div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-error/10 border border-error/20 rounded-xl flex items-center gap-3 animate-shake">
-            <svg
-              className="w-5 h-5 text-error"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span className="text-error font-medium">{error}</span>
-          </div>
-        )}
+        <div>
+          <h1
+            className="max-w-[9ch]"
+            style={{ fontSize: "clamp(38px, 6vw, 64px)", lineHeight: 1.02, letterSpacing: "-0.03em", margin: "0 0 20px" }}
+          >
+            Every application, one page.
+          </h1>
+          <p className="max-w-[38ch] m-0" style={{ fontSize: 16 }}>
+            Jobs and universities in a single ledger — statuses, deadlines and
+            follow-ups that do not slip.
+          </p>
+        </div>
 
-        {notice && (
-          <div className="mb-6 p-4 bg-secondary/10 border border-secondary/20 rounded-xl flex items-center gap-3">
-            <svg
-              className="w-5 h-5 text-breath shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
-            <span className="text-foreground/80 font-medium">{notice}</span>
-          </div>
-        )}
+        <div
+          className="grid grid-cols-3 gap-6 pt-5"
+          style={{ borderTop: "2px solid var(--color-on-accent)" }}
+        >
+          {PITCH.map((stat) => (
+            <div key={stat.label}>
+              <div className="tnum" style={{ fontWeight: 800, fontSize: 30, lineHeight: 1.1 }}>
+                {stat.value}
+              </div>
+              <div className="eyebrow" style={{ fontSize: 11, letterSpacing: "0.12em" }}>
+                {stat.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-        {/* Remounting on mode change wipes the fields, so a password typed on
-            one form never carries into the other. */}
-        <form key={mode} onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-bold text-foreground/80 mb-2 ml-1"
+      {/* The form. */}
+      <div className="flex items-center px-8 py-12 md:px-12 md:py-14">
+        <div className="w-full max-w-[380px] mx-auto lg:mx-0">
+          <h2 style={{ fontSize: 32, margin: "0 0 6px" }}>{text.heading}</h2>
+          <p className="text-muted" style={{ fontSize: 14, margin: "0 0 28px" }}>
+            {text.sub}
+          </p>
+
+          {error && (
+            <div
+              className="animate-shake flex items-center gap-3 px-3 py-2.5 mb-5"
+              style={{
+                background: "var(--color-accent-100)",
+                borderLeft: "3px solid var(--color-accent)",
+                color: "var(--color-accent-800)",
+                fontSize: 13,
+              }}
+              role="alert"
             >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              name="email"
-              autoComplete="email"
-              className="input-glass w-full px-4 py-3 rounded-xl"
-              placeholder="Enter email"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-bold text-foreground/80 mb-2 ml-1"
+              {error}
+            </div>
+          )}
+
+          {notice && (
+            <div
+              className="flex items-center gap-3 px-3 py-2.5 mb-5"
+              style={{
+                background: "var(--color-neutral-200)",
+                borderLeft: "3px solid var(--color-text)",
+                fontSize: 13,
+              }}
+              role="status"
             >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              name="password"
-              autoComplete={
-                mode === "signup" ? "new-password" : "current-password"
-              }
-              className="input-glass w-full px-4 py-3 rounded-xl"
-              placeholder={
-                mode === "signup" ? "At least 8 characters" : "Enter password"
-              }
-              required
-            />
-          </div>
-          {mode === "signup" && (
-            <div>
-              <label
-                htmlFor="confirm"
-                className="block text-sm font-bold text-foreground/80 mb-2 ml-1"
-              >
-                Confirm password
-              </label>
+              {notice}
+            </div>
+          )}
+
+          {/* Remounting on mode change wipes the fields, so a password typed on
+              one form never carries into the other. */}
+          <form key={mode} onSubmit={handleSubmit}>
+            <div className="field mb-4">
+              <label htmlFor="email">Email</label>
               <input
-                id="confirm"
-                type="password"
-                name="confirm"
-                autoComplete="new-password"
-                className="input-glass w-full px-4 py-3 rounded-xl"
-                placeholder="Re-enter password"
+                id="email"
+                type="email"
+                name="email"
+                autoComplete="email"
+                className="input"
+                placeholder="you@example.com"
                 required
               />
             </div>
-          )}
-          <button
-            type="submit"
-            disabled={pending}
-            aria-busy={pending}
-            className="btn-glass w-full py-3.5 bg-breath text-paper rounded-xl font-semibold text-base border-breath mt-4 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center min-h-[3.25rem]"
-          >
-            {pending ? (
-              <>
-                <BreathDots loading />
-                <span className="sr-only">{text.busy}</span>
-              </>
-            ) : (
-              text.submit
+            <div className={mode === "signup" ? "field mb-4" : "field mb-6"}>
+              <label htmlFor="password">Passphrase</label>
+              <input
+                id="password"
+                type="password"
+                name="password"
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                className="input"
+                placeholder={mode === "signup" ? "At least 8 characters" : "••••••••"}
+                required
+              />
+            </div>
+            {mode === "signup" && (
+              <div className="field mb-6">
+                <label htmlFor="confirm">Confirm passphrase</label>
+                <input
+                  id="confirm"
+                  type="password"
+                  name="confirm"
+                  autoComplete="new-password"
+                  className="input"
+                  placeholder="Re-enter passphrase"
+                  required
+                />
+              </div>
             )}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={pending}
+              aria-busy={pending}
+              className="btn btn-primary w-full"
+              style={{ minHeight: 44, letterSpacing: "0.08em" }}
+            >
+              {pending ? (
+                <>
+                  <LoadingBars />
+                  <span className="sr-only">{text.busy}</span>
+                </>
+              ) : (
+                text.submit
+              )}
+            </button>
+          </form>
 
-        <p className="mt-6 text-center text-sm text-foreground/75">
-          {text.switchPrompt}{" "}
-          <button
-            type="button"
-            onClick={switchMode}
-            disabled={pending}
-            className="font-semibold text-breath hover:underline underline-offset-4 disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {text.switchAction}
-          </button>
-        </p>
+          <div className="hr" />
+
+          <div className="flex items-center gap-2 eyebrow text-muted">
+            <span>{text.switchPrompt}</span>
+            <button
+              type="button"
+              onClick={switchMode}
+              disabled={pending}
+              className="op-lnk text-foreground underline underline-offset-4"
+            >
+              {text.switchAction}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

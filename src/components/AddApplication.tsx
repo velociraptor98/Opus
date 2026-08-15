@@ -1,5 +1,6 @@
 import { ApplicationKind, KIND_LABELS } from "@/constants/kind";
 
+/** The one primary action on the list screen — and the only coral button. */
 export const AddApplication = ({
   setIsModalOpen,
   kind,
@@ -11,27 +12,10 @@ export const AddApplication = ({
     <button
       onClick={() => setIsModalOpen(true)}
       title={KIND_LABELS[kind].addAction}
-      aria-label={KIND_LABELS[kind].addAction}
-      className="btn-glass w-full h-10 rounded-full flex items-center justify-center text-breath transition-all duration-200 active:scale-95 hover:scale-[1.03]"
-      style={{
-        background: "color-mix(in srgb, var(--clay) 12%, transparent)",
-        boxShadow:
-          "inset 0 0 0 1.5px color-mix(in srgb, var(--clay) 35%, transparent)",
-      }}
+      className="btn btn-primary whitespace-nowrap"
+      style={{ letterSpacing: "0.08em" }}
     >
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2.5"
-          d="M12 4v16m8-8H4"
-        />
-      </svg>
+      + NEW APPLICATION
     </button>
   );
 };

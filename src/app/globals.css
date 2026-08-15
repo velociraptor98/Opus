@@ -1,210 +1,340 @@
 @import "tailwindcss";
 
-/* ── iki studios · design language v1 ──────────────────────────────────────
-   "The breath is the brand." Paper and ink carry almost everything; clay is
-   reserved for the breath itself, so the accent always means "this is alive."
+/* ── Opus · Modernist ──────────────────────────────────────────────────────
+   Flat, square, typographic. The page is built from rules, not boxes: 2px
+   dividers separate bands, 1px dividers separate cells, and nothing has a
+   corner radius or a border of its own. Weight and rule-thickness carry the
+   hierarchy that colour used to.
 
-   Light only — the app renders on paper. Espresso is kept as a brand token
-   because the reversed ground still exists off-screen (the app icon), but
-   nothing in the UI switches to it.
+   One accent — coral — and a single neutral ramp. Coral is spent only on
+   "this needs you": follow-ups, live interviews, the primary action. Every
+   routine status is ink or grey, so the accent never stops meaning anything.
 
-   Two tiers per hue, because the brand tones are mid-lightness (OKLCH L .605)
-   and land at 3.4–3.6:1 on paper. That clears the 3:1 bar for graphical
-   objects — dots, chart fills, the mark — but not the 4.5:1 that small bold
-   text needs. So the brand tier (--clay, --sage, --amber, --rust, --slate,
-   --taupe) is for shapes; the text tier (--breath, --primary, --secondary,
-   --accent, --error, --warning) is the same hues deepened, for type.
+   Two tiers per role, because the accent at full strength is a 3.76:1 colour:
+   fine for shapes (3:1), short of the 4.5:1 that type needs. So --color-accent
+   is for *shapes* (bars, rules, marks, fills) and --color-accent-700 is for
+   *type* on light grounds. Where the accent is itself the ground behind text,
+   --color-accent-ground (a hair deeper) carries white at 4.7:1.
    ───────────────────────────────────────────────────────────────────────── */
 :root {
   color-scheme: light;
 
-  /* Brand tokens — exactly as specified in the design language. */
-  --paper: #f6f2ea;    /* oklch(0.962 0.012 86)  primary surface */
-  --ink: #362d25;      /* oklch(0.305 0.020 64)  headings & wordmark */
-  --ink-soft: #64584e; /* oklch(0.470 0.022 64)  body & captions */
-  --clay: #a77455;     /* oklch(0.605 0.078 52)  the breath / accent */
-  --sage: #6a8c6e;     /* oklch(0.605 0.058 148) secondary accent */
-  --espresso: #2d221a; /* oklch(0.262 0.022 60)  reversed grounds */
+  --color-bg: #f3f2f2;
+  --color-surface: #eae9e9;
+  --color-text: #201e1d;
+  --color-accent: #ec3013;
+  --color-accent-2: #e15b47;
+  --color-divider: color-mix(in srgb, #201e1d 40%, transparent);
 
-  /* Earth siblings — derived in clay and sage's own OKLCH band (L .605) so the
-     six statuses stay tellable apart in the charts without leaving the family.
-     Clay is deliberately absent here: it is never spent on a routine status. */
-  --amber: #9a7c51;    /* oklch(0.605 0.070 75)  Interviewing */
-  --rust: #aa7069;     /* oklch(0.605 0.075 28)  Rejected */
-  --slate: #748399;    /* oklch(0.605 0.038 258) Applied */
-  --taupe: #8b7f76;    /* oklch(0.605 0.020 64)  Closed */
+  /* Tonal ramps — generated in OKLCH on one shared lightness scale, so the
+     same step of any role matches the others in visual value. */
+  --color-neutral-100: #f8f4f4;
+  --color-neutral-200: #eae7e7;
+  --color-neutral-300: #d7d3d3;
+  --color-neutral-400: #bab6b6;
+  --color-neutral-500: #9b9797;
+  --color-neutral-600: #7d7979;
+  --color-neutral-700: #605d5d;
+  --color-neutral-800: #444141;
+  --color-neutral-900: #2d2b2b;
 
-  /* The ground is paper with a whisper of clay worked through it — enough to
-     feel warm and handmade, far too little to read as a colour of its own. */
-  --background: color-mix(in srgb, var(--clay) 4%, var(--paper));
-  --foreground: var(--ink);
-  --muted: var(--ink-soft);
+  --color-accent-100: #fff2ef;
+  --color-accent-200: #ffe0d9;
+  --color-accent-300: #ffc4b8;
+  --color-accent-400: #ff9783;
+  --color-accent-500: #ff563c;
+  --color-accent-600: #dd2b0f;
+  --color-accent-700: #ae1800;
+  --color-accent-800: #7c1405;
+  --color-accent-900: #4d170e;
 
-  /* Text tier — the same hues, deepened until they clear 4.5:1 on the *worst*
-     surface text actually lands on: the recessed .glass-well, over the mesh's
-     densest clay lobe, *under the deepest crease of the paper texture* (~#d6cdc3)
-     — not on bare paper. Bare paper was optimistic and left these at ~3.5:1 in
-     the sidebar; ignoring the crease left them at 4.1:1. The texture's 6% floor
-     and these values are a matched pair — retune one and you must retune both. */
-  --breath: #7c4c2e;   /* clay  — "this is alive": follow-up, next step, CTA */
-  --primary: #405f44;  /* sage  — Offered, positive */
-  --secondary: #4c596e;/* slate — Applied, passive info */
-  --accent: #61564d;   /* taupe — Closed, terminal */
-  --error: #7f4942;    /* rust  — Rejected, destructive */
-  --warning: #705329;  /* amber — Interviewing */
+  --color-accent-2-100: #fff2ef;
+  --color-accent-2-200: #ffe0da;
+  --color-accent-2-300: #ffc4b9;
+  --color-accent-2-400: #ff9784;
+  --color-accent-2-500: #ef6853;
+  --color-accent-2-600: #c94b39;
+  --color-accent-2-700: #9e3526;
+  --color-accent-2-800: #71261b;
+  --color-accent-2-900: #471d16;
+
+  /* The accent as a *ground*: one step down from the shape tier so that white
+     type on it clears 4.74:1. Bare --color-accent under white is 4.20:1, which
+     puts the primary button and the sign-in hero's body copy below AA. */
+  --color-accent-ground: var(--color-accent-600);
+  --color-on-accent: #ffffff;
+
+  --font-heading: var(--font-archivo), system-ui, sans-serif;
+  --font-heading-weight: 800;
+  --font-body: var(--font-archivo), system-ui, sans-serif;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+
+  /* Elevation — soft ink-tinted shadows, used only where something genuinely
+     floats above the page (dialogs, toasts). Bands and rows never lift. */
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #2d2b2b 14%, transparent);
+  --shadow-md: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
+  --shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
 }
 
+/* Tailwind utility names, mapped to the tokens above. Deliberately distinct
+   names on both sides — a `@theme` key that refers to itself is ambiguous. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text);
+  --color-panel: var(--color-surface);
+  --color-line: var(--color-divider);
+  /* brand = shapes, brand-ink = type. See the header note. */
+  --color-brand: var(--color-accent);
+  --color-brand-ink: var(--color-accent-700);
+  --color-brand-ground: var(--color-accent-ground);
+  --color-on-brand: var(--color-on-accent);
+  --color-mute: var(--color-neutral-600);
 
-  /* text tier */
-  --color-breath: var(--breath);
-  --color-primary: var(--primary);
-  --color-secondary: var(--secondary);
-  --color-accent: var(--accent);
-  --color-error: var(--error);
-  --color-warning: var(--warning);
-
-  /* brand tier — marks, dots, chart fills, the mesh */
-  --color-paper: var(--paper);
-  --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-clay: var(--clay);
-  --color-sage: var(--sage);
-  --color-espresso: var(--espresso);
-
-  /* Quicksand is the brand voice; Space Mono the system voice. */
-  --font-sans: var(--font-quicksand);
-  --font-mono: var(--font-space-mono);
+  --font-sans: var(--font-archivo), system-ui, sans-serif;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   Base
+   ══════════════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  line-height: 1.12; letter-spacing: -0.015em; margin: 0 0 var(--space-2);
+}
+h1 { font-size: 42px; }
+h2 { font-size: 32px; }
+h3 { font-size: 25px; }
+h4 { font-size: 20px; }
+h5 { font-size: 16px; }
+h6 { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+p { margin: 0 0 var(--space-3); }
+
+/* The text tier, not the shape tier: bare --color-accent is 3.76:1 here. */
+a { color: var(--color-accent-700); text-underline-offset: 3px; }
+img { display: block; max-width: 100%; }
+
+/* 65%, not the 55% the mock used: 55% lands at 3.66:1 on this ground and this
+   class dresses almost every caption in the app. 65% reads identically and
+   clears 4.5:1. */
+.text-muted { color: color-mix(in srgb, var(--color-text) 65%, transparent); }
+
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--color-accent-700); outline-offset: 2px; }
+::selection { background: color-mix(in srgb, var(--color-accent) 30%, transparent); }
+
+html {
+  accent-color: var(--color-accent-ground);
+  caret-color: var(--color-accent);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-neutral-400) transparent;
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-neutral-400); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-neutral-500); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Components
+
+   In `@layer components` (not unlayered) so that the Tailwind utilities
+   callers pair with these — the `w-[min(760px,100%)]` on the detail dialog,
+   the `ml-auto` on a footer button — win over the component default instead
+   of being silently overridden by it. Unlayered rules beat every Tailwind
+   utility, which is exactly how `.dialog`'s 440px default swallowed all four
+   dialog widths the first time round.
+   ══════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+/* — rules — */
+.hr { height: 2px; border: 0; margin: var(--space-4) 0; background: var(--color-divider); }
+
+/* — buttons — */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; text-decoration: none;
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 14px; line-height: 1.2; color: var(--color-text);
+  background: transparent; border: 1px solid transparent;
+  padding: var(--space-2) calc(var(--space-3) * 1.2);
+  border-radius: var(--radius-md);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.btn svg { display: block; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary { background: var(--color-accent-ground); color: var(--color-on-accent); }
+.btn-primary:hover:not(:disabled) { background: var(--color-accent-700); }
+.btn-primary:active:not(:disabled) { background: var(--color-accent-800); }
+.btn-secondary { border-color: var(--color-divider); }
+.btn-secondary:hover:not(:disabled) { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
+.btn-secondary:active:not(:disabled) { background: color-mix(in srgb, var(--color-text) 14%, transparent); }
+.btn-ghost { color: var(--color-accent-700); padding-inline: var(--space-1); }
+.btn-ghost:hover:not(:disabled) { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+.btn-ghost:active:not(:disabled) { background: color-mix(in srgb, var(--color-accent) 18%, transparent); }
+.btn-danger { background: var(--color-accent-800); color: var(--color-on-accent); }
+.btn-danger:hover:not(:disabled) { background: var(--color-accent-900); }
+.btn-icon { width: 36px; height: 36px; padding: 0; }
+.btn-block { width: 100%; justify-content: flex-start; text-align: left; }
+
+/* — forms — */
+.field > label {
+  display: block; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  margin-bottom: 5px;
+  color: color-mix(in srgb, var(--color-text) 70%, transparent);
+}
+.input {
+  width: 100%; min-height: 36px; padding: 6px 10px; font: inherit;
+  font-size: 14px; color: var(--color-text); caret-color: var(--color-accent);
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider); border-radius: var(--radius-md);
+}
+.input::placeholder { color: color-mix(in srgb, var(--color-text) 55%, transparent); }
+.input:hover { border-color: color-mix(in srgb, var(--color-text) 60%, transparent); }
+.input:focus-visible { border-color: var(--color-accent-700); outline-offset: 0; }
+textarea.input { min-height: 90px; resize: vertical; }
+select.input { cursor: pointer; }
+
+/* The borderless field used inside the filter band, where the band's own
+   rules already draw every edge the control needs. */
+.input-bare {
+  border: 0; background: transparent; font: inherit; font-size: 14px;
+  color: var(--color-text); caret-color: var(--color-accent); outline: none;
+  min-width: 0;
+}
+.input-bare::placeholder { color: color-mix(in srgb, var(--color-text) 55%, transparent); }
+
+.radio { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
+.radio input, .seg-opt input {
+  position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
+}
+.radio .dot {
+  width: 16px; height: 16px; flex: none; border-radius: 50%;
+  border: 1.5px solid var(--color-divider);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.radio:hover .dot { border-color: var(--color-accent-700); }
+.radio input:checked + .dot {
+  border-color: var(--color-accent-ground); background: var(--color-accent-ground);
+  box-shadow: inset 0 0 0 4px var(--color-bg);
+}
+.radio input:focus-visible + .dot { outline: 2px solid var(--color-accent-700); outline-offset: 2px; }
+
+.seg {
+  display: inline-flex; overflow: hidden;
+  border: 1px solid var(--color-divider); border-radius: var(--radius-md);
+}
+.seg-opt {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; font-size: 13px; cursor: pointer;
+}
+.seg-opt + .seg-opt { border-left: 1px solid var(--color-divider); }
+.seg-opt:has(input:checked) { background: var(--color-accent-ground); color: var(--color-on-accent); }
+.seg-opt:not(:has(input:checked)):hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
+.seg-opt:has(input:focus-visible) { outline: 2px solid var(--color-accent-700); outline-offset: -2px; }
+
+/* — tags — */
+.tag {
+  display: inline-flex; align-items: center; font-size: 11px;
+  letter-spacing: 0.02em; padding: 3px 10px;
+  border-radius: calc(var(--radius-md) * 0.75);
+  white-space: nowrap;
+}
+.tag-accent { background: var(--color-accent-100); color: var(--color-accent-800); }
+.tag-accent-2 { background: var(--color-accent-2-100); color: var(--color-accent-2-800); }
+.tag-neutral { background: var(--color-neutral-200); color: var(--color-neutral-800); }
+.tag-outline { border: 1px solid var(--color-accent); color: var(--color-accent-700); }
+
+/* — tables — */
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th {
+  text-align: left; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--color-text) 65%, transparent);
+  padding: var(--space-2); border-bottom: 2px solid var(--color-divider);
+}
+.table td { padding: var(--space-2); border-bottom: 1px solid var(--color-divider); }
+
+/* — rows — */
+.op-row { transition: background 0.12s ease; }
+.op-row:hover { background: color-mix(in srgb, var(--color-text) 4%, transparent); }
+.op-row:focus-visible { outline: 2px solid var(--color-accent-700); outline-offset: -2px; }
+
+/* — inline text links, in the bands where a button would be too loud — */
+.op-lnk {
+  cursor: pointer; background: none; border: 0; padding: 0;
+  font: inherit; color: inherit;
+}
+.op-lnk:hover:not(:disabled) { color: var(--color-accent-700); }
+.op-lnk:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* — dialog — */
+.dialog-backdrop {
+  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center;
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--color-neutral-900) 50%, transparent);
+}
+.dialog {
+  width: min(440px, 100%); display: flex; flex-direction: column;
+  background: var(--color-bg); box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-lg);
+}
+.dialog:focus { outline: none; }
+.dialog-head {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: 18px 24px; border-bottom: 2px solid var(--color-divider);
+}
+.dialog-foot {
+  display: flex; align-items: center; gap: 10px; padding: 16px 24px;
+}
+.dialog-foot-ruled { border-top: 2px solid var(--color-divider); }
+
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Motion — short, flat, no scaling. The design doesn't bounce.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-5px); }
   75% { transform: translateX(5px); }
 }
 
-.animate-shake {
-  animation: shake 0.2s ease-in-out 0s 2;
-}
-
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-in {
-  animation: fade-in 0.4s ease-out forwards;
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
-/* Decorative palette mesh behind all glass surfaces. Fixed so it stays put
-   while content scrolls, giving the backdrop-filters something to refract.
-
-   Clay leads and recurs on both diagonals, so the warmth reads as a property of
-   the whole page rather than a stain in one corner. The lobes are deliberately
-   faint (≤10%): the earlier 22% clay lobe sank the .glass-well beneath it to
-   ~3.5:1 for accent text. Sage is held right back — at any strength it turned
-   the top-right cool and green, which fights "warm, muted, handmade". */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-
-  /* Crumpled paper — "warm, muted, handmade". Generated procedurally by an
-     inline SVG filter rather than shipped as an image, so it costs no request
-     and stays crisp at any DPR. Two lit noise fields multiplied together: a
-     low-frequency, high-relief one for the facets and creases of a crumple, and
-     a fine high-frequency one for the fibre tooth.
-
-     Note feDiffuseLighting takes its height map from the input's ALPHA channel,
-     so each feTurbulence is routed through an feColorMatrix that copies red into
-     alpha first. Lighting the turbulence directly yields a flat sheet (measured:
-     1/255 of variation) — which is exactly the trap this hit the first time.
-
-     It `multiply`s, because paper reads as shadow in the creases; `soft-light`
-     on a ground this light merely lightens and desaturates it, washing the clay
-     out. The feComponentTransfer remaps the texture's own [0.69, 0.94] range to
-     [0.94, 1.00], so the deepest crease darkens the ground by at most 6%. That
-     ceiling is not cosmetic: the worst text surface sits at 4.52:1 with *zero*
-     headroom, so any darkening at all has to be paid for out of the text tier,
-     which is why the accents above were deepened to match this exact floor.
-     Blended via `background-blend-mode` (within this one element) rather than
-     `mix-blend-mode`, which blends against the root canvas, where a propagated
-     body background makes the outcome unpredictable. */
-  background-color: var(--background);
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1400' height='1000'%3E%3Cfilter id='p' filterUnits='userSpaceOnUse' x='0' y='0' width='1400' height='1000'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.008' numOctaves='3' seed='5' result='cn'/%3E%3CfeColorMatrix in='cn' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0' result='cbump'/%3E%3CfeDiffuseLighting in='cbump' lighting-color='%23ffffff' surfaceScale='9' diffuseConstant='1' result='crease'%3E%3CfeDistantLight azimuth='235' elevation='55'/%3E%3C/feDiffuseLighting%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.06' numOctaves='4' seed='17' result='fn'/%3E%3CfeColorMatrix in='fn' type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0' result='fbump'/%3E%3CfeDiffuseLighting in='fbump' lighting-color='%23ffffff' surfaceScale='1.6' diffuseConstant='1' result='fibre'%3E%3CfeDistantLight azimuth='235' elevation='55'/%3E%3C/feDiffuseLighting%3E%3CfeBlend in='crease' in2='fibre' mode='multiply' result='paper'/%3E%3CfeColorMatrix in='paper' type='saturate' values='0' result='grey'/%3E%3CfeComponentTransfer in='grey'%3E%3CfeFuncR type='linear' slope='0.24' intercept='0.774'/%3E%3CfeFuncG type='linear' slope='0.24' intercept='0.774'/%3E%3CfeFuncB type='linear' slope='0.24' intercept='0.774'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='1400' height='1000' filter='url(%23p)'/%3E%3C/svg%3E"),
-    radial-gradient(60% 55% at 8% -8%, color-mix(in srgb, var(--clay) 10%, transparent), transparent 72%),
-    radial-gradient(55% 50% at 92% 6%, color-mix(in srgb, var(--sage) 6%, transparent), transparent 70%),
-    radial-gradient(65% 60% at 85% 100%, color-mix(in srgb, var(--clay) 8%, transparent), transparent 74%),
-    radial-gradient(50% 50% at 2% 92%, color-mix(in srgb, var(--amber) 7%, transparent), transparent 72%);
-  background-size: cover, auto, auto, auto, auto;
-  background-repeat: no-repeat, repeat, repeat, repeat, repeat;
-  background-blend-mode: multiply, normal, normal, normal, normal;
-}
-
-@keyframes fade-out {
-  from { opacity: 1; transform: translateY(0); }
-  to { opacity: 0; transform: translateY(-8px); }
-}
-
-.animate-out {
-  animation: fade-out 0.3s ease-in forwards;
-}
-
-@keyframes backdrop-enter {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.animate-backdrop {
-  animation: backdrop-enter 0.2s ease-out forwards;
-}
-
-@keyframes modal-enter {
-  from { opacity: 0; transform: scale(0.95) translateY(12px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0); }
-}
-
-.animate-modal {
-  animation: modal-enter 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes row-enter {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.animate-row {
-  animation: row-enter 0.25s ease-out forwards;
-}
-
-@keyframes card-enter {
-  from { opacity: 0; transform: translateY(12px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.animate-card {
-  opacity: 0;
-  animation: card-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
+.animate-shake { animation: shake 0.2s ease-in-out 0s 2; }
+.animate-backdrop { animation: fade-in 0.16s ease-out forwards; }
+.animate-modal { animation: rise-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-row { animation: fade-in 0.2s ease-out forwards; }
+.animate-toast { animation: rise-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
 @media (prefers-reduced-motion: reduce) {
-  /* Collapse every animation/transition to near-instant rather than removing
-     them, so JS that waits on animationend (modal/toast teardown) still fires. */
-  *,
-  *::before,
-  *::after {
+  /* Collapsed rather than removed, so JS waiting on animationend still fires. */
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -212,347 +342,58 @@ body::before {
   }
 }
 
-/* Keyboard focus ring for custom buttons — tinted to the control's own colour
-   via currentColor, so it reads on red/green/blue actions alike. */
-.focus-ring:focus-visible,
-.focus-ring-within:focus-within {
-  outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 30%, transparent);
-}
-
-.card-glass {
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  background: rgba(255, 255, 255, 0.62);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 1px 0 0 rgba(255, 255, 255, 0.5),
-    0 4px 20px rgba(54, 45, 37, 0.10),
-    0 1px 3px rgba(54, 45, 37, 0.06);
-  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-.card-glass:hover {
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 1),
-    inset 1px 0 0 rgba(255, 255, 255, 0.6),
-    0 8px 32px rgba(54, 45, 37, 0.14),
-    0 2px 6px rgba(54, 45, 37, 0.08);
-}
-
-.navbar-glass {
-  backdrop-filter: blur(32px) saturate(190%);
-  -webkit-backdrop-filter: blur(32px) saturate(190%);
-  background: rgba(255, 255, 255, 0.3);
-  border-bottom: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 4px 24px rgba(0, 0, 0, 0.06);
-}
-
-.modal-glass {
-  backdrop-filter: blur(40px) saturate(200%);
-  -webkit-backdrop-filter: blur(40px) saturate(200%);
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.75);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    inset 1px 0 0 rgba(255, 255, 255, 0.5),
-    0 20px 60px rgba(0, 0, 0, 0.15),
-    0 4px 16px rgba(0, 0, 0, 0.08);
-}
-
-/* In @layer components (not unlayered) so that the `bg-*` / `border-*` utilities
-   callers pair with this — `bg-primary/80` on the card's Save button, the
-   `bg-secondary/10` navbar buttons — win over the glass fill instead of being
-   silently overridden by it. Unlayered rules beat every Tailwind utility. */
-@layer components {
-  .btn-glass {
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    background: rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.7);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.85),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.04),
-      0 2px 10px rgba(0, 0, 0, 0.06);
-    transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease;
-  }
-
-  .btn-glass:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.68);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.95),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.04),
-      0 5px 18px rgba(0, 0, 0, 0.1);
-  }
-
-  .btn-glass:active:not(:disabled) {
-    transform: scale(0.96);
-    background: rgba(255, 255, 255, 0.4);
-  }
-
-}
-
-/* Glass form fields — translucent, blurred inputs/selects/textareas */
-.input-glass {
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  background: rgba(255, 255, 255, 0.26);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.02),
-    0 1px 2px rgba(0, 0, 0, 0.03);
-  color: var(--foreground);
-  transition: background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-}
-
-.input-glass::placeholder {
-  color: color-mix(in srgb, var(--foreground) 55%, transparent);
-}
-
-.input-glass:focus,
-.input-glass:focus-visible {
-  outline: none;
-  background: rgba(255, 255, 255, 0.4);
-  border-color: color-mix(in srgb, var(--color-breath) 55%, transparent);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    0 0 0 3px color-mix(in srgb, var(--color-breath) 22%, transparent);
-}
-
-/* Faint glass tray — recessed well that holds the floating cards */
-.glass-well {
-  backdrop-filter: blur(8px) saturate(140%);
-  -webkit-backdrop-filter: blur(8px) saturate(140%);
-  background: color-mix(in srgb, var(--ink) 4%, transparent);
-  border: 1px solid color-mix(in srgb, var(--ink) 7%, transparent);
-  box-shadow:
-    inset 0 2px 10px rgba(54, 45, 37, 0.07),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-/* Glass checkbox — translucent tile with a soft checkmark */
-.checkbox-glass {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 1.15rem;
-  height: 1.15rem;
-  border-radius: 0.4rem;
-  backdrop-filter: blur(12px) saturate(160%);
-  -webkit-backdrop-filter: blur(12px) saturate(160%);
-  background: rgba(255, 255, 255, 0.22);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    0 1px 2px rgba(0, 0, 0, 0.04);
-  cursor: pointer;
-  display: inline-grid;
-  place-content: center;
-  transition: background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-}
-
-.checkbox-glass::before {
-  content: "";
-  width: 0.62rem;
-  height: 0.62rem;
-  transform: scale(0);
-  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  background: var(--color-primary);
-  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-}
-
-.checkbox-glass:checked {
-  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
-  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
-}
-
-.checkbox-glass:checked::before {
-  transform: scale(1);
-}
-
-.checkbox-glass:focus-visible {
-  outline: none;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    0 0 0 3px color-mix(in srgb, var(--color-primary) 22%, transparent);
-}
-
-/* Skeleton shimmer — loading placeholders */
-.skeleton {
-  position: relative;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--foreground) 8%, transparent);
-}
-
+/* Loading placeholders — a flat grey block that sweeps, matching the bars. */
+.skeleton { position: relative; overflow: hidden; background: var(--color-neutral-200); }
 .skeleton::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  transform: translateX(-100%);
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--foreground) 7%, transparent),
-    transparent
-  );
-  animation: shimmer 1.5s ease-in-out infinite;
+  content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--color-neutral-300), transparent);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+
+/* The mark's own rhythm, borrowed for work in flight: five pipeline bars
+   filling left to right. */
+@keyframes bar-pulse {
+  0%, 100% { background: var(--color-neutral-300); }
+  50%      { background: var(--color-accent); }
+}
+.bars-loading > i { animation: bar-pulse 1.2s ease-in-out infinite; }
+.bars-loading > i:nth-child(2) { animation-delay: 0.12s; }
+.bars-loading > i:nth-child(3) { animation-delay: 0.24s; }
+.bars-loading > i:nth-child(4) { animation-delay: 0.36s; }
+.bars-loading > i:nth-child(5) { animation-delay: 0.48s; }
+
+@layer components {
+/* A checklist item is not a radio — same control, square box, because in this
+   system a filled square means "done" everywhere else too. */
+.radio .box {
+  width: 16px; height: 16px; flex: none;
+  border: 1.5px solid var(--color-divider);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.radio:hover .box { border-color: var(--color-accent-700); }
+.radio input:checked + .box {
+  border-color: var(--color-accent-ground); background: var(--color-accent-ground);
+  box-shadow: inset 0 0 0 3px var(--color-bg);
+}
+.radio input:focus-visible + .box { outline: 2px solid var(--color-accent-700); outline-offset: 2px; }
 }
 
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
-  }
+/* ══════════════════════════════════════════════════════════════════════════
+   Type modifiers — last on purpose.
+
+   These are stacked *onto* the component classes above (`op-lnk eyebrow`,
+   `tag eyebrow`, `btn eyebrow`), and several of those set the same
+   properties — `.op-lnk` resets the whole `font` shorthand, `.tag` sets its
+   own size and tracking. Source order is the only thing separating them, so
+   these live at the bottom of the file where they always win.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* The uppercase micro-label that titles every band, cell and field. */
+.eyebrow {
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  line-height: 1.4;
 }
 
-/* Toast entrance — slides up from the corner */
-@keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translateY(16px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.animate-toast {
-  animation: toast-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* ── the breath, beyond the logo ───────────────────────────────────────────
-   "The line-and-dots gesture isn't just the logo — it's the studio's
-   punctuation." Same shape, same clay, every time: a short exhale that
-   releases into a trail of fading dots.
-   ───────────────────────────────────────────────────────────────────────── */
-
-/* Section divider / sign-off. Line length and dot spacing scale with font-size,
-   so the gesture is never set by hand — it breathes with whatever it sits in. */
-.breath-rule {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5em;
-  color: var(--clay);
-}
-
-.breath-rule::before {
-  content: "";
-  width: 3.5em;
-  height: 2px;
-  border-radius: 2px;
-  background: currentColor;
-}
-
-.breath-dots {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-}
-
-/* Three dots by default, each smaller and fainter — breath dispersing. */
-.breath-dots > i {
-  display: block;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.breath-dots > i:nth-child(1) { width: 0.44em; height: 0.44em; opacity: 0.9; }
-.breath-dots > i:nth-child(2) { width: 0.34em; height: 0.34em; opacity: 0.6; }
-.breath-dots > i:nth-child(3) { width: 0.26em; height: 0.26em; opacity: 0.35; }
-
-/* Loading rhythm — the same trail, exhaled on a loop rather than held still. */
-@keyframes breathe {
-  0%, 100% { opacity: 0.15; transform: scale(0.85); }
-  50%      { opacity: 1;    transform: scale(1); }
-}
-
-.breath-loading > i {
-  animation: breathe 1.6s ease-in-out infinite;
-}
-
-.breath-loading > i:nth-child(2) { animation-delay: 0.18s; }
-.breath-loading > i:nth-child(3) { animation-delay: 0.36s; }
-
-/* The system voice: Space Mono for labels, captions and metadata. */
-.meta {
-  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
-  letter-spacing: 0.12em;
-}
-
-/* ── the breath, applied ───────────────────────────────────────────────────
-   Clay always means "this is alive": the live point in a field, the selected
-   text, a step completed, work in flight. It is never a routine status.
-   ───────────────────────────────────────────────────────────────────────── */
-
-/* Selection was rendering in the browser's system blue — the one place a cold
-   colour still leaked into a warm palette. Highlighting text is the reader
-   marking something live, so it takes the clay. */
-::selection {
-  background: color-mix(in srgb, var(--clay) 28%, transparent);
-  color: var(--ink);
-}
-
-html {
-  /* Native control chrome (notably the date picker's calendar) defaults to the
-     browser's blue. The checkboxes are already custom, so this is mostly for
-     the date field. */
-  accent-color: var(--clay);
-  /* The caret is literally the live point in the document. This one is a
-     flourish, not a fix — caret-color already defaulted to ink via currentColor. */
-  caret-color: var(--breath);
-
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--ink) 28%, transparent) transparent;
-}
-
-/* WebKit needs its own scrollbar; without it the track stays system grey. */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  border: 3px solid transparent;
-  background-clip: content-box;
-  background-color: color-mix(in srgb, var(--ink) 25%, transparent);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: color-mix(in srgb, var(--clay) 55%, transparent);
-}
-
-/* The breath as a progress track. The checklist happens to have exactly three
-   steps and the mark has exactly three dots, so completing a step lights one:
-   the same taper as the logo, but full-strength clay once earned rather than
-   fading away. */
-.breath-steps {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-}
-
-.breath-steps > i {
-  display: block;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--foreground) 18%, transparent);
-  transition: background 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.breath-steps > i:nth-child(1) { width: 0.44em; height: 0.44em; }
-.breath-steps > i:nth-child(2) { width: 0.34em; height: 0.34em; }
-.breath-steps > i:nth-child(3) { width: 0.26em; height: 0.26em; }
-
-.breath-steps > i[data-done="true"] {
-  background: var(--clay);
-  transform: scale(1.2);
-}
+/* Numerals that must not jitter as they update (counts, rates, day tallies). */
+.tnum { font-variant-numeric: tabular-nums; }

@@ -1,15 +1,11 @@
 <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Opus">
-  <!-- Reversed on espresso with a clay breath. The gesture alone carries the
-       mark at icon sizes: the wordmark would need an embedded font to render
-       reliably at 16px, and the exhale is the identity anyway. -->
-  <rect x="1" y="1" width="62" height="62" rx="16" fill="#2d221a"/>
-  <rect x="1.6" y="1.6" width="60.8" height="60.8" rx="15.2" fill="none" stroke="#f6f2ea" stroke-opacity="0.10" stroke-width="1.2"/>
+  <!-- The mark is the pipeline: five bars, three filled, the live one coral.
+       The wordmark is dropped at icon sizes — it would need an embedded font
+       to render reliably at 16px, and the bars alone carry the identity.
+       Square, because nothing in this system has a corner radius. -->
+  <rect width="64" height="64" fill="#201e1d"/>
 
-  <!-- the exhale: a short clay stroke leaving the word -->
-  <path d="M 14 32 H 30" stroke="#a77455" stroke-width="3.2" stroke-linecap="round"/>
-
-  <!-- the dots: each smaller and fainter — breath dispersing into air -->
-  <circle cx="38.5" cy="32" r="3.1" fill="#a77455"/>
-  <circle cx="45.8" cy="32" r="2.4" fill="#a77455" fill-opacity="0.6"/>
-  <circle cx="51.8" cy="32" r="1.8" fill="#a77455" fill-opacity="0.35"/>
+  <rect x="10" y="26" width="44" height="4" fill="#f3f2f2"/>
+  <rect x="10" y="34" width="44" height="4" fill="#f3f2f2"/>
+  <rect x="10" y="42" width="44" height="4" fill="#ec3013"/>
 </svg>

@@ -2,27 +2,20 @@
 
 import JobChecklist from "@/components/JobChecklist";
 import LoginForm from "@/components/LoginForm";
+import Navbar from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
 
+  // Signed out, the sign-in split owns the whole viewport — it carries its own
+  // wordmark on the coral panel, so the app header would only repeat it.
+  if (!isAuthenticated) return <LoginForm />;
+
   return (
-    <div className="min-h-[calc(100vh-4.5rem)] transition-colors">
-      {/* From md up the dashboard is exactly one screen tall — the navbar is
-          4.5rem and fixed, so that's all that's left — and the card grid
-          scrolls inside its well rather than the page scrolling. Below md the
-          panels stack, where a locked height would squeeze the list to
-          nothing, so height goes back to natural flow. */}
-      <main className="max-w-6xl mx-auto px-4 md:px-8 py-4 md:py-8 md:h-[calc(100vh-4.5rem)]">
-        {!isAuthenticated ? (
-          <LoginForm />
-        ) : (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 md:h-full md:min-h-0">
-            <JobChecklist />
-          </div>
-        )}
-      </main>
+    <div className="flex flex-col flex-1 min-h-screen">
+      <Navbar />
+      <JobChecklist />
     </div>
   );
 }
