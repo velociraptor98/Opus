@@ -7,6 +7,7 @@ import { KIND_LABELS, sourceOptions, statusLabel } from "@/constants/kind";
 import { BaseJobProps, JobApplication } from "@/constants/types";
 import { useToast } from "@/context/ToastContext";
 import { pipelineSegments, TONE_MARK, TONE_TAG, toneFor } from "@/lib/pipeline";
+import { safeExternalUrl } from "@/lib/url";
 import { ConfirmModal } from "./ConfirmModal";
 import { PipelineBars } from "./Mark";
 import { Modal } from "./Modal";
@@ -136,6 +137,9 @@ export const DetailModal = ({
   const mark = TONE_MARK[tone];
   const segments = pipelineSegments(draft.status, tone);
   const initial = draft.company.trim() ? draft.company.trim()[0].toUpperCase() : "?";
+  // The link is free text (typed, or imported from someone else's CSV), so it
+  // only becomes an href once it has been proven to be an http(s) URL.
+  const linkHref = safeExternalUrl(draft.link);
   const done = [
     draft.checklist.resumeSent,
     draft.checklist.coverLetterSent,
@@ -377,9 +381,9 @@ export const DetailModal = ({
               />
             </div>
 
-            {draft.link && (
+            {linkHref && (
               <a
-                href={draft.link}
+                href={linkHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="eyebrow"
